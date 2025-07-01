@@ -30,7 +30,15 @@ class SignupStep1Screen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    //Theme
     final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
+    final asset = isDarkTheme
+        ? 'assets/dark_variant.png'
+        : 'assets/login_screen_bg.png';
+    final overlayColor = isDarkTheme
+        ? Color(0xFF1E293B).withOpacity(0.98)
+        : Colors.white.withOpacity(0.3);
 
     // Form controllers
     final firstNameController = useTextEditingController();
@@ -54,13 +62,13 @@ class SignupStep1Screen extends HookConsumerWidget {
             child: Opacity(
               opacity: 0.4,
               child: Image.asset(
-                'assets/login_screen_bg.png',
+                asset,
                 fit: BoxFit.cover,
               )
             ),
           ),
 
-          Container(color: Colors.white.withOpacity(0.3),),
+          Container(color: overlayColor),
 
           SafeArea(
             child: Padding(
@@ -321,16 +329,20 @@ class SignupStep1Screen extends HookConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text("Next"),
+                    child: Text(
+                      "Next",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 16),
 
                   RichText(
                     text: TextSpan(
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.black54,
-                      ), // Default text style for the sentence
+                      style: theme.textTheme.bodyMedium, // Default text style for the sentence
                       children: <TextSpan> [
                         const TextSpan(text: "Already have an account? "),
                         TextSpan(

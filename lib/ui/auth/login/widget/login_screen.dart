@@ -1,5 +1,7 @@
 // lib/ui/auth/widgets/login_screen.dart
 
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -31,23 +33,30 @@ class LoginScreen extends HookConsumerWidget {
 
     //Theme
     final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
+    final asset = isDarkTheme
+        ? 'assets/dark_variant.png'
+        : 'assets/login_screen_bg.png';
+    final overlayColor = isDarkTheme
+        ? Color(0xFF1E293B).withOpacity(0.98)
+        : Colors.white.withOpacity(0.3);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
+      //backgroundColor: Colors.white,
       body: Stack(
           children: [
             Positioned.fill(
               child: Opacity(
                 opacity: 0.4,
                 child: Image.asset(
-                  'assets/login_screen_bg.png',
+                  asset,
                   fit: BoxFit.cover,
                 ),
               ),
             ),
 
-            Container(color: Colors.white.withOpacity(0.3),),
+            Container(color: overlayColor),
 
             SafeArea(
               child: Padding(
@@ -132,6 +141,13 @@ class LoginScreen extends HookConsumerWidget {
                                 emailController.text,
                                 passwordController.text,
                               );
+
+                              if (authState is AsyncData) {
+                                Timer(const Duration(milliseconds: 1300), () {
+                                  context.go('/home');
+                                }
+                                );
+                              }
                             },
 
                             style: FilledButton.styleFrom(
@@ -164,7 +180,7 @@ class LoginScreen extends HookConsumerWidget {
 
                           const SizedBox(height: 12),
 
-                          // ❌ Show Error Message
+                          // Show Error Message
                           if (authState is AsyncError)
                             Text(
                               authState.error.toString(),
@@ -179,9 +195,7 @@ class LoginScreen extends HookConsumerWidget {
                       //Don't have an account?
                       RichText(
                         text: TextSpan(
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.black54,
-                          ), // Default text style for the sentence
+                          style: theme.textTheme.bodyMedium, // Default text style for the sentence
                           children: <TextSpan>[
                             const TextSpan(text: "Don't have an account? "),
                             TextSpan(
@@ -189,14 +203,14 @@ class LoginScreen extends HookConsumerWidget {
                               style: const TextStyle(
                                 color: Colors.blue,
                                 fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline, // Optional: underline it
+                                decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {context.go('/signup');},
                             ),
                           ],
                         ),
-                        textAlign: TextAlign.center, // Optional: if you want the whole text centered
+                        textAlign: TextAlign.center,
                       ),
 
                       //For visual consistency
@@ -227,7 +241,7 @@ class _TopSection extends StatelessWidget {
           "Good to see you again 👋",
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineMedium?.copyWith(
-            color: Color(0xFF121212),
+            //color: Color(0xFF121212),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -238,7 +252,7 @@ class _TopSection extends StatelessWidget {
           "Continue with smarter payments, fewer delays,\nand total control",
           textAlign: TextAlign.start,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: Colors.black54,
+           // color: Colors.black54,
             fontWeight: FontWeight.bold,
           ),
         ),
