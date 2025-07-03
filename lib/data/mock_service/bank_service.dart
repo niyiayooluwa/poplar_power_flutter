@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../model/bank_notification.dart';
 import '../model/transaction_class.dart';
 import '../model/user_class.dart';
@@ -18,21 +19,38 @@ class BankService {
     return [
       Transaction(
         title: 'Starbucks',
-        amount: -5.67,
-        date: 'Today',
-        icon: Icons.local_cafe,
+        amount: -400.67,
+        date: 'June 3rd, 9:15:48',
+        status: 'Successful',
+        icon: Icons.arrow_upward,
       ),
       Transaction(
-        title: 'Salary Deposit',
-        amount: 3500.00,
-        date: 'Yesterday',
-        icon: Icons.work,
+        title: 'Transfer from Z-Merchant',
+        amount: 35000.00,
+        date: 'June 2nd, 13:30:18',
+        status: 'Successful',
+        icon: Icons.arrow_downward,
       ),
       Transaction(
-        title: 'Amazon',
-        amount: -89.99,
+        title: 'Temu',
+        amount: -5000.00,
+        date: 'June 1st, 12:18:55',
+        status: 'Successful',
+        icon: Icons.arrow_upward,
+      ),
+      Transaction(
+        title: 'Temu',
+        amount: -5000.00,
+        date: 'June 1st, 12:15:32',
+        icon: Icons.arrow_upward,
+        status: 'Failed',
+      ),
+      Transaction(
+        title: 'Electricity',
+        amount: -1890.99,
         date: '2 days ago',
-        icon: Icons.shopping_cart,
+        status: 'Successful',
+        icon: Icons.arrow_upward,
       ),
     ];
   }

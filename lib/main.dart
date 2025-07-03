@@ -8,11 +8,7 @@ import 'package:poplar_power/ui/core/ui/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ⛔ NO overlays: go behind nav + status bars fully
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-  // ✅ Actually make both transparent — no scrim
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

@@ -13,9 +13,26 @@ class TransactionList extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recent Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        SizedBox(height: 16),
-        ...transactions.map((transaction) => TransactionItem(transaction: transaction)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+                'Recent Transactions',
+                style: Theme.of(context).textTheme.titleLarge
+            ),
+
+            InkWell(
+              onTap: () {},
+              child: Text(
+                'See More >',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            )
+          ],
+        ),
+
+        ...transactions.map((transaction)
+        => TransactionItem(transaction: transaction)),
       ],
     );
   }
@@ -29,13 +46,17 @@ class TransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1))],
+      //margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 12,
       ),
+
+      decoration: BoxDecoration(
+        //color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+
       child: Row(
         children: [
           Container(
@@ -44,22 +65,56 @@ class TransactionItem extends StatelessWidget {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(transaction.icon, color: Colors.grey[600]),
+            child: Icon(
+                transaction.icon,
+                color: Colors.grey[600]
+            ),
           ),
+
+
           SizedBox(width: 16),
+
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(transaction.title, style: TextStyle(fontWeight: FontWeight.w600)),
-                Text(transaction.date, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                Text(
+                    transaction.title,
+                    style: TextStyle(fontWeight: FontWeight.w600)
+                ),
+
+                Text(
+                    transaction.date,
+                    style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12
+                    )
+                ),
               ],
             ),
           ),
-          Text(
-            transaction.formattedAmount,
-            style: TextStyle(fontWeight: FontWeight.bold, color: transaction.amountColor),
-          ),
+
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                transaction.formattedAmount,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: transaction.amountColor
+                ),
+              ),
+
+              Text(
+                transaction.status,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: transaction.amountColor,
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );

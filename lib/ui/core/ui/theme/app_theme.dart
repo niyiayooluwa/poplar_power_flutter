@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Private constructor to prevent instantiation
@@ -209,8 +210,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: _lightColorScheme,
-      textTheme: _textTheme,
-      fontFamily: 'Inter', // Modern, clean font for fintech
+      textTheme: GoogleFonts.spaceGroteskTextTheme(_textTheme),
       // App Bar Theme
       appBarTheme: const AppBarTheme(
         elevation: 0,

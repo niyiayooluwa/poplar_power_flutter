@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/ui/home/widget/primary_actions.dart';
+import 'package:poplar_power/ui/home/widget/quick_actions.dart';
 import 'package:poplar_power/ui/home/widget/transaction_list.dart';
 
-import 'balance_card.dart';
+import 'widget/balance_card.dart';
 
 class HomeScreen extends HookConsumerWidget {
   const HomeScreen({super.key});
@@ -14,7 +16,7 @@ class HomeScreen extends HookConsumerWidget {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.white,
+      //backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -22,16 +24,19 @@ class HomeScreen extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const BalanceCard(),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      //QuickActions(),
-                      SizedBox(height: 30),
-                      TransactionList(),
+                      PrimaryActions(),
+                      SizedBox(height: 32),
+                      QuickActions(),
+                      SizedBox(height: 32),
+                      TransactionList()
                     ],
                   ),
                 ),

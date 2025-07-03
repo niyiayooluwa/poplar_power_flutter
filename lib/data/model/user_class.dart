@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class User {
   final String firstName;
   final String lastName;
@@ -12,6 +14,20 @@ class User {
   });
 
   // Helper methods (business logic)
-  String get formattedBalance => '\$${balance.toStringAsFixed(2)}';
+  String get formattedBalance {
+    final currencyFormatter = NumberFormat.currency(
+        locale: 'en_US',
+        symbol: '₦',
+        decimalDigits: 2
+    );
+
+    String formattedNumber = currencyFormatter.format(balance.abs());
+
+    final numberPartFormatter = NumberFormat("#,##0.00", "en_US");
+
+    String formattedValue = numberPartFormatter.format(balance.abs());
+
+    return '\u20A6$formattedValue';
+  }
   bool get hasPositiveBalance => balance > 0;
 }
