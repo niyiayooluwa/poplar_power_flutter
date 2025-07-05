@@ -11,7 +11,7 @@ class BankService {
       firstName: "John",
       lastName: "Doe",
       email: 'john.doe@email.com',
-      balance: 12345.67,
+      balance: 33345.67,
     );
   }
 
@@ -20,37 +20,44 @@ class BankService {
       Transaction(
         title: 'Starbucks',
         amount: -400.67,
-        date: 'June 3rd, 9:15:48',
-        status: 'Successful',
+        date: DateTime(2025, 7, 3, 9, 15, 48),
+        status: TransactionStatus.pending,
         icon: Icons.arrow_upward,
       ),
       Transaction(
         title: 'Transfer from Z-Merchant',
         amount: 35000.00,
-        date: 'June 2nd, 13:30:18',
-        status: 'Successful',
+        date: DateTime(2025, 7, 2, 13, 30, 18),
+        status: TransactionStatus.success,
         icon: Icons.arrow_downward,
       ),
       Transaction(
         title: 'Temu',
         amount: -5000.00,
-        date: 'June 1st, 12:18:55',
-        status: 'Successful',
+        date: DateTime(2025, 7, 1, 12, 18, 55),
+        status: TransactionStatus.success,
         icon: Icons.arrow_upward,
       ),
       Transaction(
         title: 'Temu',
         amount: -5000.00,
-        date: 'June 1st, 12:15:32',
-        icon: Icons.arrow_upward,
-        status: 'Failed',
+        date: DateTime(2025, 7, 1, 12, 15, 32),
+        icon: Icons.cancel_outlined,
+        status: TransactionStatus.failed,
       ),
       Transaction(
         title: 'Electricity',
         amount: -1890.99,
-        date: '2 days ago',
-        status: 'Successful',
-        icon: Icons.arrow_upward,
+        date: DateTime(2025, 6, 30, 15, 55, 29),
+        status: TransactionStatus.reversed,
+        icon: Icons.subdirectory_arrow_left_sharp,
+      ),
+      Transaction(
+        title: 'Electricity',
+        amount: -1890.99,
+        date: DateTime(2025, 6, 30, 15, 55, 29),
+        status: TransactionStatus.reversed,
+        icon: Icons.subdirectory_arrow_left_sharp,
       ),
     ];
   }

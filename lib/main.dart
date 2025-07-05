@@ -31,7 +31,7 @@ class PoplarPowerApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Poplar Power',
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      //darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,

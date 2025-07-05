@@ -25,7 +25,7 @@ class PrimaryActions extends HookConsumerWidget {
                 child: PillActionItem(
                   icon: Icons.send,
                   label: 'Send',
-                  onTap: () {context.go('/send');},
+                  onTap: () {context.push('/send');},
                 ),
               ),
 
@@ -34,7 +34,7 @@ class PrimaryActions extends HookConsumerWidget {
                 child: PillActionItem(
                   icon: Icons.qr_code,
                   label: 'Scan',
-                  onTap: () => context.go('/scan'),
+                  onTap: () => context.push('/scan'),
                 ),
               ),
 
@@ -43,7 +43,7 @@ class PrimaryActions extends HookConsumerWidget {
                 child: PillActionItem(
                   icon: Icons.account_balance_wallet,
                   label: 'Top Up',
-                  onTap: () => context.go('/topup'),
+                  onTap: () => context.push('/topup'),
                 ),
               ),
             ]

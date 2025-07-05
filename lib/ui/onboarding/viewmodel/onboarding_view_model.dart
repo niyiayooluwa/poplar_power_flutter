@@ -16,7 +16,7 @@ class OnboardingViewModel extends _$OnboardingViewModel {
   int build() => 0;
 
   void navigateToNext(context) {
-    GoRouter.of(context).go('/home');
+    GoRouter.of(context).go('/get-started');
   }
 
   /// Advances to the next page if not already on the last one.

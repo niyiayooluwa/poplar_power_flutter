@@ -25,6 +25,8 @@ class HomeScreen extends HookConsumerWidget {
             children: [
               const BalanceCard(),
               const SizedBox(height: 24),
+              const PrimaryActions(),
+              const SizedBox(height: 12),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -32,8 +34,7 @@ class HomeScreen extends HookConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      PrimaryActions(),
-                      SizedBox(height: 32),
+                      SizedBox(height: 24),
                       QuickActions(),
                       SizedBox(height: 32),
                       TransactionList()

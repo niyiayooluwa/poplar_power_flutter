@@ -3,18 +3,22 @@ import 'package:go_router/go_router.dart';
 import 'package:poplar_power/ui/auth/login/widget/login_screen.dart';
 import 'package:poplar_power/ui/auth/signup/widget/sign_up_one_screen.dart';
 import 'package:poplar_power/ui/auth/signup/widget/sign_up_two_screen.dart';
+import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/onboarding/widget/get_started.dart';
 import 'package:poplar_power/ui/onboarding/widget/onboarding.dart';
 import 'package:poplar_power/ui/splash/widget/splash_screen.dart';
-import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
+import '../data/model/transaction_class.dart';
+import '../ui/send/widget/send_screen.dart';
+import '../ui/transaction_history_detail/transaction_detail_screen.dart';
+import '../ui/transaction_history_detail/transaction_history_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/onboarding',
   routes: [
     /// Public routes - no navbar
     GoRoute(
@@ -63,6 +67,34 @@ final GoRouter appRouter = GoRouter(
           pageBuilder: (context, state) => const NoTransitionPage(child: MoreScreen()),
         ),
       ],
+    ),
+
+    GoRoute(
+      path: '/send',
+      builder: (context, state) => const SendScreen(),
+    ),
+
+    GoRoute(
+      path: '/scan',
+      builder: (context, state) => const SendScreen(),
+    ),
+
+    GoRoute(
+      path: '/topup',
+      builder: (context, state) => const SendScreen(),
+    ),
+
+    GoRoute(
+      path: '/transaction_history_detail-history',
+      builder: (context, state) => const TransactionHistoryScreen(),
+    ),
+
+    GoRoute(
+      path: '/transaction_history_detail-details',
+      builder: (context, state) {
+        final transaction = state.extra as Transaction;
+        return TransactionDetailScreen(transaction: transaction);
+      },
     ),
   ],
 );
