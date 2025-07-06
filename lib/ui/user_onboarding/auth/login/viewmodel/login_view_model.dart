@@ -1,6 +1,6 @@
 // lib/ui/auth/view_model/auth_view_model.dart
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../data/mock_service/mock_auth_service.dart';
+import '../../../../../data/mock_service/mock_auth_service.dart';
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {

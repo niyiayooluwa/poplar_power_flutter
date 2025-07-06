@@ -1,10 +1,8 @@
 // lib/ui/auth/viewmodel/signup_view_model.dart
 
 import 'dart:ui';
-
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import '../../../../data/mock_service/mock_auth_service.dart';
+import '../../../../../data/mock_service/mock_auth_service.dart';
 
 /// Model class to hold signup data across steps.
 class SignupFormData {

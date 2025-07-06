@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/ui/auth/login/widget/login_screen.dart';
-import 'package:poplar_power/ui/auth/signup/widget/sign_up_one_screen.dart';
-import 'package:poplar_power/ui/auth/signup/widget/sign_up_two_screen.dart';
 import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
-import 'package:poplar_power/ui/onboarding/widget/get_started.dart';
-import 'package:poplar_power/ui/onboarding/widget/onboarding.dart';
-import 'package:poplar_power/ui/splash/widget/splash_screen.dart';
 import '../data/model/transaction_class.dart';
 import '../ui/send/widget/send_screen.dart';
 import '../ui/transaction_history_detail/transaction_detail_screen.dart';
 import '../ui/transaction_history_detail/transaction_history_screen.dart';
+import '../ui/user_onboarding/auth/login/widget/login_screen.dart';
+import '../ui/user_onboarding/auth/signup/widget/sign_up_one_screen.dart';
+import '../ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
+import '../ui/user_onboarding/onboarding/widget/get_started.dart';
+import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
+import '../ui/user_onboarding/splash/widget/splash_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/onboarding',
+  initialLocation: '/home',
   routes: [
     /// Public routes - no navbar
     GoRoute(
