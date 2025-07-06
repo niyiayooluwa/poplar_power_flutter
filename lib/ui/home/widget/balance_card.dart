@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../data/mock_service/app_providers.dart';
@@ -28,17 +29,20 @@ class BalanceCard extends HookConsumerWidget {
           children: [
             Text(
                 state.value,
-                style: Theme.of(context).textTheme.titleMedium
+                style: Theme.of(context).textTheme.titleMedium,
             ),
 
             Row(
               children: [
-                const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Icon(
-                    Icons.notifications,
-                    size: 24,
+                InkWell(
+                  onTap: () {context.push('/notifications');},
+                  child:const SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Icon(
+                      Icons.notifications,
+                      size: 24,
+                    ),
                   ),
                 ),
 
@@ -46,11 +50,11 @@ class BalanceCard extends HookConsumerWidget {
 
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
                         color: theme.primaryColor,
                         width: 2,
-                    )
+                      )
                   ),
                   width: 32,
                   height: 32,

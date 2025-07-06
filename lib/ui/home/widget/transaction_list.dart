@@ -26,9 +26,12 @@ class TransactionList extends ConsumerWidget {
               onTap: () {
                 context.push('/transaction_history_detail-history');
               },
-              child: Text(
-                'See More >',
-                style: Theme.of(context).textTheme.bodySmall,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Text(
+                  'See More >',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             )
           ],

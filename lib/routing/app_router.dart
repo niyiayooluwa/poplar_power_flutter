@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
+import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import '../data/model/transaction_class.dart';
 import '../ui/send/widget/send_screen.dart';
 import '../ui/transaction_history_detail/transaction_detail_screen.dart';
@@ -82,6 +83,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/topup',
       builder: (context, state) => const SendScreen(),
+    ),
+
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationScreen(),
     ),
 
     GoRoute(
