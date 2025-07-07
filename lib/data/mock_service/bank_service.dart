@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import '../model/bank_notification.dart';
 import '../model/transaction_class.dart';
 import '../model/user_class.dart';

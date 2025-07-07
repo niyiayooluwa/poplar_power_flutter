@@ -22,7 +22,7 @@ class BankNotification {
     final month = DateFormat.MMMM().format(date); // July
     final time = DateFormat.Hms().format(date); // 9:15:48
 
-    return '$month ${day}$daySuffix, $time';
+    return '$month $day$daySuffix, $time';
   }
 
   /// Private method to get the day suffix

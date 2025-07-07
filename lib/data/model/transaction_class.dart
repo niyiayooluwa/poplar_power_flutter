@@ -73,7 +73,7 @@ class Transaction {
     final month = DateFormat.MMMM().format(date); // July
     final time = DateFormat.Hms().format(date); // 9:15:48
 
-    return '$month ${day}$daySuffix, $time';
+    return '$month $day$daySuffix, $time';
   }
 
   /// Private method to get the day suffix
@@ -91,7 +91,7 @@ class Transaction {
     final day = DateFormat('d').format(date);
     final suffix = _getDaySuffix(int.parse(day));
     final month = DateFormat('MMMM').format(date);
-    return '$month ${day}$suffix';
+    return '$month $day$suffix';
   }
 
   /// Example: "09:15 AM"
