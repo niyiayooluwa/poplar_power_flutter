@@ -1,5 +1,6 @@
 // File: lib/widgets/balance_card.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class QuickActions extends HookConsumerWidget {
@@ -14,21 +15,25 @@ class QuickActions extends HookConsumerWidget {
         'icon': Icons.wifi,
         'label': 'Internet',
         'color': Colors.blue,
+        'route': '/internet'
       },
       {
         'icon': Icons.call,
         'label': 'Airtime',
         'color': Colors.green,
+        'route': '/airtime'
       },
       {
         'icon': Icons.power,
         'label': 'Electricity',
         'color': Colors.orange,
+        'route': '/electricity'
       },
       {
         'icon': Icons.more_horiz,
         'label': 'More',
-        'color': Colors.grey
+        'color': Colors.grey,
+        'route': '/more'
       }
     ];
 
@@ -51,7 +56,7 @@ class QuickActions extends HookConsumerWidget {
               iconColor: item['color'],
               label: item['label'],
               onTap: () {
-                // Implement specific action
+                context.push('${item['route']}');
               },
             );
           }),

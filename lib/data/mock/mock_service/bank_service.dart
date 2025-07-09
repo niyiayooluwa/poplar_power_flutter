@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../model/bank_notification.dart';
-import '../model/transaction_class.dart';
-import '../model/user_class.dart';
+import '../../model/bank_notification.dart';
+import '../../model/transaction_class.dart';
+import '../../model/user_class.dart';
 
 class BankService {
   // Fake data - Replace this with real API calls

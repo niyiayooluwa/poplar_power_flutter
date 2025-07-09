@@ -9,7 +9,11 @@ class BottomNavShell extends StatelessWidget {
     required this.child
   });
 
-  static const tabs = ['/home', '/pay', '/more'];
+  static const tabs = [
+    '/home',
+    '/pay',
+    '/more',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +26,7 @@ class BottomNavShell extends StatelessWidget {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: NavigationBar(
+          height: 60,
           selectedIndex: currentIndex,
           onDestinationSelected: (index) {
             context.go(tabs[index]);

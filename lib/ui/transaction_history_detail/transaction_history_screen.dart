@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../data/mock_service/app_providers.dart';
+import '../../data/mock/mock_service/app_providers.dart';
 import '../../data/model/transaction_class.dart';
 import '../core/widgets/transaction_widget.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../ui/user_onboarding/auth/signup/viewmodel/signup_view_model.dart';
+import '../../../ui/user_onboarding/auth/signup/viewmodel/signup_view_model.dart';
 
 
 /// Simulates authentication service. Replace with real implementation later.

@@ -4,6 +4,7 @@ import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import '../data/model/transaction_class.dart';
+import '../ui/quick_actions/internet/widget/internet_screen.dart';
 import '../ui/send/widget/send_screen.dart';
 import '../ui/transaction_history_detail/transaction_detail_screen.dart';
 import '../ui/transaction_history_detail/transaction_history_screen.dart';
@@ -19,7 +20,7 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/onboarding',
+  initialLocation: '/home',
   routes: [
     /// Public routes - no navbar
     GoRoute(
@@ -88,6 +89,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationScreen(),
+    ),
+
+    GoRoute(
+      path: '/internet',
+      builder: (context, state) => const InternetScreen(),
     ),
 
     GoRoute(

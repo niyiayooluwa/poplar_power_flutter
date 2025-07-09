@@ -14,7 +14,7 @@ class PrimaryActions extends HookConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final buttonWidth = (constraints.maxWidth - 32) / 3;
+        final buttonWidth = (constraints.maxWidth - 16) / 2;
 
         return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -29,14 +29,15 @@ class PrimaryActions extends HookConsumerWidget {
                 ),
               ),
 
-              SizedBox(
+              //TODO(): Future implementation maybe?
+              /*SizedBox(
                 width: buttonWidth,
                 child: PillActionItem(
                   icon: Icons.qr_code,
                   label: 'Scan',
                   onTap: () => context.push('/scan'),
                 ),
-              ),
+              ),*/
 
               SizedBox(
                 width: buttonWidth,

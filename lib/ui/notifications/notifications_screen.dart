@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/ui/notifications/widget/notification_item.dart';
-import '../../data/mock_service/app_providers.dart';
+import '../../data/mock/mock_service/app_providers.dart';
 
 class NotificationScreen extends HookConsumerWidget{
  const NotificationScreen({super.key});
