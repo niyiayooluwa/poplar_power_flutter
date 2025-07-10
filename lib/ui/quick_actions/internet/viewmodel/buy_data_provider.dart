@@ -2,6 +2,7 @@
 ///
 /// It includes providers for the data bundle repository and the view model
 /// responsible for handling the business logic of buying data.
+library;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../data/mock/mock_repository/mock_data_repository.dart';
 import 'buy_data_view_model.dart';

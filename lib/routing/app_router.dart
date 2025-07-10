@@ -14,6 +14,7 @@ import '../ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
 import '../ui/user_onboarding/onboarding/widget/get_started.dart';
 import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
+import '../ui/quick_actions/internet/widget/confirm_details_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -23,10 +24,7 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
   routes: [
     /// Public routes - no navbar
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
@@ -35,10 +33,7 @@ final GoRouter appRouter = GoRouter(
       path: '/get-started',
       builder: (context, state) => const GetStartedScreen(),
     ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/signup',
       builder: (context, state) => const SignupStep1Screen(),
@@ -56,35 +51,29 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/home',
           name: 'home',
-          pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: HomeScreen()),
         ),
         GoRoute(
           path: '/pay',
           name: 'pay',
-          pageBuilder: (context, state) => const NoTransitionPage(child: PayScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: PayScreen()),
         ),
         GoRoute(
           path: '/more',
           name: 'more',
-          pageBuilder: (context, state) => const NoTransitionPage(child: MoreScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MoreScreen()),
         ),
       ],
     ),
 
-    GoRoute(
-      path: '/send',
-      builder: (context, state) => const SendScreen(),
-    ),
+    GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
 
-    GoRoute(
-      path: '/scan',
-      builder: (context, state) => const SendScreen(),
-    ),
+    GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
 
-    GoRoute(
-      path: '/topup',
-      builder: (context, state) => const SendScreen(),
-    ),
+    GoRoute(path: '/topup', builder: (context, state) => const SendScreen()),
 
     GoRoute(
       path: '/notifications',
@@ -97,12 +86,17 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/transaction_history_detail-history',
+      path: '/confirm-details',
+      builder: (context, state) => const ConfirmDetailsScreen(),
+    ),
+
+    GoRoute(
+      path: '/transaction-history',
       builder: (context, state) => const TransactionHistoryScreen(),
     ),
 
     GoRoute(
-      path: '/transaction_history_detail-details',
+      path: '/transaction-detail',
       builder: (context, state) {
         final transaction = state.extra as Transaction;
         return TransactionDetailScreen(transaction: transaction);

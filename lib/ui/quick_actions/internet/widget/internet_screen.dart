@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
+import '../../../../data/services/confirm_transaction_service.dart';
 import '../../../core/widgets/smart_input_field.dart';
 import '../viewmodel/buy_data_provider.dart';
 
 /// [InternetScreen] is a widget that allows users to purchase internet data bundles.
 ///
 /// It uses a [HookConsumerWidget] to manage state and interact with the [buyDataViewModelProvider].
-class InternetScreen extends HookConsumerWidget{
+class InternetScreen extends HookConsumerWidget {
   /// Creates an [InternetScreen] widget.
-  const InternetScreen ({super.key});
+  const InternetScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,11 +39,33 @@ class InternetScreen extends HookConsumerWidget{
       viewModel.reset(); // Reset the view model state
     }
 
+    void showDataConfirmation(BuildContext context) {
+      TransactionSheetService.showConfirmation(
+        context,
+        title: 'Confirm Data Purchase',
+        amount: '₦${selectedBundle?.price}',
+        description: 'Data Purchase',
+        transactionConfig: TransactionSheetService.dataConfig,
+        paymentMethod: TransactionSheetService.walletConfig,
+        referenceNumber: 'AIR123456789',
+        fields: TransactionSheetService.createAirtimeFields(
+          phoneNumber: '+234 801 234 5678',
+          network: '$selectedISP',
+          amount: '₦${selectedBundle?.price}',
+        ),
+        onConfirm: () {
+          Navigator.pop(context);
+          // Handle airtime purchase
+        },
+      );
+    }
+
     // Effect hook to listen for changes in the phone number input field
     useEffect(() {
       // Listener to update the phone number in the view model
       phoneController.addListener(() {
-        ref.read(buyDataViewModelProvider.notifier)
+        ref
+            .read(buyDataViewModelProvider.notifier)
             .setPhoneNumber(phoneController.text);
       });
       // Return null as there's no cleanup needed for this effect
@@ -55,9 +76,10 @@ class InternetScreen extends HookConsumerWidget{
     /// This ensures that the state is clean when the user navigates away from the screen.
     useEffect(() {
       // Return a function that calls resetBuyDataFlow when the widget is disposed
-      return () {resetBuyDataFlow();};
+      return () {
+        resetBuyDataFlow();
+      };
     }, const []);
-
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -88,7 +110,9 @@ class InternetScreen extends HookConsumerWidget{
                   ispController.text = name;
                   bundleController.clear();
                   priceController.clear();
-                  viewModel.selectISP(name); // Update the selected ISP in the view model
+                  viewModel.selectISP(
+                    name,
+                  ); // Update the selected ISP in the view model
                 },
               ),
 
@@ -114,7 +138,9 @@ class InternetScreen extends HookConsumerWidget{
                   // When a bundle is selected, update the controller, view model, and price
                   onSelected: (name) {
                     bundleController.text = name;
-                    viewModel.selectBundle(name); // Update the selected bundle in the view model
+                    viewModel.selectBundle(
+                      name,
+                    ); // Update the selected bundle in the view model
 
                     final bundle = bundles.firstWhere((b) => b.name == name);
                     // Display the price of the selected bundle
@@ -125,13 +151,41 @@ class InternetScreen extends HookConsumerWidget{
               const SizedBox(height: 16),
 
               /// Price Display
-              if(selectedBundle != null)
+              if (selectedBundle != null)
                 // Show bundle price if a bundle is selected
                 SmartInputField(
                   label: 'Price',
                   controller: priceController,
                   readOnly: true,
                 ),
+
+              Spacer(),
+
+              /// Buy Button
+              /// When the buy button is pressed, it navigates to the payment screen
+              /// with the selected ISP, bundle, and phone number having been set in the view model.
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: viewModel.isFormValid
+                      ? () => showDataConfirmation(context)//context.push('/confirm-details')
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    fixedSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Next',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -139,6 +193,3 @@ class InternetScreen extends HookConsumerWidget{
     );
   }
 }
-
-
-

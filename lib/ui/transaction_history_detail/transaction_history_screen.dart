@@ -63,7 +63,7 @@ class TransactionHistoryScreen extends HookConsumerWidget {
             onTap: () {
               // Navigate to transaction detail screen
               context.push(
-                '/transaction_history_detail-details',
+                '/transaction-detail',
                 extra: transaction,
               );
             },
