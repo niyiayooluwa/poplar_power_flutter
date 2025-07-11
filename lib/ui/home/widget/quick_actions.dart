@@ -8,8 +8,8 @@ class QuickActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
+    //final theme = Theme.of(context);
+    //final isDarkTheme = theme.brightness == Brightness.dark;
     final List<Map<String, dynamic>> quickActions = [
       {
         'icon': Icons.wifi,

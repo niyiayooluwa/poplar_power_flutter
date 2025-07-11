@@ -11,6 +11,7 @@ class SmartInputField extends StatelessWidget {
   final List<String>? options;
   final bool enableSearch;
   final void Function(String)? onSelected;
+  final Function(String)? onChanged;
 
   const SmartInputField({
     super.key,
@@ -23,6 +24,7 @@ class SmartInputField extends StatelessWidget {
     this.options,
     this.enableSearch = false,
     this.onSelected,
+    this.onChanged,
   });
 
   @override

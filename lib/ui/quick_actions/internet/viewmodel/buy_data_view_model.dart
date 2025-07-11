@@ -51,10 +51,11 @@ class BuyDataViewModel extends StateNotifier<BuyDataState> {
   /// Takes the name of the bundle as a parameter and updates the state
   /// with the selected bundle.
   void selectBundle(String bundleName) {
-    final bundle = state.selectedISP?.bundles
-        .firstWhere((b) => b.name == bundleName, /*orElse: () => null*/);
+    final bundle = state.selectedISP?.bundles.firstWhere(
+      (b) => b.name == bundleName /*orElse: () => null*/,
+    );
 
-    state = state.copyWith(selectedBundle: bundle,);
+    state = state.copyWith(selectedBundle: bundle);
   }
 
   void reset() {
@@ -64,6 +65,7 @@ class BuyDataViewModel extends StateNotifier<BuyDataState> {
       phoneNumber: '',
     );
   }
+
   /// Returns true if the form is valid, false otherwise.
   ///
   /// The form is considered valid if both an ISP and a data bundle

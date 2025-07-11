@@ -38,6 +38,7 @@ flutter:
     - assets/drawables/get_started_bg.svg
     - assets/login_screen_bg.png
     - assets/dark_variant.png
+    - assets/networks/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

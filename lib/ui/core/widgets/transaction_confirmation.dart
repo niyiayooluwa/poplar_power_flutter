@@ -68,25 +68,24 @@ class ConfirmTransactionSheet extends StatelessWidget {
         children: [
           _buildDragHandle(),
           _buildHeader(context),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (amount != null) _buildAmountSection(context),
-                  _buildTransactionDetails(context),
-                  if (paymentMethod != null) _buildPaymentMethod(context),
-                  if (showSecurityBadge) _buildSecurityBadge(context),
-                  if (referenceNumber != null) _buildReferenceNumber(context),
-                  const SizedBox(height: 24),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                if (amount != null) _buildAmountSection(context),
+                _buildTransactionDetails(context),
+                //if (paymentMethod != null) _buildPaymentMethod(context),
+                //if (showSecurityBadge) _buildSecurityBadge(context),
+                if (referenceNumber != null) _buildReferenceNumber(context),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
           _buildActionButtons(context),
           if (processingTime != null) _buildProcessingTime(context),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
         ],
       ),
     );

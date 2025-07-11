@@ -24,7 +24,7 @@ class TransactionList extends ConsumerWidget {
 
             InkWell(
               onTap: () {
-                context.push('/transaction_history_detail-history');
+                context.push('/transaction-history');
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -41,7 +41,7 @@ class TransactionList extends ConsumerWidget {
             InkWell(
               onTap: () {
                 // this is what happens when user taps the transaction
-                context.push('/transaction_history_detail-details', extra: transaction);
+                context.push('/transaction-detail', extra: transaction);
               },
               child: TransactionItem(transaction: transaction),
             )

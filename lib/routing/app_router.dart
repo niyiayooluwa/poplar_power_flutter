@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
+import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
 import '../data/model/transaction_class.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
 import '../ui/send/widget/send_screen.dart';
@@ -14,7 +15,6 @@ import '../ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
 import '../ui/user_onboarding/onboarding/widget/get_started.dart';
 import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
-import '../ui/quick_actions/internet/widget/confirm_details_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -80,15 +80,18 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const NotificationScreen(),
     ),
 
+    //=========================================================================
+    // Quick actions routes
     GoRoute(
       path: '/internet',
       builder: (context, state) => const InternetScreen(),
     ),
 
     GoRoute(
-      path: '/confirm-details',
-      builder: (context, state) => const ConfirmDetailsScreen(),
+      path: '/airtime',
+      builder: (context, state) => const AirtimeScreen(),
     ),
+    //=========================================================================
 
     GoRoute(
       path: '/transaction-history',

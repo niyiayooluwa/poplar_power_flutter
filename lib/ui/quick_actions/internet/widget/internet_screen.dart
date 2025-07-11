@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../../../../data/model/transaction_class.dart';
 import '../../../../data/services/confirm_transaction_service.dart';
+import '../../../core/widgets/pin_input.dart';
 import '../../../core/widgets/smart_input_field.dart';
 import '../viewmodel/buy_data_provider.dart';
 
@@ -30,6 +32,8 @@ class InternetScreen extends HookConsumerWidget {
     final selectedBundle = state.selectedBundle;
     final bundles = selectedISP?.bundles ?? [];
 
+    final isProcessing = useState(false);
+
     /// Resets the buy data flow by clearing all input fields and resetting the view model state.
     void resetBuyDataFlow() {
       ispController.clear();
@@ -47,16 +51,42 @@ class InternetScreen extends HookConsumerWidget {
         description: 'Data Purchase',
         transactionConfig: TransactionSheetService.dataConfig,
         paymentMethod: TransactionSheetService.walletConfig,
-        referenceNumber: 'AIR123456789',
-        fields: TransactionSheetService.createAirtimeFields(
-          phoneNumber: '+234 801 234 5678',
-          network: '$selectedISP',
+        fields: TransactionSheetService.createDataFields(
+          phoneNumber: phoneController.text,
+          network: selectedISP!.name,
           amount: '₦${selectedBundle?.price}',
+          plan: '₦${selectedBundle?.name}',
         ),
-        onConfirm: () {
-          Navigator.pop(context);
-          // Handle airtime purchase
-        },
+        onConfirm: () async {
+          context.pop(); // Dismiss the bottom sheet
+          await Future.delayed(Duration(milliseconds: 500)); // Simulate API call
+          // Show the bottom sheet and wait for the result (PIN)
+          final pin = await PinEntryService.showPinEntryWithRetry(
+            context,
+            title: 'Authentication Required',
+            validator: (pin) => pin == '1234', // Your validation logic
+            maxAttempts: 3,
+          );
+
+          // If user completed PIN entry
+          if (pin != null) {
+            isProcessing.value = true;
+
+            await Future.delayed(Duration(seconds: 1)); // Simulate API call
+
+            isProcessing.value = false; // Optional slight delay
+            context.replace(
+              '/transaction-detail',
+              extra: Transaction(
+                title: 'Data Purchase',
+                amount: -selectedBundle!.price,
+                date: DateTime.timestamp(),
+                status: TransactionStatus.success,
+                icon: Icons.wifi,
+              ),
+            );
+          }
+        }
       );
     }
 
