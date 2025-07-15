@@ -24,54 +24,54 @@ class AirtimeScreen extends HookConsumerWidget {
     final isProcessing = useState(false);
 
     useEffect(() {
-    // Only update controllers if the values are different to prevent loops
-    if (amountController.text != (state.customAmount?.toString() ?? '')) {
-      amountController.text = state.customAmount?.toString() ?? '';
-    }
-    if (phoneController.text != state.phoneNumber) {
-      phoneController.text = state.phoneNumber;
-    }
-    return null;
-  }, [state.customAmount, state.phoneNumber]);
+      // Only update controllers if the values are different to prevent loops
+      if (amountController.text != (state.customAmount?.toString() ?? '')) {
+        amountController.text = state.customAmount?.toString() ?? '';
+      }
+      if (phoneController.text != state.phoneNumber) {
+        phoneController.text = state.phoneNumber;
+      }
+      return null;
+    }, [state.customAmount, state.phoneNumber]);
 
-  // Handle amount input changes - defer state updates
-  useEffect(() {
-    void listener() {
-      final text = amountController.text.trim();
-      // Use Future.microtask to defer state updates until after build
-      Future.microtask(() {
-        if (text.isEmpty) {
-          viewModel.clearAmounts();
-        } else {
-          final amount = int.tryParse(text);
-          if (amount != null) {
-            viewModel.setCustomAmount(amount);
+    // Handle amount input changes - defer state updates
+    useEffect(() {
+      void listener() {
+        final text = amountController.text.trim();
+        // Use Future.microtask to defer state updates until after build
+        Future.microtask(() {
+          if (text.isEmpty) {
+            viewModel.clearAmounts();
+          } else {
+            final amount = int.tryParse(text);
+            if (amount != null) {
+              viewModel.setCustomAmount(amount);
+            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    amountController.addListener(listener);
-    return () => amountController.removeListener(listener);
-  }, [amountController]);
+      amountController.addListener(listener);
+      return () => amountController.removeListener(listener);
+    }, [amountController]);
 
-  // Handle phone number changes - already using Future.microtask correctly
-  useEffect(() {
-    void listener() {
-      Future.microtask(() {
-        viewModel.setPhoneNumber(phoneController.text.trim());
-      });
-    }
+    // Handle phone number changes - already using Future.microtask correctly
+    useEffect(() {
+      void listener() {
+        Future.microtask(() {
+          viewModel.setPhoneNumber(phoneController.text.trim());
+        });
+      }
 
-    phoneController.addListener(listener);
-    return () => phoneController.removeListener(listener);
-  }, [phoneController]);
+      phoneController.addListener(listener);
+      return () => phoneController.removeListener(listener);
+    }, [phoneController]);
 
-  void showAirtimeConfirmation(BuildContext context) {
-    TransactionSheetService.showConfirmation(
-      context,
-      title: 'Confirm Airtime Purchase',
-      amount: '₦${state.effectiveAmount}',
+    void showAirtimeConfirmation(BuildContext context) {
+      TransactionSheetService.showConfirmation(
+        context,
+        title: 'Confirm Airtime Purchase',
+        amount: '₦${state.effectiveAmount}',
         description: 'Airtime Purchase',
         transactionConfig: TransactionSheetService.airtimeConfig,
         paymentMethod: TransactionSheetService.walletConfig,
@@ -84,7 +84,7 @@ class AirtimeScreen extends HookConsumerWidget {
           try {
             context.pop(); // Dismiss the bottom sheet
             await Future.delayed(const Duration(milliseconds: 500));
-            
+
             // Show the bottom sheet and wait for the result (PIN)
             final pin = await PinEntryService.showPinEntryWithRetry(
               context,
@@ -97,10 +97,12 @@ class AirtimeScreen extends HookConsumerWidget {
             if (pin != null) {
               isProcessing.value = true;
 
-              await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+              await Future.delayed(
+                const Duration(seconds: 1),
+              ); // Simulate API call
 
               isProcessing.value = false;
-              
+
               if (context.mounted) {
                 context.replace(
                   '/transaction-detail',
@@ -167,12 +169,6 @@ class AirtimeScreen extends HookConsumerWidget {
               ),
 
               const Spacer(),
-              Text(
-                state.isFormValid
-                    ? 'Ready to purchase'
-                    : 'Please complete the form',
-              ),
-              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -192,15 +188,20 @@ class AirtimeScreen extends HookConsumerWidget {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : Text(
-                          'Continue',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          state.isFormValid
+                              ? 'Continue'
+                              : 'Please complete the form',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                 ),
               ),
@@ -263,11 +264,11 @@ class AirtimeScreen extends HookConsumerWidget {
               child: Image.asset(
                 assetPath,
                 fit: BoxFit.fill,
-                height: 40,
-                width: 40,
+                height: 30,
+                width: 30,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
             Text(
               name,
               style: TextStyle(

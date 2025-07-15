@@ -122,7 +122,7 @@ class InternetScreen extends HookConsumerWidget {
           },
         ),
         title: const Text('Internet'), // Title of the app bar
-        centerTitle: true, // Center the title
+        //centerTitle: true, // Center the title
       ),
       body: SafeArea(
         child: Padding(

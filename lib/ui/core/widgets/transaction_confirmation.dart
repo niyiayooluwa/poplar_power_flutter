@@ -57,7 +57,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        //maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -68,26 +68,33 @@ class ConfirmTransactionSheet extends StatelessWidget {
         children: [
           _buildDragHandle(),
           _buildHeader(context),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                if (amount != null) _buildAmountSection(context),
-                _buildTransactionDetails(context),
-                //if (paymentMethod != null) _buildPaymentMethod(context),
-                //if (showSecurityBadge) _buildSecurityBadge(context),
-                if (referenceNumber != null) _buildReferenceNumber(context),
-                const SizedBox(height: 24),
-              ],
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        if (amount != null) _buildAmountSection(context),
+                        _buildTransactionDetails(context),
+                        if (referenceNumber != null) _buildReferenceNumber(context),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           _buildActionButtons(context),
           if (processingTime != null) _buildProcessingTime(context),
-          const SizedBox(height: 24),
+          const SizedBox(height: 36),
         ],
-      ),
+      )
     );
   }
 
