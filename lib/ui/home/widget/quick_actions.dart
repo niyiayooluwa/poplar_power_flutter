@@ -33,7 +33,7 @@ class QuickActions extends HookConsumerWidget {
         'icon': Icons.more_horiz,
         'label': 'More',
         'color': Colors.grey,
-        'route': '/more'
+        'route': '/more-actions'
       }
     ];
 

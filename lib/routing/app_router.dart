@@ -4,7 +4,9 @@ import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
+import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
+import 'package:poplar_power/ui/quick_actions/more_actions.dart';
 import '../data/model/transaction_class.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
 import '../ui/send/widget/send_screen.dart';
@@ -96,6 +98,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/electricity',
       builder: (context, state) => const ElectricityScreen(),
+    ),
+
+    GoRoute(
+      path: '/cable',
+      builder: (context, state) => const CableScreen(),
+    ),
+
+    GoRoute(
+      path: '/more-actions',
+      builder: (context,state) => const MoreActions()
     ),
     //=========================================================================
 
