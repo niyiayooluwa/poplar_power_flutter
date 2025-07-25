@@ -7,6 +7,8 @@ import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dar
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+import 'package:poplar_power/ui/send/widget/send_2nd_step.dart';
+
 import '../data/model/transaction_class.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
 import '../ui/send/widget/send_screen.dart';
@@ -46,7 +48,12 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const SignupStep2Screen(),
     ),
 
-    /// Shell route - wraps screens with bottom nav
+    GoRoute(
+      path: '/home',
+      builder: (context, state) => const HomeScreen(),
+    ),
+
+    /*/// Shell route - wraps screens with bottom nav
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) => BottomNavShell(child: child),
@@ -70,11 +77,19 @@ final GoRouter appRouter = GoRouter(
               const NoTransitionPage(child: MoreScreen()),
         ),
       ],
+    ),*/
+
+    GoRoute(
+        path: '/send',
+        builder: (context, state) => const SendScreen()
     ),
 
-    GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
+    GoRoute(
+      path: '/send2',
+      builder: (context, state) => const Send2ndStepScreen(),
+    ),
 
-    GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
+    //GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
 
     GoRoute(path: '/topup', builder: (context, state) => const SendScreen()),
 
@@ -100,17 +115,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const ElectricityScreen(),
     ),
 
-    GoRoute(
-      path: '/cable',
-      builder: (context, state) => const CableScreen(),
-    ),
+    GoRoute(path: '/cable', builder: (context, state) => const CableScreen()),
 
     GoRoute(
       path: '/more-actions',
-      builder: (context,state) => const MoreActions()
+      builder: (context, state) => const MoreActions(),
     ),
-    //=========================================================================
 
+    //=========================================================================
     GoRoute(
       path: '/transaction-history',
       builder: (context, state) => const TransactionHistoryScreen(),
