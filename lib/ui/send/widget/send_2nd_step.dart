@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:poplar_power/ui/send/viewmodel/send_provider.dart';
 
 import '../../../data/mock/mock_service/app_providers.dart';
+import '../../../data/model/transaction_class.dart';
+import '../../../data/services/confirm_transaction_service.dart';
+import '../../core/widgets/pin_input.dart';
 
 class Send2ndStepScreen extends HookConsumerWidget {
   const Send2ndStepScreen({super.key});
@@ -15,12 +18,15 @@ class Send2ndStepScreen extends HookConsumerWidget {
     final viewModel = ref.read(sendViewModelProvider.notifier);
     final state = ref.watch(sendViewModelProvider);
 
-    final amountString = state.amount ?? '0';
+    final amountString = state.amount;
     final recipientName =
         state.accountName ?? 'Recipient'; // Use actual fetched name
     final recipientBank = state.selectedBank?.name ?? 'Bank';
     final recipientAccountNumber = state.accountNUmber ?? 'Account';
-    final currentBalance = ref.read(userProvider).balance; // Mock current balance
+    final currentBalance = ref
+        .read(userProvider)
+        .balance; // Mock current balance
+    final isProcessing = useState(false);
 
     String formatCurrency(double value) {
       final formatter = NumberFormat.currency(
@@ -29,6 +35,70 @@ class Send2ndStepScreen extends HookConsumerWidget {
         decimalDigits: 0,
       );
       return formatter.format(value);
+    }
+
+    void showTransferConfirmation(BuildContext context) {
+      TransactionSheetService.showConfirmation(
+        context,
+        title: 'Transfer Money',
+        amount: '₦$amountString',
+        description: 'Transfer to $recipientName',
+        transactionConfig: TransactionSheetService.transferConfig,
+        paymentMethod: TransactionSheetService.walletConfig,
+        fields: TransactionSheetService.createTransferFields(
+          recipientName: recipientName,
+          accountNumber: recipientAccountNumber,
+          bankName: recipientBank,
+          fee: '0',
+          total: amountString,
+        ),
+        onConfirm: () async {
+          try {
+            context.pop(); // Dismiss the bottom sheet
+            await Future.delayed(const Duration(milliseconds: 500));
+
+            // Show the bottom sheet and wait for the result (PIN)
+            final pin = await PinEntryService.showPinEntryWithRetry(
+              context,
+              title: 'Authentication Required',
+              validator: (pin) => pin == '1234', // Your validation logic
+              maxAttempts: 3,
+            );
+
+            // If user completed PIN entry
+            if (pin != null) {
+              isProcessing.value = true;
+
+              await Future.delayed(
+                const Duration(seconds: 1),
+              ); // Simulate API call
+
+              isProcessing.value = false;
+
+              if (context.mounted) {
+                ref.invalidate(sendViewModelProvider);
+                context.replace(
+                  '/transaction-detail',
+                  extra: Transaction(
+                    title: 'Transfer to $recipientName',
+                    amount: -int.tryParse(state.amount)!.toDouble(),
+                    date: DateTime.timestamp(),
+                    status: TransactionStatus.success,
+                    icon: Icons.send,
+                  ),
+                );
+              }
+            }
+          } catch (error) {
+            isProcessing.value = false;
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Purchase failed: $error')),
+              );
+            }
+          }
+        },
+      );
     }
 
     return Scaffold(
@@ -54,8 +124,8 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       spreadRadius: 1,
                       blurRadius: 3,
                       offset: const Offset(0, 2),
-                    )
-                  ]
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -180,7 +250,8 @@ class Send2ndStepScreen extends HookConsumerWidget {
                                 height: 55,
                                 child: NumberButton(
                                   text: number,
-                                  onPressed: () => viewModel.handleNumberPress(number),
+                                  onPressed: () =>
+                                      viewModel.handleNumberPress(number),
                                 ),
                               );
                             }),
@@ -189,7 +260,8 @@ class Send2ndStepScreen extends HookConsumerWidget {
                               height: 55,
                               child: NumberButton(
                                 text: '.',
-                                onPressed: () => viewModel.handleNumberPress('.'),
+                                onPressed: () =>
+                                    viewModel.handleNumberPress('.'),
                               ),
                             ),
                             SizedBox(
@@ -197,7 +269,8 @@ class Send2ndStepScreen extends HookConsumerWidget {
                               height: 55,
                               child: NumberButton(
                                 text: '0',
-                                onPressed: () => viewModel.handleNumberPress('0'),
+                                onPressed: () =>
+                                    viewModel.handleNumberPress('0'),
                               ),
                             ),
                             SizedBox(
@@ -209,39 +282,63 @@ class Send2ndStepScreen extends HookConsumerWidget {
                               ),
                             ),
                           ],
-                        )
-
-                      )
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
               const Spacer(),
-
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: amountString != '0'
-                      ? () {
-                    // Handle transfer
-                  }
+                  onPressed: amountString.length >= 3
+                      ? () => showTransferConfirmation(context)
                       : null,
-                style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                fixedSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    fixedSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                  child: isProcessing.value
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : amountString.length >= 3
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.send, color: Colors.white),
+                            const SizedBox(width: 16),
+                            Text(
+                              'Transfer',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          'Please enter a valid amount',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
                 ),
               ),
             ],
@@ -280,13 +377,13 @@ class NumberButton extends HookWidget {
               child: icon != null
                   ? Icon(icon, size: 24, color: Colors.black54)
                   : Text(
-                text!,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.black87,
-                ),
-              ),
+                      text!,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black87,
+                      ),
+                    ),
             ),
           ),
         ),

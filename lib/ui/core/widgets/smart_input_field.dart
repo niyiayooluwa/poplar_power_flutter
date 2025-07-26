@@ -140,12 +140,7 @@ class SmartInputField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: theme.textTheme.bodyLarge),
           const SizedBox(height: 8),
 
           // AbsorbPointer to disable interaction with the TextField if options
@@ -156,11 +151,10 @@ class SmartInputField extends StatelessWidget {
               controller: controller,
               keyboardType: keyboardType,
               maxLength: maxLength,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
-                counterText: '', // Hide the default counter
+                counterText: '',
+                // Hide the default counter
                 hintText: hintText,
                 suffixIcon: suffixIcon != null
                     ? Icon(suffixIcon, color: theme.iconTheme.color)

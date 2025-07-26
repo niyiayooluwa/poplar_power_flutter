@@ -33,7 +33,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
   final bool isLoading;
 
   const ConfirmTransactionSheet({
-    Key? key,
+    super.key,
     required this.title,
     required this.fields,
     required this.onConfirm,
@@ -48,7 +48,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
     this.confirmButtonText = "Confirm Payment",
     this.cancelButtonText = "Cancel",
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +269,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: paymentMethod!.color.withOpacity(0.1),
+        color: paymentMethod!.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -277,7 +277,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: paymentMethod!.color.withOpacity(0.2),
+              color: paymentMethod!.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(

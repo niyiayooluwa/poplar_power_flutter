@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/ui/core/widgets/bottom_nav_shell.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';

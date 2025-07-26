@@ -25,6 +25,11 @@ class SendScreen extends HookConsumerWidget {
     //State
     final selectedBank = state.selectedBank;
 
+    void resetControllers() {
+      bankNameController.clear();
+      accountNumberController.clear();
+    }
+
     // Debounced async validation
     useEffect(() {
       Timer? timer;
@@ -90,8 +95,11 @@ class SendScreen extends HookConsumerWidget {
                 height: 20,
                 child: switch (state.validationStatus) {
                   AccountValidationStatus.initial => const SizedBox.shrink(),
-                  AccountValidationStatus.loading =>
-                    const CircularProgressIndicator(),
+                  AccountValidationStatus.loading => const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(),
+                  ),
                   AccountValidationStatus.success => Text(
                     state.accountName ?? '',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -118,6 +126,7 @@ class SendScreen extends HookConsumerWidget {
                           viewModel.setAccountNumber(
                             accountNumberController.text,
                           );
+                          resetControllers();
                           context.push('/send2');
                         }
                       : null,

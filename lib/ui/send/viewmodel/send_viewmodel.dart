@@ -34,7 +34,7 @@ class SendViewModel extends StateNotifier<SendState> {
   // Handles the press of a number button on the keypad.
   // Appends the pressed number to the current amount.
   void handleNumberPress(String num) {
-    final currentAmount = state.amount ?? '0';
+    final currentAmount = state.amount;
     if (currentAmount == '0') {
       setAmount(num);
     } else {
@@ -45,7 +45,7 @@ class SendViewModel extends StateNotifier<SendState> {
   // Handles the press of the backspace button on the keypad.
   // Removes the last digit from the current amount.
   void handleBackspace() {
-    final currentAmount = state.amount ?? '0';
+    final currentAmount = state.amount;
     if (currentAmount.length == 1) {
       setAmount('0');
     } else {

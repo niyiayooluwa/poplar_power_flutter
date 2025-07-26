@@ -3,7 +3,6 @@ import 'dart:async';
 import '../../../domain/models/electricity_disco.dart';
 
 class ElectricityDiscoRepository {
-  static const _delay = Duration(milliseconds: 300);
 
   ///Fetches a list of Discos and their associated products.
   Future<List<ElectricityDisco>> fetchDiscos() async {

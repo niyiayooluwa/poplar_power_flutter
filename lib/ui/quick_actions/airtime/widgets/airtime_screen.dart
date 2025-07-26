@@ -133,7 +133,7 @@ class AirtimeScreen extends HookConsumerWidget {
       appBar: AppBar(title: const Text('Buy Airtime')),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,27 +146,27 @@ class AirtimeScreen extends HookConsumerWidget {
               _buildNetworkSelector(state, viewModel, context),
 
               const SizedBox(height: 24),
-              Text(
-                'Select Amount',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-
-              const SizedBox(height: 12),
-              _buildAmountGrid(state, viewModel, context),
-
-              const SizedBox(height: 16),
-              SmartInputField(
-                label: 'Or enter custom amount',
-                keyboardType: TextInputType.number,
-                controller: amountController,
-              ),
-
-              const SizedBox(height: 24),
               SmartInputField(
                 label: 'Phone Number',
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
               ),
+
+              const SizedBox(height: 16),
+              SmartInputField(
+                label: 'Amount',
+                keyboardType: TextInputType.number,
+                controller: amountController,
+              ),
+
+              const SizedBox(height: 24),
+              Text(
+                'Or select Amount',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+
+              const SizedBox(height: 12),
+              _buildAmountGrid(state, viewModel, context),
 
               const Spacer(),
               SizedBox(

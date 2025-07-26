@@ -6,7 +6,7 @@ class SendState {
   final List<Bank> bank;
   final Bank? selectedBank;
   final String? accountNUmber;
-  final String? amount; // Changed from int? to String?
+  final String amount; // Changed from int? to String?
   final List<int> quickAmounts; // New: Quick amount suggestions
   final AccountValidationStatus validationStatus;
   final String? accountName;

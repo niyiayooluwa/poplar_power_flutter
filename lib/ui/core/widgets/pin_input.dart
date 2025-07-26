@@ -109,7 +109,7 @@ class PinEntrySheet extends HookWidget {
                               (showError
                                       ? Colors.red
                                       : Theme.of(context).primaryColor)
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -139,7 +139,7 @@ class PinEntrySheet extends HookWidget {
               border: Border.all(color: Colors.grey[200]!, width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),

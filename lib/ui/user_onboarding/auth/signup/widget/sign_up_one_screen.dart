@@ -37,8 +37,8 @@ class SignupStep1Screen extends HookConsumerWidget {
         ? 'assets/dark_variant.png'
         : 'assets/login_screen_bg.png';
     final overlayColor = isDarkTheme
-        ? Color(0xFF1E293B).withOpacity(0.98)
-        : Colors.white.withOpacity(0.3);
+        ? Color(0xFF1E293B).withValues(alpha: 0.98)
+        : Colors.white.withValues(alpha: 0.3);
 
     // Form controllers
     final firstNameController = useTextEditingController();
@@ -100,7 +100,7 @@ class SignupStep1Screen extends HookConsumerWidget {
                       Text(
                         "Start by telling us who you are",
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.textTheme.titleMedium?.color?.withOpacity(0.7),
+                          color: theme.textTheme.titleMedium?.color?.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
