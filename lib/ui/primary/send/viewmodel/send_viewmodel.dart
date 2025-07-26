@@ -1,6 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/mock/mock_repository/mock_bank_repository.dart';
-import 'package:poplar_power/ui/send/viewmodel/send_state.dart';
+import 'package:poplar_power/ui/primary/send/viewmodel/send_state.dart';
 
 class SendViewModel extends StateNotifier<SendState> {
   final BankRepository _repository;

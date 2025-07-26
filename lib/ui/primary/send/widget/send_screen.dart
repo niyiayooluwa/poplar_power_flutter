@@ -5,8 +5,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
-import 'package:poplar_power/ui/send/viewmodel/send_provider.dart';
-import 'package:poplar_power/ui/send/viewmodel/send_state.dart';
+
+import '../viewmodel/send_provider.dart';
+import '../viewmodel/send_state.dart';
 
 class SendScreen extends HookConsumerWidget {
   const SendScreen({super.key});

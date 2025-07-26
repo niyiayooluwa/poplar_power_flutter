@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:poplar_power/data/model/transaction_class.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
+import 'package:poplar_power/ui/primary/send/widget/send_2nd_step.dart';
+import 'package:poplar_power/ui/primary/topup/widget/topup_screen.dart';
 import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
-import 'package:poplar_power/ui/send/widget/send_2nd_step.dart';
-
-import '../data/model/transaction_class.dart';
+import '../ui/primary/send/widget/send_screen.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
-import '../ui/send/widget/send_screen.dart';
 import '../ui/transaction_history_detail/transaction_detail_screen.dart';
 import '../ui/transaction_history_detail/transaction_history_screen.dart';
 import '../ui/user_onboarding/auth/login/widget/login_screen.dart';
@@ -90,7 +90,7 @@ final GoRouter appRouter = GoRouter(
 
     //GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
 
-    GoRoute(path: '/topup', builder: (context, state) => const SendScreen()),
+    GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
 
     GoRoute(
       path: '/notifications',
