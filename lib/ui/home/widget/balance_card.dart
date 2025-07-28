@@ -48,17 +48,20 @@ class BalanceCard extends HookConsumerWidget {
 
                 const SizedBox(width: 8),
 
-                Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.primaryColor,
-                        width: 2,
-                      )
-                  ),
-                  width: 32,
-                  height: 32,
-                  child: Icon(Icons.person, size: 24,),
+                InkWell(
+                  onTap: () {context.push('/profile');},
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.primaryColor,
+                          width: 2,
+                        )
+                    ),
+                    width: 32,
+                    height: 32,
+                    child: Icon(Icons.person, size: 24,),
+                  )
                 )
               ],
             )

@@ -19,6 +19,7 @@ dependencies:
   flutter_svg: ^2.0.0
   dio: ^5.4.0
   google_fonts: ^6.1.0
+  shared_preferences: ^2.2.3
   intl: ^0.18.0
 
 dependency_overrides:

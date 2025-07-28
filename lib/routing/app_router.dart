@@ -5,10 +5,12 @@ import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/primary/send/widget/send_2nd_step.dart';
 import 'package:poplar_power/ui/primary/topup/widget/topup_screen.dart';
+import 'package:poplar_power/ui/profile/widget/profile_screen.dart';
 import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+
 import '../ui/primary/send/widget/send_screen.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
 import '../ui/transaction_history_detail/transaction_detail_screen.dart';
@@ -28,28 +30,39 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
   routes: [
     /// Public routes - no navbar
-    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+    GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen()
+    ),
+
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
+
     GoRoute(
       path: '/get-started',
       builder: (context, state) => const GetStartedScreen(),
     ),
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+
+    GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen()
+    ),
+
     GoRoute(
       path: '/signup',
       builder: (context, state) => const SignupStep1Screen(),
     ),
+
     GoRoute(
       path: '/signup-two',
       builder: (context, state) => const SignupStep2Screen(),
     ),
 
     GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
+        path: '/home',
+        builder: (context, state) => const HomeScreen()
     ),
 
     /*/// Shell route - wraps screens with bottom nav
@@ -77,7 +90,6 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),*/
-
     GoRoute(
         path: '/send',
         builder: (context, state) => const SendScreen()
@@ -89,12 +101,19 @@ final GoRouter appRouter = GoRouter(
     ),
 
     //GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
-
-    GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
+    GoRoute(
+        path: '/topup',
+        builder: (context, state) => const TopUpScreen()
+    ),
 
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationScreen(),
+    ),
+
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
     ),
 
     //=========================================================================
