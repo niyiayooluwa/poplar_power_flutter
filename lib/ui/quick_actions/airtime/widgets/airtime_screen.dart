@@ -150,6 +150,7 @@ class AirtimeScreen extends HookConsumerWidget {
                 label: 'Phone Number',
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                maxLength: 11,
               ),
 
               const SizedBox(height: 16),
@@ -157,6 +158,7 @@ class AirtimeScreen extends HookConsumerWidget {
                 label: 'Amount',
                 keyboardType: TextInputType.number,
                 controller: amountController,
+                maxLength: 6,
               ),
 
               const SizedBox(height: 24),

@@ -153,6 +153,7 @@ class InternetScreen extends HookConsumerWidget {
                 label: 'Phone Number',
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                maxLength: 11,
               ),
 
               const SizedBox(height: 16),

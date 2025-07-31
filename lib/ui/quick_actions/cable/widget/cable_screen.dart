@@ -156,6 +156,7 @@ class CableScreen extends HookConsumerWidget {
                 label: 'Account Number',
                 controller: accountNumberController,
                 keyboardType: TextInputType.number,
+                maxLength: 10,
               ),
 
               const SizedBox(height: 16),

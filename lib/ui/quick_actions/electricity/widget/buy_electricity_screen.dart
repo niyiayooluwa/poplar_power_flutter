@@ -145,6 +145,7 @@ class ElectricityScreen extends HookConsumerWidget {
                   label: 'Meter Number',
                   controller: meterNumberController,
                   keyboardType: TextInputType.number,
+                  maxLength: 10,
                 ),
 
                 const SizedBox(height: 16),
