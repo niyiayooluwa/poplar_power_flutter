@@ -1,6 +1,7 @@
 // lib/ui/auth/view_model/auth_view_model.dart
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../../data/mock/mock_service/mock_auth_service.dart';
+import '../../../../../utils/validators.dart';
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {
@@ -13,6 +14,18 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
 
     try {
+      // Validate inputs
+      final emailError = validateEmail(email);
+      if (emailError != null) {
+        state = AsyncError(emailError, StackTrace.current);
+        return;
+      }
+
+      if (password.isEmpty) {
+        state = AsyncError("Password is required", StackTrace.current);
+        return;
+      }
+
       await _authService.login(email, password);
       state = const AsyncData(null);
     } catch (e, st) {
@@ -23,6 +36,6 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
 
 /// Provides [loginViewModel] with a mock service for now.
 final loginViewModelProvider =
-  StateNotifierProvider<LoginViewModel, AsyncValue<void>>(
+StateNotifierProvider<LoginViewModel, AsyncValue<void>>(
       (ref) => LoginViewModel(MockAuthService()),
 );

@@ -1,7 +1,5 @@
 // lib/ui/auth/widgets/login_screen.dart
 
-import 'dart:async';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -31,6 +29,18 @@ class LoginScreen extends HookConsumerWidget {
     // Watch the auth state
     final authState = ref.watch(loginViewModelProvider);
 
+    // Listen for navigation side-effects
+    ref.listen<AsyncValue<void>>(loginViewModelProvider, (_, state) {
+      if (state is AsyncData && !state.hasError) {
+        context.go('/home');
+      }
+      if (state is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.error.toString())),
+        );
+      }
+    });
+
     //Theme
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
@@ -38,195 +48,156 @@ class LoginScreen extends HookConsumerWidget {
         ? 'assets/dark_variant.png'
         : 'assets/login_screen_bg.png';
     final overlayColor = isDarkTheme
-        ? Color(0xFF1E293B).withValues(alpha: 0.98)
+        ? const Color(0xFF1E293B).withValues(alpha: 0.98)
         : Colors.white.withValues(alpha: 0.3);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      //backgroundColor: Colors.white,
       body: Stack(
-          children: [
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.4,
-                child: Image.asset(
-                  asset,
-                  fit: BoxFit.cover,
-                ),
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.4,
+              child: Image.asset(asset, fit: BoxFit.cover),
+            ),
+          ),
+
+          Container(color: overlayColor),
+
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 80),
+                  const _TopSection(),
+                  const SizedBox(height: 48),
+
+                  //Input Fields
+                  Column(
+                    children: [
+                      TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Password field with visibility toggle
+                      TextField(
+                        controller: passwordController,
+                        obscureText: obscurePassword.value,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscurePassword.value
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => obscurePassword.value =
+                                !obscurePassword.value,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: InkWell(
+                          onTap: () {
+                            // TODO: Implement forgot password
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8.0,
+                            ),
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  //Login Button
+                  FilledButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            ref.read(loginViewModelProvider.notifier).login(
+                                  emailController.text.trim(),
+                                  passwordController.text.trim(),
+                                );
+                          },
+                    style: FilledButton.styleFrom(
+                      fixedSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: authState.isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Login',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+
+                  const Spacer(),
+
+                  //Don't have an account?
+                  RichText(
+                    text: TextSpan(
+                      style: theme.textTheme.bodyMedium,
+                      children: <TextSpan>[
+                        const TextSpan(text: "Don't have an account? "),
+                        TextSpan(
+                          text: 'Create one here',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              context.go('/signup');
+                            },
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-
-            Container(color: overlayColor),
-
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                ),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 80),
-                      _TopSection(),
-                      const SizedBox(height: 48),
-
-                      //Input Fields
-                      Column(
-                        children: [
-                          TextField(
-                            controller: emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password field with visibility toggle with forgot password button
-                          Column(
-                            children: [
-                              TextField(
-                                controller: passwordController,
-                                obscureText: obscurePassword.value,
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  border: const OutlineInputBorder(),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      obscurePassword.value ? Icons.visibility_off : Icons.visibility,
-                                    ),
-                                    onPressed: () => obscurePassword.value = !obscurePassword.value,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              Align(
-                                alignment: Alignment.centerRight, // Or Alignment.topRight, Alignment.bottomRight, etc.
-                                child: InkWell(
-                                  onTap: () {
-                                    throw UnimplementedError(
-                                        "This feature has not been implemented yet"
-                                    );//TODO: implement forgot password
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: TextStyle(color: Color(0xff2563EB), fontSize: 16),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      //Login Button
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-
-                          // 🔐 Login Button
-                          FilledButton(
-                            onPressed: authState is AsyncLoading
-                                ? null
-                                : () {
-                              ref.read(loginViewModelProvider.notifier).login(
-                                emailController.text,
-                                passwordController.text,
-                              );
-
-                              if (authState is AsyncData) {
-                                Timer(const Duration(milliseconds: 1300), () {
-                                  context.go('/home');
-                                }
-                                );
-                              }
-                            },
-
-                            style: FilledButton.styleFrom(
-                              fixedSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-
-                            child: authState is AsyncLoading
-                                ? const
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child:
-                              CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            ) :
-
-                            Text(
-                              'Login',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Show Error Message
-                          if (authState is AsyncError)
-                            Text(
-                              authState.error.toString(),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.redAccent),
-                            ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      //Don't have an account?
-                      RichText(
-                        text: TextSpan(
-                          style: theme.textTheme.bodyMedium, // Default text style for the sentence
-                          children: <TextSpan>[
-                            const TextSpan(text: "Don't have an account? "),
-                            TextSpan(
-                              text: 'Create one here',
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {context.go('/signup');},
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-
-                      //For visual consistency
-                      const SizedBox(height: 24)
-                    ]
-                ),
-              ),
-            )
-          ]
+          ),
+        ],
       ),
-      extendBody: false,
     );
   }
 }
 
 class _TopSection extends StatelessWidget {
+  const _TopSection();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -241,7 +212,6 @@ class _TopSection extends StatelessWidget {
           "Good to see you again 👋",
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineMedium?.copyWith(
-            //color: Color(0xFF121212),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -252,11 +222,10 @@ class _TopSection extends StatelessWidget {
           "Continue with smarter payments, fewer delays,\nand total control",
           textAlign: TextAlign.start,
           style: theme.textTheme.titleMedium?.copyWith(
-           // color: Colors.black54,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ]
+      ],
     );
   }
 }

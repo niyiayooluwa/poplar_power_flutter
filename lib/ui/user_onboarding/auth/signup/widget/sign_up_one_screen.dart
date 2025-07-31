@@ -1,18 +1,11 @@
 // lib/ui/auth/widgets/signup_step1_screen.dart
 
-import 'dart:async';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../viewmodel/signup_view_model.dart';
-
-/// Regex pattern to validate standard email formats.
-final _emailRegex = RegExp(
-  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-);
 
 /// Step 1 of the Signup process
 ///
@@ -21,10 +14,7 @@ final _emailRegex = RegExp(
 /// - Last name
 /// - Email address
 ///
-/// If email is invalid on submit:
-/// - Red border is applied
-/// - Field shakes slightly
-/// - Message disappears after 2 seconds
+/// Validation is handled by the [SignupViewModel].
 class SignupStep1Screen extends HookConsumerWidget {
   const SignupStep1Screen({super.key});
 
@@ -37,7 +27,7 @@ class SignupStep1Screen extends HookConsumerWidget {
         ? 'assets/dark_variant.png'
         : 'assets/login_screen_bg.png';
     final overlayColor = isDarkTheme
-        ? Color(0xFF1E293B).withValues(alpha: 0.98)
+        ? const Color(0xFF1E293B).withValues(alpha: 0.98)
         : Colors.white.withValues(alpha: 0.3);
 
     // Form controllers
@@ -45,13 +35,8 @@ class SignupStep1Screen extends HookConsumerWidget {
     final lastNameController = useTextEditingController();
     final emailController = useTextEditingController();
 
-    // Controls for email validation animation and message
-    final emailError = useState<String?>(null);
-    final animateError = useState(false);
-
-    // Controls name validation
-    final firstNameError = useState<String?>(null);
-    final lastNameError = useState<String?>(null);
+    // Holds validation errors for each field
+    final errors = useState<Map<String, String>>({});
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -116,152 +101,43 @@ class SignupStep1Screen extends HookConsumerWidget {
                         controller: firstNameController,
                         decoration: InputDecoration(
                           labelText: 'First Name',
+                          errorText: errors.value['firstName'],
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: firstNameError.value != null ? Colors.red : Colors.black26,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: firstNameError.value != null ? Colors.red : Colors.black26,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: firstNameError.value != null ? Colors.red : theme.colorScheme.primary,
-                              width: 2,
-                            ),
                           ),
                         ),
                         textCapitalization: TextCapitalization.words,
                       ),
-                      if (firstNameError.value != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              firstNameError.value!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
-                            ),
-                          ),
-                        ),
-
 
                       const SizedBox(height: 20),
-
 
                       // Last Name field
                       TextField(
                         controller: lastNameController,
                         decoration: InputDecoration(
                           labelText: 'Last Name',
+                          errorText: errors.value['lastName'],
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: lastNameError.value != null ? Colors.red : Colors.black26,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: lastNameError.value != null ? Colors.red : Colors.black26,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: lastNameError.value != null ? Colors.red : theme.colorScheme.primary,
-                              width: 2,
-                            ),
                           ),
                         ),
                         textCapitalization: TextCapitalization.words,
                       ),
-                      if (lastNameError.value != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              lastNameError.value!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
-                            ),
-                          ),
-                        ),
-
 
                       const SizedBox(height: 20),
 
-
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        transform: animateError.value
-                            ? Matrix4.translationValues(6, 0, 0)
-                            : Matrix4.identity(),
-                        curve: Curves.elasticIn,
-
-                        child: TextField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            // Show red border if error exists
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: emailError.value != null
-                                    ? Colors.red
-                                    : Colors.black26,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: emailError.value != null
-                                    ? Colors.red
-                                    : Colors.black26,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: emailError.value != null
-                                    ? Colors.red
-                                    : theme.colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
+                      // Email field
+                      TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          errorText: errors.value['email'],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                       ),
-                      // Error message (if any)
-                      if (emailError.value != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              emailError.value!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
 
@@ -270,58 +146,20 @@ class SignupStep1Screen extends HookConsumerWidget {
                   // "Next" button
                   FilledButton(
                     onPressed: () {
-                      final email = emailController.text.trim();
-                      final firstName = firstNameController.text.trim();
-                      final lastName = lastNameController.text.trim();
+                      final validationErrors = ref
+                          .read(signupViewModelProvider.notifier)
+                          .validateAndSaveStep1(
+                            firstName: firstNameController.text.trim(),
+                            lastName: lastNameController.text.trim(),
+                            email: emailController.text.trim(),
+                          );
 
-                      bool hasError = false;
-
-                      // First Name validation
-                      if (firstName.isEmpty) {
-                        firstNameError.value = "First name is required";
-                        hasError = true;
+                      if (validationErrors != null) {
+                        errors.value = validationErrors;
                       } else {
-                        firstNameError.value = null;
+                        errors.value = {}; // Clear errors
+                        context.push('/signup-two');
                       }
-
-                      // Last Name validation
-                      if (lastName.isEmpty) {
-                        lastNameError.value = "Last name is required";
-                        hasError = true;
-                      } else {
-                        lastNameError.value = null;
-                      }
-
-                      // Email format validation
-                      final isValidEmail = _emailRegex.hasMatch(email);
-                      if (!isValidEmail) {
-                        emailError.value = "Invalid email format";
-                        animateError.value = true;
-
-                        Future.delayed(const Duration(milliseconds: 80), () {
-                          animateError.value = false;
-                        });
-
-                        Timer(const Duration(seconds: 2), () {
-                          emailError.value = null;
-                          firstNameError.value = null;
-                          lastNameError.value = null;
-                        });
-
-                        hasError = true;
-                      }
-
-                      if (hasError) return; // Don't continue if there are any field errors
-
-                      // Save valid data to ViewModel
-                      ref.read(signupViewModelProvider.notifier).saveStep1(
-                        firstName: firstName,
-                        lastName: lastName,
-                        email: email,
-                      );
-
-                      // Go to next step
-                      context.push('/signup-two');
                     },
                     style: FilledButton.styleFrom(
                       fixedSize: const Size(double.infinity, 48),
@@ -350,7 +188,6 @@ class SignupStep1Screen extends HookConsumerWidget {
                           style: const TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline, // Optional: underline it
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {context.go('/login');},

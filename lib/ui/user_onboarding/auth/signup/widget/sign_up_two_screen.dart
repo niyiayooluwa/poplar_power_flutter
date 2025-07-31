@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -18,7 +17,7 @@ class SignupStep2Screen extends HookConsumerWidget {
         ? 'assets/dark_variant.png'
         : 'assets/login_screen_bg.png';
     final overlayColor = isDarkTheme
-        ? Color(0xFF1E293B).withValues(alpha: 0.98)
+        ? const Color(0xFF1E293B).withValues(alpha: 0.98)
         : Colors.white.withValues(alpha: 0.3);
 
     final passwordController = useTextEditingController();
@@ -28,26 +27,19 @@ class SignupStep2Screen extends HookConsumerWidget {
     final passwordVisible = useState(false);
     final confirmPasswordVisible = useState(false);
 
+    // Holds the current password validation error
     final passwordError = useState<String?>(null);
-    final confirmError = useState<String?>(null);
 
-    // Tracks which password rules are met
-    final hasMinLength = useState(false);
-    final hasUppercase = useState(false);
-    final hasNumber = useState(false);
-    final hasSpecial = useState(false);
+    // Listen to the signup state for errors or loading
+    final signupState = ref.watch(signupViewModelProvider);
 
-    // Regex helpers
-    bool hasUpper(String s) => RegExp(r'[A-Z]').hasMatch(s);
-    bool hasNum(String s) => RegExp(r'[0-9]').hasMatch(s);
-    bool hasSpecialChar(String s) => RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(s);
-
-    void validatePassword(String value) {
-      hasMinLength.value = value.length >= 8;
-      hasUppercase.value = hasUpper(value);
-      hasNumber.value = hasNum(value);
-      hasSpecial.value = hasSpecialChar(value);
-    }
+    ref.listen<AsyncValue<void>>(signupViewModelProvider, (_, state) {
+      if (state is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.error.toString())),
+        );
+      }
+    });
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -58,7 +50,7 @@ class SignupStep2Screen extends HookConsumerWidget {
             child: Opacity(
                 opacity: 0.4,
                 child: Image.asset(
-                asset,
+                  asset,
                   fit: BoxFit.cover,
                 )
             ),
@@ -112,9 +104,13 @@ class SignupStep2Screen extends HookConsumerWidget {
                       TextField(
                         controller: passwordController,
                         obscureText: !passwordVisible.value,
-                        onChanged: validatePassword,
+                        onChanged: (value) {
+                          // Clear error on change
+                          passwordError.value = null;
+                        },
                         decoration: InputDecoration(
                           labelText: 'Password',
+                          errorText: passwordError.value,
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -128,16 +124,8 @@ class SignupStep2Screen extends HookConsumerWidget {
 
                       // Password strength rules
                       Padding(
-                        padding: EdgeInsets.only(left: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildPasswordRequirement("At least 8 characters", hasMinLength.value, context),
-                            _buildPasswordRequirement("1 uppercase letter", hasUppercase.value, context),
-                            _buildPasswordRequirement("1 number", hasNumber.value, context),
-                            _buildPasswordRequirement("1 special character", hasSpecial.value, context),
-                          ],
-                        ),
+                        padding: const EdgeInsets.only(left: 8),
+                        child: PasswordStrengthIndicator(password: useValueListenable(passwordController).text),
                       ),
 
                       const SizedBox(height: 20),
@@ -158,15 +146,6 @@ class SignupStep2Screen extends HookConsumerWidget {
                         ),
                       ),
 
-                      if (confirmError.value != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            confirmError.value!,
-                            style: const TextStyle(color: Colors.redAccent),
-                          ),
-                        ),
-
                       const SizedBox(height: 20),
 
                       // Custom Ref (optional or required based on backend)
@@ -184,38 +163,21 @@ class SignupStep2Screen extends HookConsumerWidget {
 
                   // Submit button
                   FilledButton(
-                    onPressed: () {
+                    onPressed: signupState.isLoading ? null : () {
                       final password = passwordController.text;
                       final confirm = confirmPasswordController.text;
+                      final customRef = customRefController.text.trim();
 
-                      // Validate password rules
-                      if (!(hasMinLength.value &&
-                          hasUppercase.value &&
-                          hasNumber.value &&
-                          hasSpecial.value)) {
-                        passwordError.value = "Weak password.";
-                        return;
-                      }
-
-                      // Check match
-                      if (password != confirm) {
-                        confirmError.value = "Passwords do not match";
-                        Timer(const Duration(seconds: 2), () {
-                          confirmError.value = null;
-                        });
-                        return;
-                      }
-
-                      // Send to mock ViewModel
+                      // Perform validation and signup
                       ref.read(signupViewModelProvider.notifier).signup(
                         password: password,
                         confirmPassword: confirm,
-                        customRef: customRefController.text.trim(),
-                        onSuccess: () {context.go('/home');},
+                        customRef: customRef,
+                        onSuccess: () {
+                          // Navigate on success
+                          context.go('/home');
+                        },
                       );
-
-                      // Go to home screen
-                      context.go('/home');
                     },
                     style: FilledButton.styleFrom(
                       fixedSize: const Size(double.infinity, 48),
@@ -223,7 +185,9 @@ class SignupStep2Screen extends HookConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
+                    child: signupState.isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
                       "Sign Up",
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: Colors.white,
@@ -244,14 +208,13 @@ class SignupStep2Screen extends HookConsumerWidget {
                           style: const TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline, // Optional: underline it
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {context.go('/login');},
                         ),
                       ],
                     ),
-                    textAlign: TextAlign.center, // Optional: if you want the whole text centered
+                    textAlign: TextAlign.center,
                   ),
 
                   const SizedBox(height: 24),
@@ -261,6 +224,42 @@ class SignupStep2Screen extends HookConsumerWidget {
           ),
         ]
       ),
+    );
+  }
+}
+
+/// A widget that displays a checklist of password strength requirements.
+class PasswordStrengthIndicator extends StatelessWidget {
+  final String password;
+
+  const PasswordStrengthIndicator({super.key, required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildPasswordRequirement(
+          "At least 8 characters",
+          password.length >= 8,
+          context,
+        ),
+        _buildPasswordRequirement(
+          "1 uppercase letter",
+          password.contains(RegExp(r'[A-Z]')),
+          context,
+        ),
+        _buildPasswordRequirement(
+          "1 number",
+          password.contains(RegExp(r'[0-9]')),
+          context,
+        ),
+        _buildPasswordRequirement(
+          "1 special character",
+          password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]')),
+          context,
+        ),
+      ],
     );
   }
 
