@@ -44,7 +44,8 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
     return state.selectedDisco != null &&
         state.selectedProduct != null &&
         state.meterNumber != null &&
-        state.price!.length < 6 &&
+        state.price != null &&
+        state.price!.length <= 6 &&
         state.price!.length >= 3 &&
         state.meterNumber!.length < 11 &&
         state.meterNumber!.length >= 6;

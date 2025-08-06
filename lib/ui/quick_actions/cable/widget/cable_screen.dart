@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../../../data/model/transaction_class.dart';
 import '../../../../../../data/services/confirm_transaction_service.dart';
 import '../../../core/widgets/pin_input.dart';
@@ -48,7 +49,7 @@ class CableScreen extends HookConsumerWidget {
         context,
         title: 'Confirm Cable Subscription',
         amount: '₦${selectedPackage?.price}',
-        description: 'Cable Subscription',
+        description: '${selectedPackage?.name}',
         transactionConfig: TransactionSheetService.billConfig,
         paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createBillFields(
@@ -92,18 +93,6 @@ class CableScreen extends HookConsumerWidget {
         },
       );
     }
-
-    // Effect hook to listen for changes in the account number input field
-    useEffect(() {
-      // Listener to update the account number in the view model
-      accountNumberController.addListener(() {
-        ref
-            .read(buyCableViewModelProvider.notifier)
-            .setAccountNumber(accountNumberController.text);
-      });
-      // Return null as there's no cleanup needed for this effect
-      return null;
-    }, const []);
 
     // Effect hook to reset the buy cable flow when the widget is disposed
     /// This ensures that the state is clean when the user navigates away from the screen.
@@ -157,6 +146,9 @@ class CableScreen extends HookConsumerWidget {
                 controller: accountNumberController,
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                onChanged: (value) {
+                  viewModel.setAccountNumber(value);
+                },
               ),
 
               const SizedBox(height: 16),

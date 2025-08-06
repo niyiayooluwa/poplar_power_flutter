@@ -46,16 +46,16 @@ class InternetScreen extends HookConsumerWidget {
     void showDataConfirmation(BuildContext context) {
       TransactionSheetService.showConfirmation(
         context,
-        title: 'Confirm Data Purchase',
+        title: 'Confirm Data\nPurchase',
         amount: '₦${selectedBundle?.price}',
-        description: 'Data Purchase',
+        description: 'Data Purchase of ${selectedBundle?.name} for ${selectedBundle?.validity}',
         transactionConfig: TransactionSheetService.dataConfig,
         paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createDataFields(
           phoneNumber: phoneController.text,
           network: selectedISP!.name,
           amount: '₦${selectedBundle?.price}',
-          plan: '₦${selectedBundle?.name}',
+          plan: '${selectedBundle?.name}',
         ),
         onConfirm: () async {
           context.pop(); // Dismiss the bottom sheet
@@ -89,18 +89,6 @@ class InternetScreen extends HookConsumerWidget {
         }
       );
     }
-
-    // Effect hook to listen for changes in the phone number input field
-    useEffect(() {
-      // Listener to update the phone number in the view model
-      phoneController.addListener(() {
-        ref
-            .read(buyDataViewModelProvider.notifier)
-            .setPhoneNumber(phoneController.text);
-      });
-      // Return null as there's no cleanup needed for this effect
-      return null;
-    }, const []);
 
     // Effect hook to reset the buy data flow when the widget is disposed
     /// This ensures that the state is clean when the user navigates away from the screen.
@@ -154,6 +142,9 @@ class InternetScreen extends HookConsumerWidget {
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 maxLength: 11,
+                onChanged: (value) {
+                  viewModel.setPhoneNumber(value);
+                },
               ),
 
               const SizedBox(height: 16),

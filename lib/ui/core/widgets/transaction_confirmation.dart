@@ -82,6 +82,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
                         if (amount != null) _buildAmountSection(context),
                         _buildTransactionDetails(context),
                         if (referenceNumber != null) _buildReferenceNumber(context),
+                        _buildPaymentMethod(context),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -149,13 +150,13 @@ class ConfirmTransactionSheet extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (transactionConfig?.subtitle != null)
+                /*if (transactionConfig?.subtitle != null)
                   Text(
                     transactionConfig!.subtitle!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
-                  ),
+                  ),*/
               ],
             ),
           ),

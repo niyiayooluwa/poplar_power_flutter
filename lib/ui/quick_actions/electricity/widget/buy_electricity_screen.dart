@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -37,27 +39,6 @@ class ElectricityScreen extends HookConsumerWidget {
     // State to track if a transaction is being processed.
     final isProcessing = useState(false);
 
-    useEffect(() {
-      //Listener to update the meter number in the view model
-      meterNumberController.addListener(() {
-        ref
-            .read(buyElectricityViewModelProvider.notifier)
-            .setMeterNumber(meterNumberController.text);
-      });
-      //Return null as there's no cleanup needed for this effect
-      return null;
-    }, const[]);
-
-    // Effect to listen for changes in the price input field and update the view model.
-    useEffect(() {
-      priceController.addListener(() {
-        ref
-            .read(buyElectricityViewModelProvider.notifier)
-            .setPrice(priceController.text);
-      });
-      return null;
-    }, const []);
-
     /// Shows a confirmation bottom sheet for the electricity purchase.
     ///
     /// After confirmation, it prompts for PIN entry.
@@ -66,10 +47,9 @@ class ElectricityScreen extends HookConsumerWidget {
     void showElectricityConfirmation(BuildContext context) {
       TransactionSheetService.showConfirmation(
           context,
-          title: 'Confirm Data Purchase',
+          title: 'Confirm Electricity\nBill',
           amount: '₦$price',
-          description: 'Data Purchase',
-          transactionConfig: TransactionSheetService.dataConfig,
+          transactionConfig: TransactionSheetService.electricityConfig,
           paymentMethod: TransactionSheetService.walletConfig,
           fields: TransactionSheetService.createElectricityFields(
             disco: selectedDisco!.name,
@@ -146,6 +126,9 @@ class ElectricityScreen extends HookConsumerWidget {
                   controller: meterNumberController,
                   keyboardType: TextInputType.number,
                   maxLength: 10,
+                  onChanged: (number) {
+                    viewModel.setMeterNumber(number);
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -174,6 +157,9 @@ class ElectricityScreen extends HookConsumerWidget {
                     label: 'Price',
                     controller: priceController,
                     keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      viewModel.setPrice(value);
+                    },
                   ),
 
                 const Spacer(), // Pushes the button to the bottom of the screen.

@@ -78,9 +78,7 @@ class BuyCableViewModel extends StateNotifier<BuyCableState> {
     return state.selectedProvider != null &&
         state.selectedPackage != null &&
         state.accountNumber != null &&
-        state.accountNumber!.length >
-            10 && // Account number must be greater than 10 characters.
-        state.accountNumber!.length <=
-            16; // Account number must be less than or equal to 16 characters.
+        state.accountNumber!.length >=
+            10; // Account number must be greater than 10 characters.
   }
 }

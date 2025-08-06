@@ -34,39 +34,6 @@ class AirtimeScreen extends HookConsumerWidget {
       return null;
     }, [state.customAmount, state.phoneNumber]);
 
-    // Handle amount input changes - defer state updates
-    useEffect(() {
-      void listener() {
-        final text = amountController.text.trim();
-        // Use Future.microtask to defer state updates until after build
-        Future.microtask(() {
-          if (text.isEmpty) {
-            viewModel.clearAmounts();
-          } else {
-            final amount = int.tryParse(text);
-            if (amount != null) {
-              viewModel.setCustomAmount(amount);
-            }
-          }
-        });
-      }
-
-      amountController.addListener(listener);
-      return () => amountController.removeListener(listener);
-    }, [amountController]);
-
-    // Handle phone number changes - already using Future.microtask correctly
-    useEffect(() {
-      void listener() {
-        Future.microtask(() {
-          viewModel.setPhoneNumber(phoneController.text.trim());
-        });
-      }
-
-      phoneController.addListener(listener);
-      return () => phoneController.removeListener(listener);
-    }, [phoneController]);
-
     void showAirtimeConfirmation(BuildContext context) {
       TransactionSheetService.showConfirmation(
         context,
@@ -151,6 +118,9 @@ class AirtimeScreen extends HookConsumerWidget {
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 maxLength: 11,
+                  onChanged: (value) {
+                    viewModel.setPhoneNumber(value);
+                  }
               ),
 
               const SizedBox(height: 16),
@@ -159,6 +129,9 @@ class AirtimeScreen extends HookConsumerWidget {
                 keyboardType: TextInputType.number,
                 controller: amountController,
                 maxLength: 6,
+                onChanged: (value) {
+                  viewModel.setCustomAmount(int.tryParse(value) ?? 0);
+                }
               ),
 
               const SizedBox(height: 24),
