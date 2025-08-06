@@ -41,7 +41,6 @@ class AirtimeScreen extends HookConsumerWidget {
         amount: '₦${state.effectiveAmount}',
         description: 'Airtime Purchase',
         transactionConfig: TransactionSheetService.airtimeConfig,
-        paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createAirtimeFields(
           phoneNumber: state.phoneNumber,
           network: state.selectedNetwork?.label ?? 'Unknown',

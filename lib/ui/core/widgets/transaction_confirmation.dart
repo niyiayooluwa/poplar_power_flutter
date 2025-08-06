@@ -1,32 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
 import 'package:poplar_power/domain/models/transaction_config.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
 
-/// A reusable bottom sheet to confirm transaction details before submission.
-///
-/// This widget follows clean architecture principles by separating:
-/// - Domain models (TransactionField, TransactionConfig, PaymentMethodConfig)
-/// - Presentation logic (ConfirmTransactionSheet)
-/// - UI components (private methods for each section)
-/// - Application service (TransactionSheetService for usage)
-
-class ConfirmTransactionSheet extends StatelessWidget {
-  // Core required properties
+class ConfirmTransactionSheet extends HookConsumerWidget {
   final String title;
   final List<TransactionField> fields;
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
-
-  // Optional configuration
   final TransactionConfig? transactionConfig;
-  final PaymentMethodConfig? paymentMethod;
   final String? amount;
   final String? description;
   final String? referenceNumber;
   final String? processingTime;
-
-  // UI behavior
   final bool showSecurityBadge;
   final String confirmButtonText;
   final String cancelButtonText;
@@ -39,7 +28,6 @@ class ConfirmTransactionSheet extends StatelessWidget {
     required this.onConfirm,
     this.onCancel,
     this.transactionConfig,
-    this.paymentMethod,
     this.amount,
     this.description,
     this.referenceNumber,
@@ -51,7 +39,65 @@ class ConfirmTransactionSheet extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+
+    final walletConfig = PaymentMethodConfig(
+      name: 'Main Wallet',
+      balance: user.formattedBalance,
+      icon: Icons.account_balance_wallet,
+      color: Colors.blue,
+    );
+
+    final cardConfig = const PaymentMethodConfig(
+      name: 'Card',
+      balance: '**** **** **** 1234',
+      icon: Icons.credit_card,
+      color: Colors.red,
+    );
+
+    final webPayConfig = const PaymentMethodConfig(
+      name: 'Web Pay',
+      balance: 'Pay with a web browser',
+      icon: Icons.language,
+      color: Colors.green,
+    );
+
+    final paymentMethods = [walletConfig, cardConfig, webPayConfig];
+
+    final selectedPaymentMethod = useState(walletConfig);
+
+    void showPaymentMethodSelector(BuildContext context) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDragHandle(),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: paymentMethods.map((method) {
+                    return ListTile(
+                      leading: Icon(method.icon, color: method.color),
+                      title: Text(method.name),
+                      subtitle: Text(method.balance),
+                      onTap: () {
+                        selectedPaymentMethod.value = method;
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                )
+              ],
+            )
+          );
+        },
+      );
+    }
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -82,7 +128,10 @@ class ConfirmTransactionSheet extends StatelessWidget {
                         if (amount != null) _buildAmountSection(context),
                         _buildTransactionDetails(context),
                         if (referenceNumber != null) _buildReferenceNumber(context),
-                        _buildPaymentMethod(context),
+                        GestureDetector(
+                          onTap: () => showPaymentMethodSelector(context),
+                          child: _buildPaymentMethod(context, selectedPaymentMethod.value),
+                        ),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -98,10 +147,6 @@ class ConfirmTransactionSheet extends StatelessWidget {
       )
     );
   }
-
-  // =============================================================================
-  // UI COMPONENTS
-  // =============================================================================
 
   Widget _buildDragHandle() {
     return Container(
@@ -150,13 +195,6 @@ class ConfirmTransactionSheet extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                /*if (transactionConfig?.subtitle != null)
-                  Text(
-                    transactionConfig!.subtitle!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),*/
               ],
             ),
           ),
@@ -262,7 +300,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentMethod(BuildContext context) {
+  Widget _buildPaymentMethod(BuildContext context, PaymentMethodConfig selectedPaymentMethod) {
     final theme = Theme.of(context);
 
     return Container(
@@ -270,7 +308,7 @@ class ConfirmTransactionSheet extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: paymentMethod!.color.withValues(alpha: 0.1),
+        color: selectedPaymentMethod.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -278,12 +316,12 @@ class ConfirmTransactionSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: paymentMethod!.color.withValues(alpha: 0.2),
+              color: selectedPaymentMethod.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              paymentMethod!.icon,
-              color: paymentMethod!.color,
+              selectedPaymentMethod.icon,
+              color: selectedPaymentMethod.color,
               size: 20,
             ),
           ),
@@ -293,55 +331,15 @@ class ConfirmTransactionSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  paymentMethod!.name,
+                  selectedPaymentMethod.name,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  'Balance: ${paymentMethod!.balance}',
+                  'Balance: ${selectedPaymentMethod.balance}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSecurityBadge(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.security, color: Colors.green[600], size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Secure Transaction',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green[900],
-                  ),
-                ),
-                Text(
-                  'This transaction is protected by bank-level security',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.green[700],
                   ),
                 ),
               ],
@@ -442,57 +440,3 @@ class ConfirmTransactionSheet extends StatelessWidget {
     );
   }
 }
-
-// =============================================================================
-// USAGE EXAMPLES
-// =============================================================================
-
-/*
-// Example 1: Money Transfer
-void showTransferConfirmation(BuildContext context) {
-  TransactionSheetService.showConfirmation(
-    context,
-    title: 'Confirm Transfer',
-    amount: '₦25,000.00',
-    description: 'Monthly allowance',
-    transactionConfig: TransactionSheetService.transferConfig,
-    paymentMethod: TransactionSheetService.walletConfig,
-    referenceNumber: 'TXN123456789',
-    processingTime: 'Instant',
-    fields: TransactionSheetService.createTransferFields(
-      recipientName: 'John Adebayo',
-      accountNumber: '0123456789',
-      bankName: 'First Bank of Nigeria',
-      fee: '₦26.50',
-      total: '₦25,026.50',
-    ),
-    onConfirm: () {
-      Navigator.pop(context);
-      // Handle transfer confirmation
-    },
-  );
-}
-
-// Example 2: Airtime Purchase
-void showAirtimeConfirmation(BuildContext context) {
-  TransactionSheetService.showConfirmation(
-    context,
-    title: 'Confirm Airtime Purchase',
-    amount: '₦2,000.00',
-    description: 'Airtime top-up',
-    transactionConfig: TransactionSheetService.airtimeConfig,
-    paymentMethod: TransactionSheetService.walletConfig,
-    referenceNumber: 'AIR123456789',
-    processingTime: 'Instant',
-    fields: TransactionSheetService.createAirtimeFields(
-      phoneNumber: '+234 801 234 5678',
-      network: 'MTN Nigeria',
-      amount: '₦2,000.00',
-    ),
-    onConfirm: () {
-      Navigator.pop(context);
-      // Handle airtime purchase
-    },
-  );
-}
-*/

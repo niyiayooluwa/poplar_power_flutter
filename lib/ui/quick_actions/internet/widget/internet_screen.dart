@@ -50,13 +50,13 @@ class InternetScreen extends HookConsumerWidget {
         amount: '₦${selectedBundle?.price}',
         description: 'Data Purchase of ${selectedBundle?.name} for ${selectedBundle?.validity}',
         transactionConfig: TransactionSheetService.dataConfig,
-        paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createDataFields(
           phoneNumber: phoneController.text,
           network: selectedISP!.name,
           amount: '₦${selectedBundle?.price}',
           plan: '${selectedBundle?.name}',
         ),
+
         onConfirm: () async {
           context.pop(); // Dismiss the bottom sheet
           await Future.delayed(Duration(milliseconds: 500)); // Simulate API call

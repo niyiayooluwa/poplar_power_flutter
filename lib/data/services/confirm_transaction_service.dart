@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-
-import '../../domain/models/payment_config.dart';
 import '../../domain/models/transaction_config.dart';
 import '../../domain/models/transaction_field.dart';
 import '../../ui/core/widgets/transaction_confirmation.dart';
 
-/// This acts as an application service in clean architecture
 class TransactionSheetService {
-  // Predefined transaction configurations
   static const TransactionConfig transferConfig = TransactionConfig(
     type: 'Money Transfer',
     icon: Icons.send,
@@ -43,14 +39,6 @@ class TransactionSheetService {
     subtitle: 'Utility bill payment',
   );
 
-  static const PaymentMethodConfig walletConfig = PaymentMethodConfig(
-    name: 'Main Wallet',
-    balance: '₦125,450.00',
-    icon: Icons.account_balance_wallet,
-    color: Colors.blue,
-  );
-
-  /// Shows the confirmation bottom sheet
   static Future<void> showConfirmation(
       BuildContext context, {
         required String title,
@@ -58,7 +46,6 @@ class TransactionSheetService {
         required VoidCallback onConfirm,
         VoidCallback? onCancel,
         TransactionConfig? transactionConfig,
-        PaymentMethodConfig? paymentMethod,
         String? amount,
         String? description,
         String? referenceNumber,
@@ -78,7 +65,6 @@ class TransactionSheetService {
         onConfirm: onConfirm,
         onCancel: onCancel,
         transactionConfig: transactionConfig,
-        paymentMethod: paymentMethod,
         amount: amount,
         description: description,
         referenceNumber: referenceNumber,

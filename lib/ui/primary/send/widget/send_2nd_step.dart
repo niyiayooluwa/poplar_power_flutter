@@ -44,7 +44,6 @@ class Send2ndStepScreen extends HookConsumerWidget {
         amount: '₦$amountString',
         description: 'Transfer to $recipientName',
         transactionConfig: TransactionSheetService.transferConfig,
-        paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createTransferFields(
           recipientName: recipientName,
           accountNumber: recipientAccountNumber,

@@ -51,7 +51,6 @@ class CableScreen extends HookConsumerWidget {
         amount: '₦${selectedPackage?.price}',
         description: '${selectedPackage?.name}',
         transactionConfig: TransactionSheetService.billConfig,
-        paymentMethod: TransactionSheetService.walletConfig,
         fields: TransactionSheetService.createBillFields(
           service: cableController.text,
           accountNumber: accountNumberController.text,
