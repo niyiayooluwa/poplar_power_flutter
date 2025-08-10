@@ -27,7 +27,7 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/splash',
   routes: [
     /// Public routes - no navbar
     GoRoute(
