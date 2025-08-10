@@ -3,12 +3,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:poplar_power/data/model/transaction_class.dart';
+import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
+import 'package:poplar_power/data/services/confirm_transaction_service.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/core/widgets/pin_input.dart';
 import 'package:poplar_power/ui/primary/send/viewmodel/send_provider.dart';
-
-import '../../../../data/mock/mock_service/app_providers.dart';
-import '../../../../data/services/confirm_transaction_service.dart';
 
 class Send2ndStepScreen extends HookConsumerWidget {
   const Send2ndStepScreen({super.key});
@@ -192,7 +191,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Current Balance ${formatCurrency(currentBalance)}',
+                        'Current Balance ${formatCurrency(currentBalance!)}',
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black54,

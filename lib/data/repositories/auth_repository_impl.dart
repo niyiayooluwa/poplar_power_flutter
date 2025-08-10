@@ -1,10 +1,10 @@
 // lib/data/repositories/auth_repository_impl.dart
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
-import 'package:poplar_power/data/model/dto/auth/login.dart';
+import 'package:poplar_power/data/models/auth/login_request_dto.dart';
+import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/storage/token_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/repositories/auth_repository.dart';
-import 'package:poplar_power/data/model/dto/auth/signup.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -14,7 +14,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> login(String email, String password) async {
     try {
-      final requestDto = LoginRequest(email: email, password: password);
+      final requestDto = LoginRequestDto(email: email, password: password);
       final authResponseDto = await remoteDataSource.login(requestDto);
       await TokenStorage.saveToken(authResponseDto.token);
       return authResponseDto.user.toEntity();
@@ -26,7 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> register(String email, String password, String phone, String fullName, String? customRef) async {
     try {
-      final requestDto = SignupRequest(
+      final requestDto = SignupRequestDto(
         email: email,
         password: password,
         phone: phone,

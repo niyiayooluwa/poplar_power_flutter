@@ -1,18 +1,34 @@
 // lib/data/data_sources/remote/auth_remote_data_source.dart
 import 'package:dio/dio.dart';
 import 'package:poplar_power/data/models/auth/auth_response_dto.dart';
-import 'package:poplar_power/data/model/dto/auth/login.dart';
-import 'package:poplar_power/data/model/dto/auth/signup.dart';
+import 'package:poplar_power/data/models/auth/login_request_dto.dart';
+import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/models/user/user_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 import 'package:poplar_power/core/constants/api_constants.dart'; // For custom headers
 
+/// Abstract class defining the contract for authentication-related remote data operations.
+/// This class outlines the methods that any implementation of an authentication remote data source must provide.
 abstract class AuthRemoteDataSource {
-  Future<AuthResponseDto> login(LoginRequest requestDto);
-  Future<AuthResponseDto> register(SignupRequest requestDto);
+  /// Attempts to log in a user with the provided credentials.
+  ///
+  /// Takes a [LoginRequestDto] containing the user's login information.
+  /// Returns a [Future] that resolves to an [AuthResponseDto] containing authentication tokens and user details upon successful login.
+  Future<AuthResponseDto> login(LoginRequestDto requestDto);
+
+  /// Attempts to register a new user with the provided details.
+  ///
+  /// Takes a [SignupRequestDto] containing the new user's information.
+  /// Returns a [Future] that resolves to an [AuthResponseDto] containing authentication tokens and user details upon successful registration.
+  Future<AuthResponseDto> register(SignupRequestDto requestDto);
+
+  /// Fetches the details of the currently authenticated user.
+  ///
+  /// Returns a [Future] that resolves to a [UserDto] containing the authenticated user's information.
   Future<UserDto> getAuthenticatedUser();
 }
 
+/// Implementation of [AuthRemoteDataSource] that interacts with a remote API using Dio.
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio _dio = DioClient().dio;
 
@@ -24,8 +40,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     };
   }
 
+  /// Logs in a user by sending a POST request to the '/auth/login' endpoint.
+  ///
+  /// The [requestDto] contains the login credentials.
+  /// Custom authentication headers are added to the request.
+  ///
+  /// Returns an [AuthResponseDto] upon successful login.
+  /// Rethrows a [DioException] if an error occurs during the API call, allowing higher layers to handle it.
   @override
-  Future<AuthResponseDto> login(LoginRequest requestDto) async {
+  Future<AuthResponseDto> login(LoginRequestDto requestDto) async {
     try {
       final response = await _dio.post(
         '/auth/login',
@@ -38,8 +61,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  /// Registers a new user by sending a POST request to the '/auth/register' endpoint.
+  ///
+  /// The [requestDto] contains the user's registration details.
+  /// Custom authentication headers are added to the request.
+  ///
+  /// Returns an [AuthResponseDto] upon successful registration.
+  /// Rethrows a [DioException] if an error occurs during the API call.
   @override
-  Future<AuthResponseDto> register(SignupRequest requestDto) async {
+  Future<AuthResponseDto> register(SignupRequestDto requestDto) async {
     try {
       final response = await _dio.post(
         '/auth/register',
@@ -52,6 +82,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  /// Fetches the authenticated user's details by sending a GET request to the '/auth/me' endpoint.
+  ///
+  /// Custom authentication headers are added to the request.
+  ///
+  /// Returns a [UserDto] containing the user's information.
+  /// Rethrows a [DioException] if an error occurs during the API call.
   @override
   Future<UserDto> getAuthenticatedUser() async {
     try {

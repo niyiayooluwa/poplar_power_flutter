@@ -1,32 +1,20 @@
-// lib/ui/auth/view_model/auth_view_model.dart
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../../data/mock/mock_service/mock_auth_service.dart';
-import '../../../../../utils/validators.dart';
+import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/domain/use_cases/auth/login_use_case.dart';
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {
-  final MockAuthService _authService;
+  final LoginUseCase _loginUseCase;
 
-  LoginViewModel(this._authService) : super(const AsyncData(null));
+  LoginViewModel(this._loginUseCase) : super(const AsyncData(null));
 
   /// Attempts login using the mock auth service.
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
 
     try {
-      // Validate inputs
-      final emailError = validateEmail(email);
-      if (emailError != null) {
-        state = AsyncError(emailError, StackTrace.current);
-        return;
-      }
-
-      if (password.isEmpty) {
-        state = AsyncError("Password is required", StackTrace.current);
-        return;
-      }
-
-      await _authService.login(email, password);
+      await _loginUseCase.execute(email, password);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -34,8 +22,7 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Provides [loginViewModel] with a mock service for now.
 final loginViewModelProvider =
 StateNotifierProvider<LoginViewModel, AsyncValue<void>>(
-      (ref) => LoginViewModel(MockAuthService()),
+      (ref) => LoginViewModel(LoginUseCase(AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()))),
 );

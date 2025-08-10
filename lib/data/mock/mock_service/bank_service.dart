@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../model/bank_notification.dart';
-import '../../model/transaction_class.dart';
-import '../../model/user_class.dart';
+import 'package:poplar_power/domain/entities/user.dart';
+import 'package:poplar_power/ui/core/models/bank_notification.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
 
 class BankService {
   // Fake data - Replace this with real API calls
   static User getCurrentUser() {
     return User(
-      firstName: "John",
-      lastName: "Doe",
+      fullName: "John Doe",
       email: 'john.doe@email.com',
       balance: 33345.67,
+      phone: '123-456-7890',
+      id: '2',
     );
   }
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../../ui/user_onboarding/auth/signup/viewmodel/signup_view_model.dart';
+import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 
 
 /// Simulates authentication service. Replace with real implementation later.
@@ -28,7 +28,7 @@ class MockAuthService {
 /// This class represents a temporary stand-in for a real backend API call.
 class MockSignupService {
   /// Simulates a network delay and "registers" the user.
-  Future<void> registerUser(SignupFormData data) async {
+  Future<void> registerUser(SignupRequestDto data) async {
     await Future.delayed(const Duration(seconds: 2));
 
     if (data.email == "fail@test.com") {

@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/data/services/confirm_transaction_service.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
+import 'package:poplar_power/ui/core/widgets/pin_input.dart';
+import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/viewmodel/buy_electricity_provider.dart';
-
-import '../../../../data/model/transaction_class.dart';
-import '../../../../data/services/confirm_transaction_service.dart';
-import '../../../core/widgets/pin_input.dart';
-import '../../../core/widgets/smart_input_field.dart';
 
 /// A screen widget for buying electricity.
 class ElectricityScreen extends HookConsumerWidget {

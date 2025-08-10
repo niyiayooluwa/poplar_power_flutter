@@ -1,27 +1,10 @@
-// lib/ui/auth/viewmodel/signup_view_model.dart
-
-import 'dart:ui';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/domain/use_cases/auth/register_use_case.dart';
+import 'dart:ui';
 
-import '../../../../../data/mock/mock_service/mock_auth_service.dart';
 import '../../../../../utils/validators.dart';
-
-/// Model class to hold signup data across steps.
-class SignupFormData {
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String password;
-  final String customRef;
-
-  const SignupFormData({
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.password,
-    required this.customRef,
-  });
-}
 
 /// ViewModel for signup flow.
 ///
@@ -31,7 +14,9 @@ class SignupViewModel extends AsyncNotifier<void> {
   String? _lastName;
   String? _email;
 
-  final _service = MockSignupService();
+  final RegisterUseCase _registerUseCase;
+
+  SignupViewModel(this._registerUseCase);
 
   @override
   Future<void> build() async {
@@ -82,28 +67,14 @@ class SignupViewModel extends AsyncNotifier<void> {
   }) async {
     state = const AsyncLoading();
 
-    // Password validation
-    final passwordError = validatePassword(password);
-    if (passwordError != null) {
-      state = AsyncError(passwordError, StackTrace.current);
-      return;
-    }
-
-    if (password != confirmPassword) {
-      state = AsyncError("Passwords do not match", StackTrace.current);
-      return;
-    }
-
-    final user = SignupFormData(
-      firstName: _firstName ?? '',
-      lastName: _lastName ?? '',
-      email: _email ?? '',
-      password: password,
-      customRef: customRef,
-    );
-
     try {
-      await _service.registerUser(user);
+      await _registerUseCase.execute(
+        _email ?? '',
+        password,
+        '', // phone number is not collected in the UI
+        '$_firstName $_lastName',
+        customRef,
+      );
       state = const AsyncData(null);
       onSuccess();
     } catch (e, st) {
@@ -114,5 +85,5 @@ class SignupViewModel extends AsyncNotifier<void> {
 
 /// Riverpod provider for the [SignupViewModel]
 final signupViewModelProvider = AsyncNotifierProvider<SignupViewModel, void>(() {
-  return SignupViewModel();
+  return SignupViewModel(RegisterUseCase(AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl())));
 });

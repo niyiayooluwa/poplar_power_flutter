@@ -1,11 +1,11 @@
-class SignupRequest {
+class SignupRequestDto {
   final String email;
   final String password;
   final String phone;
   final String fullName;
   final String? customRef;
 
-  const SignupRequest({
+  const SignupRequestDto({
     required this.email,
     required this.password,
     required this.phone,
@@ -23,5 +23,3 @@ class SignupRequest {
     };
   }
 }
-
-class SignupResponse {}

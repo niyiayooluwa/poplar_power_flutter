@@ -81,7 +81,7 @@ class BalanceCard extends HookConsumerWidget {
             AnimatedSwitcher(
               duration: Duration(milliseconds: 300),
               child: Text(
-                balanceVisible ? user.formattedBalance : '••••••',
+                balanceVisible ? user.balance.toString() : '••••••',
                 style: TextStyle(
                     //color: Colors.white,
                     fontSize: 40

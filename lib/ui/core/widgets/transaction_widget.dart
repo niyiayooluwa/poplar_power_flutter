@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/model/transaction_class.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
 
 
 class TransactionItem extends StatelessWidget {

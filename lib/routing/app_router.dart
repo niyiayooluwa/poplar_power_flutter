@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/data/model/transaction_class.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/primary/send/widget/send_2nd_step.dart';

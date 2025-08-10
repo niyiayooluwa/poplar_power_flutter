@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/model/bank_notification.dart';
+import 'package:poplar_power/ui/core/models/bank_notification.dart';
 
 class NotificationItem extends StatelessWidget{
   final BankNotification notification;

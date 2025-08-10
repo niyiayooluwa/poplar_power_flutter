@@ -44,7 +44,7 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
 
     final walletConfig = PaymentMethodConfig(
       name: 'Main Wallet',
-      balance: user.formattedBalance,
+      balance: user.balance.toString(),
       icon: Icons.account_balance_wallet,
       color: Colors.blue,
     );
