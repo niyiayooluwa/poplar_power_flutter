@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
-import 'package:poplar_power/data/services/confirm_transaction_service.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/core/widgets/pin_input.dart';
+import 'package:poplar_power/ui/core/widgets/transaction_confirmation.dart';
 import 'package:poplar_power/ui/primary/send/viewmodel/send_provider.dart';
 
 class Send2ndStepScreen extends HookConsumerWidget {
