@@ -33,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 /lib/gemini/
+/lib/core/constants/api_constants.dart
 
 # Symbolication related
 app.*.symbols

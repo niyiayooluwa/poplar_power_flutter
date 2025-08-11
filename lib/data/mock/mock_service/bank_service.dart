@@ -9,9 +9,10 @@ class BankService {
     return User(
       fullName: "John Doe",
       email: 'john.doe@email.com',
-      balance: 33345.67,
       phone: '123-456-7890',
       id: '2',
+      verified: true,
+      active: true,
     );
   }
 

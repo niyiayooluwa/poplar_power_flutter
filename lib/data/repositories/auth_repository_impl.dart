@@ -23,10 +23,15 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> login(String email, String password) async {
     try {
-      final requestDto = LoginRequestDto(email: email, password: password);
+      final requestDto = LoginRequestDto(username: email, password: password);
       final authResponseDto = await remoteDataSource.login(requestDto);
-      await TokenStorage.saveToken(authResponseDto.token);
-      return authResponseDto.user.toEntity();
+
+      if (authResponseDto.success && authResponseDto.token != null && authResponseDto.user != null) {
+        await TokenStorage.saveToken(authResponseDto.token!);
+        return authResponseDto.user!.toEntity();
+      } else {
+        throw Exception(authResponseDto.message);
+      }
     } catch (e) {
       rethrow;
     }
@@ -58,8 +63,13 @@ class AuthRepositoryImpl implements AuthRepository {
         customRef: customRef,
       );
       final authResponseDto = await remoteDataSource.register(requestDto);
-      await TokenStorage.saveToken(authResponseDto.token);
-      return authResponseDto.user.toEntity();
+
+      if (authResponseDto.success && authResponseDto.token != null && authResponseDto.user != null) {
+        await TokenStorage.saveToken(authResponseDto.token!);
+        return authResponseDto.user!.toEntity();
+      } else {
+        throw Exception(authResponseDto.message);
+      }
     } catch (e) {
       rethrow;
     }

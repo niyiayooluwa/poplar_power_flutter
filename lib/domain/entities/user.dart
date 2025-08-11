@@ -5,8 +5,10 @@ class User {
   final String email;
   final String fullName;
   final String phone;
-  final String? customRef; // Optional based on your register DTO
-  final double? balance; // Assuming balance might be part of the user entity
+  final String? customRef;
+  final bool verified;
+  final bool active;
+  final double? balance;
 
   User({
     required this.id,
@@ -14,6 +16,8 @@ class User {
     required this.fullName,
     required this.phone,
     this.customRef,
+    required this.verified,
+    required this.active,
     this.balance,
   });
 }

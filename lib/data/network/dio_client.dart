@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:poplar_power/core/constants/api_constants.dart';
 
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
@@ -31,13 +32,16 @@ class DioClient {
   // Base options for the Dio instance.
   // These options are applied to all requests made by this Dio instance.
   static final BaseOptions _baseOptions = BaseOptions(
-    baseUrl: 'https://api.example.com',
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 3),
+    baseUrl: ApiConstants.BASE_URL,
+    connectTimeout: const Duration(seconds: 40),
+    receiveTimeout: const Duration(seconds: 40),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+
     },
+    followRedirects: true,
+    maxRedirects: 5,
   );
 
   /// Getter for the Dio instance.
