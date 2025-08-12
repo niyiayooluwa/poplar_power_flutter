@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
-import 'package:poplar_power/domain/repositories/auth_repository.dart';
+import 'package:poplar_power/data/services/settings_service.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
@@ -26,13 +26,16 @@ import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
+//final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/splash',
   redirect: (BuildContext context, GoRouterState state) async {
+    final settingsService = SettingsService();
     final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
+
+    final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
     final hasToken = await authRepository.hasToken();
 
     final protectedRoutes = [
@@ -53,7 +56,11 @@ final GoRouter appRouter = GoRouter(
 
     final isProtected = protectedRoutes.contains(state.matchedLocation);
 
-    if (!hasToken && isProtected) {
+    if (!hasCompletedOnboarding && state.matchedLocation != '/onboarding') {
+      return '/onboarding';
+    }
+
+    if (hasCompletedOnboarding && !hasToken && isProtected) {
       return '/get-started';
     }
 
@@ -164,7 +171,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const ElectricityScreen(),
     ),
 
-    GoRoute(path: '/cable', builder: (context, state) => const CableScreen()),
+    GoRoute(
+        path: '/cable',
+        builder: (context, state) => const CableScreen()
+    ),
 
     GoRoute(
       path: '/more-actions',

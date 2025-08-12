@@ -7,7 +7,7 @@ part of 'onboarding_view_model.dart';
 // **************************************************************************
 
 String _$onboardingViewModelHash() =>
-    r'dd13ec8b5712dd48d29392114e661483b91ae5c9';
+    r'50e647ea7821d0e3e526da0f640796dde6811e6d';
 
 /// A [StateNotifier] that holds and manages onboarding state.
 ///
