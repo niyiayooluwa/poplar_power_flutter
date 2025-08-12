@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../viewmodel/signup_view_model.dart';
 
 /// Step 1 of the Signup process
@@ -34,6 +35,7 @@ class SignupStep1Screen extends HookConsumerWidget {
     final firstNameController = useTextEditingController();
     final lastNameController = useTextEditingController();
     final emailController = useTextEditingController();
+    final phoneController = useTextEditingController();
 
     // Holds validation errors for each field
     final errors = useState<Map<String, String>>({});
@@ -46,10 +48,7 @@ class SignupStep1Screen extends HookConsumerWidget {
           Positioned.fill(
             child: Opacity(
               opacity: 0.4,
-              child: Image.asset(
-                asset,
-                fit: BoxFit.cover,
-              )
+              child: Image.asset(asset, fit: BoxFit.cover),
             ),
           ),
 
@@ -85,7 +84,9 @@ class SignupStep1Screen extends HookConsumerWidget {
                       Text(
                         "Start by telling us who you are",
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.textTheme.titleMedium?.color?.withValues(alpha: 0.7),
+                          color: theme.textTheme.titleMedium?.color?.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ],
@@ -138,6 +139,21 @@ class SignupStep1Screen extends HookConsumerWidget {
                           ),
                         ),
                       ),
+
+                      const SizedBox(height: 20),
+
+                      // Phone number field
+                      TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Phone Number',
+                          errorText: errors.value['phoneNumber'],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
@@ -152,6 +168,7 @@ class SignupStep1Screen extends HookConsumerWidget {
                             firstName: firstNameController.text.trim(),
                             lastName: lastNameController.text.trim(),
                             email: emailController.text.trim(),
+                            phoneNumber: phoneController.text.trim(),
                           );
 
                       if (validationErrors != null) {
@@ -180,8 +197,9 @@ class SignupStep1Screen extends HookConsumerWidget {
 
                   RichText(
                     text: TextSpan(
-                      style: theme.textTheme.bodyMedium, // Default text style for the sentence
-                      children: <TextSpan> [
+                      style: theme.textTheme.bodyMedium,
+                      // Default text style for the sentence
+                      children: <TextSpan>[
                         const TextSpan(text: "Already have an account? "),
                         TextSpan(
                           text: 'Login here',
@@ -190,11 +208,14 @@ class SignupStep1Screen extends HookConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () {context.go('/login');},
+                            ..onTap = () {
+                              context.go('/login');
+                            },
                         ),
                       ],
                     ),
-                    textAlign: TextAlign.center, // Optional: if you want the whole text centered
+                    textAlign: TextAlign
+                        .center, // Optional: if you want the whole text centered
                   ),
 
                   const SizedBox(height: 24),
@@ -202,7 +223,7 @@ class SignupStep1Screen extends HookConsumerWidget {
               ),
             ),
           ),
-        ]
+        ],
       ),
     );
   }

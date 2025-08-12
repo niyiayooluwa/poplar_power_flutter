@@ -1,10 +1,10 @@
+import 'dart:ui';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/domain/use_cases/auth/register_use_case.dart';
-import 'dart:ui';
-
-import '../../../../../utils/validators.dart';
+import 'package:poplar_power/utils/validators.dart';
 
 /// ViewModel for signup flow.
 ///
@@ -13,6 +13,7 @@ class SignupViewModel extends AsyncNotifier<void> {
   String? _firstName;
   String? _lastName;
   String? _email;
+  String? _phoneNUmber;
 
   final RegisterUseCase _registerUseCase;
 
@@ -29,6 +30,7 @@ class SignupViewModel extends AsyncNotifier<void> {
     required String firstName,
     required String lastName,
     required String email,
+    required String phoneNumber,
   }) {
     final errors = <String, String>{};
 
@@ -47,6 +49,11 @@ class SignupViewModel extends AsyncNotifier<void> {
       errors['email'] = emailError;
     }
 
+    final phoneNumberError = validatePhoneNumber(phoneNumber);
+    if (phoneNumberError != null) {
+      errors['phoneNumber'] = phoneNumberError;
+    }
+
     if (errors.isNotEmpty) {
       return errors;
     }
@@ -55,6 +62,8 @@ class SignupViewModel extends AsyncNotifier<void> {
     _firstName = firstName;
     _lastName = lastName;
     _email = email;
+    _phoneNUmber = phoneNumber;
+
     return null;
   }
 
@@ -62,28 +71,37 @@ class SignupViewModel extends AsyncNotifier<void> {
   Future<void> signup({
     required String password,
     required String confirmPassword,
-    required String customRef,
+    required String? customRef,
     required VoidCallback onSuccess,
   }) async {
     state = const AsyncLoading();
 
-    try {
-      await _registerUseCase.execute(
-        _email ?? '',
-        password,
-        '', // phone number is not collected in the UI
-        '$_firstName $_lastName',
-        customRef,
-      );
-      state = const AsyncData(null);
-      onSuccess();
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+    final result = await _registerUseCase.execute(
+      _email ?? '',
+      password,
+      _phoneNUmber ?? '',
+      '$_firstName $_lastName',
+      customRef,
+    );
+
+    result.fold(
+      ifLeft: (failure) =>
+          state = AsyncError(failure.message, StackTrace.current),
+      ifRight: (user) {
+        state = const AsyncData(null);
+        onSuccess();
+      },
+    );
   }
 }
 
 /// Riverpod provider for the [SignupViewModel]
-final signupViewModelProvider = AsyncNotifierProvider<SignupViewModel, void>(() {
-  return SignupViewModel(RegisterUseCase(AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl())));
-});
+final signupViewModelProvider = AsyncNotifierProvider<SignupViewModel, void>(
+  () {
+    return SignupViewModel(
+      RegisterUseCase(
+        AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()),
+      ),
+    );
+  },
+);

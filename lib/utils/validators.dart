@@ -14,6 +14,21 @@ String? validateEmail(String email) {
   return null;
 }
 
+/// Validates a Nigerian phone number.
+///
+/// Returns an error message if invalid, otherwise null.
+String? validatePhoneNumber(String phoneNumber) {
+  if (phoneNumber.isEmpty) {
+    return 'Phone number is required';
+  }
+  if (!phoneNumber.startsWith('0')) {
+    return 'Phone number must start with 0';
+  }
+  if (phoneNumber.length != 11) {
+    return 'Phone number must be 11 digits long';
+  }
+  return null;
+}
 /// Validates a password.
 ///
 /// Returns an error message if invalid, otherwise null.
