@@ -191,7 +191,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Current Balance ${formatCurrency(currentBalance!)}',
+                        'Current Balance ${formatCurrency(currentBalance?.toDouble() ?? 0.0)}',
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black54,

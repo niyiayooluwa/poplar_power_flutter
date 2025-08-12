@@ -22,6 +22,7 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_secure_storage: ^9.2.4
   intl: ^0.18.0
+  dart_either: ^2.0.0
 
 dependency_overrides:
   path_provider_android: 2.2.6

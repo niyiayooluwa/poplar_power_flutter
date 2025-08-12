@@ -13,12 +13,12 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
 
-    try {
-      await _loginUseCase.execute(email, password);
-      state = const AsyncData(null);
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+    final result = await _loginUseCase.execute(email, password);
+
+    result.fold(
+      ifLeft: (failure) => state = AsyncError(failure.message, StackTrace.current),
+      ifRight: (user) => state = const AsyncData(null),
+    );
   }
 }
 

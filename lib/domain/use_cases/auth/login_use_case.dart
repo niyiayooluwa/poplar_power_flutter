@@ -1,22 +1,14 @@
+import 'package:dart_either/dart_either.dart';
 import 'package:poplar_power/domain/entities/user.dart';
+import 'package:poplar_power/domain/failures/auth_failure.dart';
 import 'package:poplar_power/domain/repositories/auth_repository.dart';
-import 'package:poplar_power/utils/validators.dart';
 
 class LoginUseCase {
   final AuthRepository _repository;
 
   LoginUseCase(this._repository);
 
-  Future<User> execute(String email, String password) async {
-    final emailError = validateEmail(email);
-    if (emailError != null) {
-      throw Exception(emailError);
-    }
-
-    if (password.isEmpty) {
-      throw Exception('Password is required');
-    }
-
+  Future<Either<AuthFailure, User>> execute(String email, String password) async {
     return await _repository.login(email, password);
   }
 }
