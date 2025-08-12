@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/domain/repositories/auth_repository.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
@@ -27,7 +30,35 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/get-started',
+  initialLocation: '/home',
+  redirect: (BuildContext context, GoRouterState state) async {
+    final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
+    final hasToken = await authRepository.hasToken();
+
+    final protectedRoutes = [
+      '/home',
+      '/send',
+      '/send2',
+      '/topup',
+      '/notifications',
+      '/profile',
+      '/internet',
+      '/airtime',
+      '/electricity',
+      '/cable',
+      '/more-actions',
+      '/transaction-history',
+      '/transaction-detail',
+    ];
+
+    final isProtected = protectedRoutes.contains(state.matchedLocation);
+
+    if (!hasToken && isProtected) {
+      return '/get-started';
+    }
+
+    return null;
+  },
   routes: [
     /// Public routes - no navbar
     GoRoute(

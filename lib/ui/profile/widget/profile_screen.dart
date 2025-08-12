@@ -54,6 +54,14 @@ class ProfileScreen extends HookConsumerWidget {
                   child: const Text('Change Password'),
                 ),
               ),
+
+              const SizedBox(height: 24),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => profileViewModel.logout(),
+                  child: const Text('Logout'),
+                ),
+              ),
             ],
           ),
         ),
