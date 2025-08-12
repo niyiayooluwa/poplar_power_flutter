@@ -32,12 +32,18 @@ class AuthResponseDto {
   factory AuthResponseDto.fromJson(Map<String, dynamic> json) {
     // Handle the nested JSON string in the message field
     String finalMessage = json['message'];
-    if (json['message'] is String && json['message'].contains('{')) {
+    // Regex to find a JSON string embedded within the message
+    final RegExp jsonRegex = RegExp(r'\{.*\}');
+    final Match? match = jsonRegex.firstMatch(json['message']);
+
+    if (match != null) {
       try {
-        final nestedJson = jsonDecode(json['message'].substring(json['message'].indexOf('{')));
+        final nestedJsonString = match.group(0)!;
+        final nestedJson = jsonDecode(nestedJsonString);
         finalMessage = nestedJson['message'] ?? json['message'];
       } catch (e) {
-        // Ignore if parsing fails, use the original message
+        // If parsing fails, fall back to the original message
+        finalMessage = json['message'];
       }
     }
 

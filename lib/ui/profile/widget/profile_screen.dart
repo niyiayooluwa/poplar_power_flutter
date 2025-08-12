@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/ui/profile/viewmodel/profile_viewmodel.dart';
 
@@ -10,10 +11,15 @@ class ProfileScreen extends HookConsumerWidget {
     final profileState = ref.watch(profileViewModelProvider);
     final profileViewModel = ref.read(profileViewModelProvider.notifier);
 
+    ref.listen<ProfileState>(profileViewModelProvider, (previous, current) {
+      if (current.isLoggedOut) {
+        context.go('/login');
+        profileViewModel.resetLogoutStatus();
+      }
+    });
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

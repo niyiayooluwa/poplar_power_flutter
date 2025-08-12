@@ -94,10 +94,9 @@ class AuthRepositoryImpl implements AuthRepository {
       case DioExceptionType.connectionError:
         return AuthFailure.network();
       case DioExceptionType.badResponse:
-        if (e.response?.statusCode == 400) {
-          return AuthFailure.wrongPassword();
-        } else if (e.response?.statusCode == 404) {
-          return AuthFailure.userNotFound();
+        final responseData = e.response?.data;
+        if (responseData is Map<String, dynamic> && responseData.containsKey('message')) {
+          return AuthFailure.serverError(responseData['message']);
         } else {
           return AuthFailure.unknown();
         }

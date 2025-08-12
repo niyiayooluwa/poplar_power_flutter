@@ -52,6 +52,11 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
 
   Future<void> logout() async {
     await _logOutUseCase.execute();
+    state = state.copyWith(isLoggedOut: true);
+  }
+
+  void resetLogoutStatus() {
+    state = state.copyWith(isLoggedOut: false);
   }
 }
 
@@ -59,11 +64,13 @@ class ProfileState {
   final Profile? profile;
   final bool isLoading;
   final bool enableBiometrics;
+  final bool isLoggedOut;
 
   ProfileState({
     this.profile,
     this.isLoading = true,
     this.enableBiometrics = false,
+    this.isLoggedOut = false,
   });
 
   factory ProfileState.initial() => ProfileState();
@@ -72,11 +79,13 @@ class ProfileState {
     Profile? profile,
     bool? isLoading,
     bool? enableBiometrics,
+    bool? isLoggedOut,
   }) {
     return ProfileState(
       profile: profile ?? this.profile,
       isLoading: isLoading ?? this.isLoading,
       enableBiometrics: enableBiometrics ?? this.enableBiometrics,
+      isLoggedOut: isLoggedOut ?? this.isLoggedOut,
     );
   }
 }
