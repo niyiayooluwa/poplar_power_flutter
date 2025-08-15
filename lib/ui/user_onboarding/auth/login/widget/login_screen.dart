@@ -31,9 +31,6 @@ class LoginScreen extends HookConsumerWidget {
 
     // Listen for navigation side-effects
     ref.listen<AsyncValue<void>>(loginViewModelProvider, (_, state) {
-      if (state is AsyncData && !state.hasError) {
-        context.go('/home');
-      }
       if (state is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(state.error.toString())),
@@ -141,6 +138,18 @@ class LoginScreen extends HookConsumerWidget {
                             ref.read(loginViewModelProvider.notifier).login(
                                   emailController.text.trim(),
                                   passwordController.text.trim(),
+                                  onSuccess: () {
+                                    context.go('/home');
+                                  },
+                                  onOtpRequired: (email, password) {
+                                    context.go(
+                                      '/otp',
+                                      extra: {
+                                        'email': email,
+                                        'password': password,
+                                      },
+                                    );
+                                  },
                                 );
                           },
                     style: FilledButton.styleFrom(

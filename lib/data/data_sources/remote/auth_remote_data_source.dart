@@ -2,7 +2,9 @@
 import 'package:dio/dio.dart';
 import 'package:poplar_power/data/models/auth/auth_response_dto.dart';
 import 'package:poplar_power/data/models/auth/login_request_dto.dart';
+import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
 import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
+import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
 import 'package:poplar_power/data/models/user/user_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 import 'package:poplar_power/core/constants/api_constants.dart'; // For custom headers
@@ -26,6 +28,18 @@ abstract class AuthRemoteDataSource {
   ///
   /// Returns a [Future] that resolves to a [UserDto] containing the authenticated user's information.
   Future<UserDto> getAuthenticatedUser();
+
+  /// Verifies the OTP for a user.
+  ///
+  /// Takes a [VerifyOtpRequestDto] containing the user's email and OTP.
+  /// Returns a [Future] that resolves to an [AuthResponseDto] upon successful verification.
+  Future<AuthResponseDto> verifyOtp(VerifyOtpRequestDto requestDto);
+
+  /// Resends the OTP to a user.
+  ///
+  /// Takes a [ResendOtpRequestDto] containing the user's email.
+  /// Returns a [Future] that resolves to void upon successful resend.
+  Future<void> resendOtp(ResendOtpRequestDto requestDto);
 }
 
 /// Implementation of [AuthRemoteDataSource] that interacts with a remote API using Dio.
@@ -86,7 +100,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   ///
   /// Custom authentication headers are added to the request.
   ///
-  /// Returns a [UserDto] containing the user's information.
+  /// Returns a [UserDto] containing the authenticated user's information.
   /// Rethrows a [DioException] if an error occurs during the API call.
   @override
   Future<UserDto> getAuthenticatedUser() async {
@@ -96,6 +110,48 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         options: Options(headers: _getAuthHeaders()),
       );
       return UserDto.fromJson(response.data);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Verifies the OTP for a user by sending a POST request to the '/auth/verify' endpoint.
+  ///
+  /// The [requestDto] contains the user's email and OTP.
+  /// Custom authentication headers are added to the request.
+  ///
+  /// Returns an [AuthResponseDto] upon successful verification.
+  /// Rethrows a [DioException] if an error occurs during the API call.
+  @override
+  Future<AuthResponseDto> verifyOtp(VerifyOtpRequestDto requestDto) async {
+    try {
+      final response = await _dio.post(
+        '/auth/verify',
+        data: requestDto.toJson(),
+        options: Options(headers: _getAuthHeaders()),
+      );
+      return AuthResponseDto.fromJson(response.data);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Resends the OTP to a user by sending a POST request to the '/auth/resend-verification' endpoint.
+  ///
+  /// The [requestDto] contains the user's email.
+  /// Custom authentication headers are added to the request.
+  ///
+  /// Returns void upon successful resend.
+  /// Rethrows a [DioException] if an error occurs during the API call.
+
+  @override
+  Future<void> resendOtp(ResendOtpRequestDto requestDto) async {
+    try {
+      await _dio.post(
+        '/auth/resend-verification',
+        data: requestDto.toJson(),
+        options: Options(headers: _getAuthHeaders()),
+      );
     } on DioException {
       rethrow;
     }

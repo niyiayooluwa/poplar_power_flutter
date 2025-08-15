@@ -13,6 +13,7 @@ import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dar
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
 
 import '../ui/primary/send/widget/send_screen.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
@@ -32,11 +33,16 @@ final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/splash',
   redirect: (BuildContext context, GoRouterState state) async {
-    final settingsService = SettingsService();
     final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
-
-    final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
     final hasToken = await authRepository.hasToken();
+
+    // If the user has a token, redirect to home
+    if (hasToken) {
+      return '/home';
+    }
+
+    final settingsService = SettingsService();
+    final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
 
     final protectedRoutes = [
       '/home',
@@ -96,6 +102,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/signup-two',
       builder: (context, state) => const SignupStep2Screen(),
+    ),
+
+    GoRoute(
+      path: '/otp',
+      builder: (context, state) {
+        final args = state.extra as Map<String, String>?;
+        final email = args?['email'];
+        final password = args?['password'];
+        return OtpScreen(email: email!, password: password!);
+      },
     ),
 
     GoRoute(

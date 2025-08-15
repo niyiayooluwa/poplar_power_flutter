@@ -8,4 +8,6 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<bool> hasToken(); // Check if user is logged in
   Future<Either<AuthFailure, User>> getAuthenticatedUser(); // Get profile of logged-in user
+  Future<Either<AuthFailure, User>> verifyOtp(String email, String password, String otp);
+  Future<Either<AuthFailure, void>> resendOtp(String email);
 }

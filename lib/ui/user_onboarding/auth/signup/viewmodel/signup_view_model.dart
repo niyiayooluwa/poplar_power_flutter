@@ -13,7 +13,7 @@ class SignupViewModel extends AsyncNotifier<void> {
   String? _firstName;
   String? _lastName;
   String? _email;
-  String? _phoneNUmber;
+  String? _phoneNumber;
 
   final RegisterUseCase _registerUseCase;
 
@@ -62,7 +62,7 @@ class SignupViewModel extends AsyncNotifier<void> {
     _firstName = firstName;
     _lastName = lastName;
     _email = email;
-    _phoneNUmber = phoneNumber;
+    _phoneNumber = phoneNumber;
 
     return null;
   }
@@ -73,13 +73,14 @@ class SignupViewModel extends AsyncNotifier<void> {
     required String confirmPassword,
     required String? customRef,
     required VoidCallback onSuccess,
+    required Function(String email) onOtpRequired,
   }) async {
     state = const AsyncLoading();
 
     final result = await _registerUseCase.execute(
       _email ?? '',
       password,
-      _phoneNUmber ?? '',
+      '234$_phoneNumber',
       '$_firstName $_lastName',
       customRef,
     );
@@ -88,8 +89,12 @@ class SignupViewModel extends AsyncNotifier<void> {
       ifLeft: (failure) =>
           state = AsyncError(failure.message, StackTrace.current),
       ifRight: (user) {
+        if (!user.verified) {
+          onOtpRequired(user.email);
+        } else {
+          onSuccess();
+        }
         state = const AsyncData(null);
-        onSuccess();
       },
     );
   }

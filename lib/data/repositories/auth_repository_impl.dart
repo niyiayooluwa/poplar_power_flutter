@@ -2,7 +2,9 @@ import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/models/auth/login_request_dto.dart';
+import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
 import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
+import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
 import 'package:poplar_power/data/storage/token_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/failures/auth_failure.dart';
@@ -19,7 +21,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final requestDto = LoginRequestDto(username: email, password: password);
       final authResponseDto = await remoteDataSource.login(requestDto);
 
-      if (authResponseDto.success && authResponseDto.token != null && authResponseDto.user != null) {
+      if (authResponseDto.success &&
+          authResponseDto.token != null &&
+          authResponseDto.user != null) {
         await TokenStorage.saveToken(authResponseDto.token!);
         return Right(authResponseDto.user!.toEntity());
       } else {
@@ -50,7 +54,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       final authResponseDto = await remoteDataSource.register(requestDto);
 
-      if (authResponseDto.success && authResponseDto.token != null && authResponseDto.user != null) {
+      if (authResponseDto.success &&
+          authResponseDto.token != null &&
+          authResponseDto.user != null) {
         await TokenStorage.saveToken(authResponseDto.token!);
         return Right(authResponseDto.user!.toEntity());
       } else {
@@ -65,7 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    await TokenStorage.deleteToken();
+    //await TokenStorage.deleteToken();
   }
 
   @override
@@ -86,6 +92,49 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Either<AuthFailure, User>> verifyOtp(String email, String password, String otp) async {
+    try {
+      final requestDto = VerifyOtpRequestDto(email: email, password: password, otp: otp);
+      final authResponseDto = await remoteDataSource.verifyOtp(requestDto);
+
+      if (authResponseDto.success) {
+        if (authResponseDto.token != null) {
+          await TokenStorage.saveToken(authResponseDto.token!); 
+        }
+
+        if (authResponseDto.user != null) {
+          return Right(authResponseDto.user!.toEntity());
+        } else {
+          // If OTP verification is successful but no user object is returned,
+          // attempt to log in the user using the provided email and password.
+          // This assumes the account is now verified and can be logged into.
+          final loginResult = await login(email, password);
+          return loginResult;
+        }
+      } else {
+        return Left(AuthFailure.serverError(authResponseDto.message));
+      }
+    } on DioException catch (e) {
+      return Left(_handleDioException(e));
+    } catch (e) {
+      return Left(AuthFailure.unknown());
+    }
+  }
+
+  @override
+  Future<Either<AuthFailure, void>> resendOtp(String email) async {
+    try {
+      final requestDto = ResendOtpRequestDto(email: email);
+      await remoteDataSource.resendOtp(requestDto);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleDioException(e));
+    } catch (e) {
+      return Left(AuthFailure.unknown());
+    }
+  }
+
   AuthFailure _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -95,7 +144,8 @@ class AuthRepositoryImpl implements AuthRepository {
         return AuthFailure.network();
       case DioExceptionType.badResponse:
         final responseData = e.response?.data;
-        if (responseData is Map<String, dynamic> && responseData.containsKey('message')) {
+        if (responseData is Map<String, dynamic> &&
+            responseData.containsKey('message')) {
           return AuthFailure.serverError(responseData['message']);
         } else {
           return AuthFailure.unknown();

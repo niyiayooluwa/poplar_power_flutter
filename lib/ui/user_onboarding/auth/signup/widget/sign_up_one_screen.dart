@@ -146,6 +146,7 @@ class SignupStep1Screen extends HookConsumerWidget {
                       TextField(
                         controller: phoneController,
                         keyboardType: TextInputType.emailAddress,
+                        maxLength: 11,
                         decoration: InputDecoration(
                           labelText: 'Phone Number',
                           errorText: errors.value['phoneNumber'],

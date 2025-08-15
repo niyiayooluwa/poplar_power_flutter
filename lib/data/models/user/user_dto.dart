@@ -80,7 +80,7 @@ class UserDto {
       customRef: customRef,
       verified: verified,
       active: active,
-      balance: 0.0,
+      balance: 40000.0,
     );
   }
 }
