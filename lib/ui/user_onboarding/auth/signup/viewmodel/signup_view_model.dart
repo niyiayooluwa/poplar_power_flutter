@@ -1,15 +1,13 @@
 import 'dart:ui';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
-import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/domain/use_cases/auth/register_use_case.dart';
 import 'package:poplar_power/utils/validators.dart';
 
 /// ViewModel for signup flow.
 ///
 /// Manages user input between steps and handles submission to service.
-class SignupViewModel extends AsyncNotifier<void> {
+class SignupViewModel extends StateNotifier<AsyncValue<void>> {
   String? _firstName;
   String? _lastName;
   String? _email;
@@ -17,12 +15,7 @@ class SignupViewModel extends AsyncNotifier<void> {
 
   final RegisterUseCase _registerUseCase;
 
-  SignupViewModel(this._registerUseCase);
-
-  @override
-  Future<void> build() async {
-    // no initialization needed
-  }
+  SignupViewModel(this._registerUseCase) : super(const AsyncData(null));
 
   /// Validates and saves data from Step 1.
   /// Returns a map of field errors, or null if valid.
@@ -101,12 +94,8 @@ class SignupViewModel extends AsyncNotifier<void> {
 }
 
 /// Riverpod provider for the [SignupViewModel]
-final signupViewModelProvider = AsyncNotifierProvider<SignupViewModel, void>(
-  () {
-    return SignupViewModel(
-      RegisterUseCase(
-        AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()),
-      ),
-    );
-  },
-);
+final signupViewModelProvider =
+    StateNotifierProvider<SignupViewModel, AsyncValue<void>>((ref) {
+      final registerUseCase = ref.watch(registerUseCaseProvider);
+      return SignupViewModel(registerUseCase);
+    });

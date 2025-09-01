@@ -1,5 +1,7 @@
 // lib/data/data_sources/remote/auth_remote_data_source.dart
 import 'package:dio/dio.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/core/constants/api_constants.dart'; // For custom headers
 import 'package:poplar_power/data/models/auth/auth_response_dto.dart';
 import 'package:poplar_power/data/models/auth/login_request_dto.dart';
 import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
@@ -7,7 +9,6 @@ import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
 import 'package:poplar_power/data/models/user/user_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
-import 'package:poplar_power/core/constants/api_constants.dart'; // For custom headers
 
 /// Abstract class defining the contract for authentication-related remote data operations.
 /// This class outlines the methods that any implementation of an authentication remote data source must provide.
@@ -157,3 +158,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 }
+
+//Data Source Provider
+final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
+  return AuthRemoteDataSourceImpl();
+});

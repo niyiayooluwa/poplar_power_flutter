@@ -1,5 +1,6 @@
 import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/models/auth/login_request_dto.dart';
 import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
@@ -93,14 +94,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<AuthFailure, User>> verifyOtp(String email, String password, String otp) async {
+  Future<Either<AuthFailure, User>> verifyOtp(
+    String email,
+    String password,
+    String otp,
+  ) async {
     try {
-      final requestDto = VerifyOtpRequestDto(email: email, password: password, otp: otp);
+      final requestDto = VerifyOtpRequestDto(
+        email: email,
+        password: password,
+        otp: otp,
+      );
       final authResponseDto = await remoteDataSource.verifyOtp(requestDto);
 
       if (authResponseDto.success) {
         if (authResponseDto.token != null) {
-          await TokenStorage.saveToken(authResponseDto.token!); 
+          await TokenStorage.saveToken(authResponseDto.token!);
         }
 
         if (authResponseDto.user != null) {
@@ -155,3 +164,9 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
+
+// Repository Provider
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final remoteDataSource = ref.watch(authRemoteDataSourceProvider);
+  return AuthRepositoryImpl(remoteDataSource: remoteDataSource);
+});

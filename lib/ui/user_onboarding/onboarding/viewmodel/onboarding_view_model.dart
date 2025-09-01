@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/data/services/app_providers.dart';
+import 'package:poplar_power/data/services/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'onboarding_view_model.g.dart';
 

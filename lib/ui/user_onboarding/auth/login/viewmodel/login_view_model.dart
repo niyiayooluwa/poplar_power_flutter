@@ -1,15 +1,15 @@
 import 'dart:ui';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
-import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
 import 'package:poplar_power/domain/use_cases/auth/login_use_case.dart';
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {
   final LoginUseCase _loginUseCase;
+  final Ref _ref;
 
-  LoginViewModel(this._loginUseCase) : super(const AsyncData(null));
+  LoginViewModel(this._loginUseCase, this._ref) : super(const AsyncData(null));
 
   Future<void> login(
     String email,
@@ -33,6 +33,7 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
         if (!user.verified) {
           onOtpRequired(user.email, password); // Pass password here
         } else {
+          _ref.read(userProvider.notifier).onLoginSuccess(user);
           onSuccess();
         }
         state = const AsyncData(null);
@@ -42,6 +43,7 @@ class LoginViewModel extends StateNotifier<AsyncValue<void>> {
 }
 
 final loginViewModelProvider =
-StateNotifierProvider<LoginViewModel, AsyncValue<void>>(
-      (ref) => LoginViewModel(LoginUseCase(AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()))),
-);
+    StateNotifierProvider<LoginViewModel, AsyncValue<void>>((ref) {
+      final loginUseCase = ref.watch(loginUseCaseProvider);
+      return LoginViewModel(loginUseCase, ref);
+    });

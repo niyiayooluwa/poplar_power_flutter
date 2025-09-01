@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../viewmodel/signup_view_model.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/viewmodel/signup_view_model.dart';
 
 class SignupStep2Screen extends HookConsumerWidget {
   const SignupStep2Screen({super.key});
@@ -33,7 +33,7 @@ class SignupStep2Screen extends HookConsumerWidget {
     // Listen to the signup state for errors or loading
     final signupState = ref.watch(signupViewModelProvider);
 
-    ref.listen<AsyncValue<void>>(signupViewModelProvider, (_, state) {
+    ref.listen<AsyncValue<void>>(signupViewModelProvider,  (_, state) {
       if (state is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(state.error.toString())),

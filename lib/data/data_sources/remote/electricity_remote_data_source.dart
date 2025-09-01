@@ -4,10 +4,13 @@ import 'package:poplar_power/data/models/electricity/biller_product_dto.dart';
 import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
 import 'package:poplar_power/data/models/electricity/electricity_disco_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 abstract class ElectricityRemoteDataSource {
   Future<List<ElectricityDiscoDto>> getDiscosForCategory();
+
   Future<List<BillerProductDto>> getProductsForDisco(String discoId);
+
   Future<void> buyToken(BuyTokenRequestDto request);
 }
 
@@ -37,9 +40,7 @@ class ElectricityRemoteDataSourceImpl implements ElectricityRemoteDataSource {
   @override
   Future<List<BillerProductDto>> getProductsForDisco(String discoId) async {
     try {
-      final response = await _dio.get(
-        '/autoPayBillers/$discoId/products',
-      );
+      final response = await _dio.get('/autoPayBillers/$discoId/products');
       final List<dynamic> data = response.data;
       return data.map((json) => BillerProductDto.fromJson(json)).toList();
     } on DioException {
@@ -60,3 +61,9 @@ class ElectricityRemoteDataSourceImpl implements ElectricityRemoteDataSource {
     }
   }
 }
+
+//Data Source Provider
+final electricityRemoteDataSourceProvider =
+    Provider<ElectricityRemoteDataSource>((ref) {
+      return ElectricityRemoteDataSourceImpl();
+    });

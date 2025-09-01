@@ -1,5 +1,6 @@
 import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/electricity_remote_data_source.dart';
 import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
 import 'package:poplar_power/domain/failures/biller_failure.dart';
@@ -70,3 +71,9 @@ class ElectricityRepositoryImpl implements ElectricityRepository {
     }
   }
 }
+
+// Repository Provider
+final electricityRepositoryProvider = Provider<ElectricityRepository>((ref) {
+  final remoteDataSource = ref.watch(electricityRemoteDataSourceProvider);
+  return ElectricityRepositoryImpl(remoteDataSource);
+});
