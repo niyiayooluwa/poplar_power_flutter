@@ -560,7 +560,7 @@ class TransactionSheetService {
     ];
   }
 
-  /// Creates transaction fields for electricity purchase
+  /// Creates transaction fields for billers purchase
   static List<TransactionField> createElectricityFields({
     required String disco,
     required String meterNumber,

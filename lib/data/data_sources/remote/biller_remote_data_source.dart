@@ -1,20 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:poplar_power/core/constants/api_constants.dart';
-import 'package:poplar_power/data/models/electricity/biller_product_dto.dart';
-import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
-import 'package:poplar_power/data/models/electricity/electricity_disco_dto.dart';
+import 'package:poplar_power/data/models/billers/biller_dto.dart';
+import 'package:poplar_power/data/models/billers/biller_product_dto.dart';
+import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-abstract class ElectricityRemoteDataSource {
-  Future<List<ElectricityDiscoDto>> getDiscosForCategory();
-
-  Future<List<BillerProductDto>> getProductsForDisco(String discoId);
-
+abstract class BillerRemoteDataSource {
+  Future<List<BillerDto>> getBillersForCategory(String categoryId);
+  Future<List<BillerProductDto>> getProductsForBiller(String billerId);
   Future<void> buyToken(BuyTokenRequestDto request);
 }
 
-class ElectricityRemoteDataSourceImpl implements ElectricityRemoteDataSource {
+class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
   final Dio _dio = DioClient().dio;
 
   Map<String, dynamic> _getAuthHeaders() {
@@ -25,22 +23,22 @@ class ElectricityRemoteDataSourceImpl implements ElectricityRemoteDataSource {
   }
 
   @override
-  Future<List<ElectricityDiscoDto>> getDiscosForCategory() async {
+  Future<List<BillerDto>> getBillersForCategory (String categoryId) async {
     try {
       final response = await _dio.get(
-        '/autoPayBillers/categories/ELECTRIC_DISCO/drill',
+        '/autoPayBillers/categories/$categoryId/drill',
       );
       final List<dynamic> data = response.data;
-      return data.map((json) => ElectricityDiscoDto.fromJson(json)).toList();
+      return data.map((json) => BillerDto.fromJson(json)).toList();
     } on DioException {
       rethrow;
     }
   }
 
   @override
-  Future<List<BillerProductDto>> getProductsForDisco(String discoId) async {
+  Future<List<BillerProductDto>> getProductsForBiller (String billerId) async {
     try {
-      final response = await _dio.get('/autoPayBillers/$discoId/products');
+      final response = await _dio.get('/autoPayBillers/$billerId/products');
       final List<dynamic> data = response.data;
       return data.map((json) => BillerProductDto.fromJson(json)).toList();
     } on DioException {
@@ -63,7 +61,7 @@ class ElectricityRemoteDataSourceImpl implements ElectricityRemoteDataSource {
 }
 
 //Data Source Provider
-final electricityRemoteDataSourceProvider =
-    Provider<ElectricityRemoteDataSource>((ref) {
-      return ElectricityRemoteDataSourceImpl();
+final billerRemoteDataSourceProvider =
+    Provider<BillerRemoteDataSource>((ref) {
+      return BillerRemoteDataSourceImpl();
     });

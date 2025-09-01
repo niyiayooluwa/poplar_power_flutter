@@ -1,17 +1,17 @@
 import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/data_sources/remote/electricity_remote_data_source.dart';
-import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
+import 'package:poplar_power/data/data_sources/remote/biller_remote_data_source.dart';
+import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
 import 'package:poplar_power/domain/failures/biller_failure.dart';
+import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
-import 'package:poplar_power/domain/models/electricity_disco.dart';
-import 'package:poplar_power/domain/repositories/electricity_repository.dart';
+import 'package:poplar_power/domain/repositories/biller_repository.dart';
 
-class ElectricityRepositoryImpl implements ElectricityRepository {
-  final ElectricityRemoteDataSource _remoteDataSource;
+class BillerRepositoryImpl implements BillerRepository {
+  final BillerRemoteDataSource _remoteDataSource;
 
-  ElectricityRepositoryImpl(this._remoteDataSource);
+  BillerRepositoryImpl(this._remoteDataSource);
 
   @override
   Future<Either<BillerFailure, void>> buyToken(
@@ -28,9 +28,11 @@ class ElectricityRepositoryImpl implements ElectricityRepository {
   }
 
   @override
-  Future<Either<BillerFailure, List<ElectricityDisco>>> getDiscosForCategory() async {
+  Future<Either<BillerFailure, List<Biller>>> getBillersForCategory(
+    String categoryId,
+  ) async {
     try {
-      final dtos = await _remoteDataSource.getDiscosForCategory();
+      final dtos = await _remoteDataSource.getBillersForCategory(categoryId);
       // Assuming ElectricityDiscoDto has a toEntity() method
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
@@ -42,11 +44,11 @@ class ElectricityRepositoryImpl implements ElectricityRepository {
   }
 
   @override
-  Future<Either<BillerFailure, List<BillerProduct>>> getProductsForDisco(
-    String discoId,
+  Future<Either<BillerFailure, List<BillerProduct>>> getProductsForBiller(
+    String billerId,
   ) async {
     try {
-      final dtos = await _remoteDataSource.getProductsForDisco(discoId);
+      final dtos = await _remoteDataSource.getProductsForBiller(billerId);
       // Assuming BillerProductDto has a toEntity() method
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
@@ -73,7 +75,7 @@ class ElectricityRepositoryImpl implements ElectricityRepository {
 }
 
 // Repository Provider
-final electricityRepositoryProvider = Provider<ElectricityRepository>((ref) {
-  final remoteDataSource = ref.watch(electricityRemoteDataSourceProvider);
-  return ElectricityRepositoryImpl(remoteDataSource);
+final billerRepositoryProvider = Provider<BillerRepository>((ref) {
+  final remoteDataSource = ref.watch(billerRemoteDataSourceProvider);
+  return BillerRepositoryImpl(remoteDataSource);
 });

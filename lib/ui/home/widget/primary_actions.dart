@@ -8,7 +8,6 @@ class PrimaryActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {

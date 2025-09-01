@@ -390,7 +390,7 @@ class PinEntryService {
     bool Function(String pin)? validator,
     int maxAttempts = 3,
   }) async {
-    String? enteredPin;
+    //String? enteredPin;
     bool showError = false;
     int attempts = 0;
 

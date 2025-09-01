@@ -17,10 +17,7 @@ class OtpScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
-    final viewModel = ref.read(otpViewModelProvider.notifier);
     final resendOtpViewModel = ref.read(resendOtpViewModelProvider.notifier);
-    final state = ref.watch(otpViewModelProvider);
 
     ref.listen<AsyncValue<void>>(otpViewModelProvider, (previous, next) {
       next.when(

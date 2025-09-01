@@ -1,6 +1,4 @@
-import 'package:poplar_power/domain/models/electricity_disco.dart';
-
-class ElectricityDiscoDto {
+class Biller {
   final int id;
   final String alias;
   final String name;
@@ -8,7 +6,7 @@ class ElectricityDiscoDto {
   final String logoUrl;
   final int accountNumberSize;
 
-  ElectricityDiscoDto({
+  Biller({
     required this.id,
     required this.alias,
     required this.name,
@@ -17,25 +15,14 @@ class ElectricityDiscoDto {
     required this.accountNumberSize,
   });
 
-  factory ElectricityDiscoDto.fromJson(Map<String, dynamic> json) {
-    return ElectricityDiscoDto(
+  factory Biller.fromJson(Map<String, dynamic> json) {
+    return Biller(
       id: int.parse(json['id'] as String),
       alias: json['alias'],
       name: json['name'],
       validation: json['validation'],
       logoUrl: json['logoUrl'],
       accountNumberSize: json['accountNumberSize'],
-    );
-  }
-
-  ElectricityDisco toEntity() {
-    return ElectricityDisco(
-      id: id,
-      alias: alias,
-      name: name,
-      validation: validation,
-      logoUrl: logoUrl,
-      accountNumberSize: accountNumberSize,
     );
   }
 }

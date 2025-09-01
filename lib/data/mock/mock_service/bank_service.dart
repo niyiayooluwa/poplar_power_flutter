@@ -1225,7 +1225,7 @@ class BankService {
       ),
       BankNotification(
         title: 'Bill Payment Due',
-        subtitle: 'Reminder: Your electricity bill of \$75.00 from City Power Co. is due tomorrow. Auto-pay is enabled',
+        subtitle: 'Reminder: Your billers bill of \$75.00 from City Power Co. is due tomorrow. Auto-pay is enabled',
         icon: Icons.receipt,
         date: DateTime(2025, 7, 3, 9, 15, 48),
         color: Colors.orange,

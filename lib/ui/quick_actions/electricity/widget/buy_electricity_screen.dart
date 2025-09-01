@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
-import 'package:poplar_power/ui/quick_actions/electricity/viewmodel/buy_electricity_provider.dart';
+import 'package:poplar_power/ui/quick_actions/electricity/viewmodel/buy_electricity_viewmodel.dart';
 
 class ElectricityScreen extends HookConsumerWidget {
   const ElectricityScreen({super.key});

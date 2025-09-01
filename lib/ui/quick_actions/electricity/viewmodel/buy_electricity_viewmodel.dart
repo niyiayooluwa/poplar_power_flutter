@@ -1,42 +1,25 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
+import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
+import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
-import 'package:poplar_power/domain/models/electricity_disco.dart';
 import 'package:poplar_power/domain/use_cases/electricity/buy_electricity_token_use_case.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_discos_for_category_use_case.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_products_for_disco_use_case.dart';
-import 'package:poplar_power/domain/use_cases/profile/get_profile_use_case.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
 
 import 'buy_electricity_state.dart';
 
 class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
-  final GetDiscosForCategoryUseCase _getDiscosUseCase;
-  final GetProductsForDiscoUseCase _getProductsUseCase;
+  final GetBillersForCategoryUseCase _getDiscosUseCase;
+  final GetProductsForBillerUseCase _getProductsUseCase;
   final BuyElectricityTokenUseCase _buyTokenUseCase;
-  final GetProfileUseCase _getProfileUseCase;
 
   BuyElectricityViewModel(
     this._getDiscosUseCase,
     this._getProductsUseCase,
     this._buyTokenUseCase,
-    this._getProfileUseCase,
-  ) : super(BuyElectricityState.initial()) {
-    loadUserProfile();
-  }
+  ) : super(BuyElectricityState.initial());
 
-  Future<void> loadUserProfile() async {
-    final result = await _getProfileUseCase.execute();
-    result.fold(
-      ifLeft: (failure) {
-        result;
-      },
-      ifRight: (user) {
-        state = state.copyWith(email: user.email, phoneNumber: user.phone);
-      },
-    );
-  }
-
-  void selectDisco(ElectricityDisco disco) {
+  void selectDisco(Biller disco) {
     state = state.copyWith(
       selectedDisco: disco,
       selectedProduct: null,
@@ -82,7 +65,7 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
 
   Future<void> fetchDiscos() async {
     state = state.copyWith(discos: const AsyncLoading());
-    final result = await _getDiscosUseCase.execute();
+    final result = await _getDiscosUseCase.execute('ELECTRIC_DISCO');
 
     result.fold(
       ifLeft: (failure) => state = state.copyWith(
@@ -124,3 +107,12 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
     );
   }
 }
+
+final buyElectricityViewModelProvider =
+    StateNotifierProvider<BuyElectricityViewModel, BuyElectricityState>((ref) {
+      final getDiscos = ref.watch(getBillersForCategoryUseCaseProvider);
+      final getProducts = ref.watch(getProductsForBillerUseCaseProvider);
+      final buyToken = ref.watch(buyElectricityTokenUseCaseProvider);
+
+      return BuyElectricityViewModel(getDiscos, getProducts, buyToken);
+    });

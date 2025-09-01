@@ -25,7 +25,7 @@ class MoreActions extends StatelessWidget {
         'icon': Icons.power,
         'label': 'Electricity',
         'color': Colors.orange,
-        'route': '/electricity'
+        'route': '/billers'
       },
       {
         'icon': Icons.tv,

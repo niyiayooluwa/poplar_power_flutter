@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/services/settings_service.dart';
@@ -67,7 +64,7 @@ final GoRouter appRouter = GoRouter(
       '/profile',
       '/internet',
       '/airtime',
-      '/electricity',
+      '/billers',
       '/cable',
       '/more-actions',
       '/transaction-history',
@@ -197,7 +194,7 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/electricity',
+      path: '/billers',
       builder: (context, state) => const ElectricityScreen(),
     ),
 

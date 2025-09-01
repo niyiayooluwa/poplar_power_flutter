@@ -27,7 +27,7 @@ class QuickActions extends HookConsumerWidget {
         'icon': Icons.power,
         'label': 'Electricity',
         'color': Colors.orange,
-        'route': '/electricity'
+        'route': '/billers'
       },
       {
         'icon': Icons.more_horiz,
