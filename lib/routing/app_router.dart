@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/services/settings_service.dart';
@@ -50,8 +53,8 @@ final GoRouter appRouter = GoRouter(
     final isOnGuestRoute = guestRoutes.contains(state.matchedLocation);
 
     // If the user has a token AND is currently on a guest route, redirect to home.
-    if (hasToken && isOnGuestRoute) {
-      return '/home';
+    if (hasToken && isOnGuestRoute && state.matchedLocation != '/login') {
+      return '/login';
     }
 
     // --- The rest of the original logic for logged-out users ---
