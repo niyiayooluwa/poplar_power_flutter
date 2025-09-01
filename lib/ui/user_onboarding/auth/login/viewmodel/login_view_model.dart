@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
-import 'package:poplar_power/domain/failures/auth_failure.dart';
 import 'package:poplar_power/domain/use_cases/auth/login_use_case.dart';
 
 /// ViewModel managing login logic and state.

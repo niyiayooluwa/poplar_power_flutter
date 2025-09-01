@@ -9,8 +9,6 @@ class PrimaryActions extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
-    final iconColor = isDarkTheme ? Colors.white : Colors.black;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -69,7 +67,9 @@ class PillActionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        onTap();
+      },
       borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

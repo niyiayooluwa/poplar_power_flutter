@@ -1,53 +1,126 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/mock/mock_repository/mock_disco_repository.dart';
+import 'package:poplar_power/data/models/electricity/buy_token_request_dto.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/electricity_disco.dart';
+import 'package:poplar_power/domain/use_cases/electricity/buy_electricity_token_use_case.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_discos_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_products_for_disco_use_case.dart';
+import 'package:poplar_power/domain/use_cases/profile/get_profile_use_case.dart';
+
 import 'buy_electricity_state.dart';
 
 class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
-  final ElectricityDiscoRepository _repository;
+  final GetDiscosForCategoryUseCase _getDiscosUseCase;
+  final GetProductsForDiscoUseCase _getProductsUseCase;
+  final BuyElectricityTokenUseCase _buyTokenUseCase;
+  final GetProfileUseCase _getProfileUseCase;
 
-  BuyElectricityViewModel(this._repository): super(BuyElectricityState.initial()) {
-    _loadElectricityDiscos();
+  BuyElectricityViewModel(
+    this._getDiscosUseCase,
+    this._getProductsUseCase,
+    this._buyTokenUseCase,
+    this._getProfileUseCase,
+  ) : super(BuyElectricityState.initial()) {
+    loadUserProfile();
   }
 
-  void _loadElectricityDiscos() async {
-    final electricityDiscos = await _repository.fetchDiscos();
-    state = state.copyWith(electricityDiscos: electricityDiscos);
+  Future<void> loadUserProfile() async {
+    final result = await _getProfileUseCase.execute();
+    result.fold(
+      ifLeft: (failure) {
+        result;
+      },
+      ifRight: (user) {
+        state = state.copyWith(email: user.email, phoneNumber: user.phone);
+      },
+    );
   }
-  void setMeterNumber(String number) {
-    state = state.copyWith(meterNumber: number);
-  }
-  void selectElectricityDisco(String name) {
-    final selected =  state.electricityDiscos.firstWhere((disco) => disco.name == name);
+
+  void selectDisco(ElectricityDisco disco) {
     state = state.copyWith(
-      selectedDisco: selected,
-      selectedProduct: null, //Reset product if Disco changes
+      selectedDisco: disco,
+      selectedProduct: null,
+      products: const AsyncData(
+        [],
+      ), // Or AsyncData(null) or back to initial state
     );
   }
-  void selectProduct(String productName) {
-    final product = state.selectedDisco?.products.firstWhere(
-          (product) => product.name == productName /*orElse: () => null*/,
-    );
+
+  void selectProduct(BillerProduct product) {
     state = state.copyWith(selectedProduct: product);
   }
-  void setPrice(String price) {
-    state = state.copyWith(price: price);
-  }
-  void reset() {
-    state = state.copyWith(
-      selectedDisco: null,
-      price: '',
-      selectedProduct: null,
-      meterNumber: '',
+
+  void setMeterNumber(String num) => state = state.copyWith(meterNumber: num);
+
+  void setAmount(String amount) => state = state.copyWith(amount: amount);
+
+  void setWalletPin(String pin) => state = state.copyWith(walletPin: pin);
+
+  void setPreference(String pref) =>
+      state = state.copyWith(notificationPreference: pref);
+
+  void setEmail(String email) => state = state.copyWith(email: email);
+
+  void setPhoneNumber(String phoneNumber) =>
+      state = state.copyWith(phoneNumber: phoneNumber);
+
+  BuyTokenRequestDto buildPurchaseRequest() {
+    return BuyTokenRequestDto(
+      meterNumber: state.meterNumber,
+      amount: int.tryParse(state.amount) ?? 0,
+      walletPin: state.walletPin,
+      notificationPreference: state.notificationPreference,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      provider: state.provider,
+      categoryOrBillerGroups: "ELECTRIC_DISCO",
+      categoryIdOrBillers: state.selectedDisco!.alias,
+      billerIdOrProductId:
+          state.selectedProduct!.id, // Fixed: removed quotes around 'state'
     );
   }
-  bool get isFormValid {
-    return state.selectedDisco != null &&
-        state.selectedProduct != null &&
-        state.meterNumber != null &&
-        state.price != null &&
-        state.price!.length <= 6 &&
-        state.price!.length >= 3 &&
-        state.meterNumber!.length < 11 &&
-        state.meterNumber!.length >= 6;
+
+  Future<void> fetchDiscos() async {
+    state = state.copyWith(discos: const AsyncLoading());
+    final result = await _getDiscosUseCase.execute();
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        discos: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (discos) => state = state.copyWith(discos: AsyncData(discos)),
+    );
+  }
+
+  Future<void> fetchProducts(String discoAlias) async {
+    if (state.selectedDisco == null) return;
+    state = state.copyWith(products: const AsyncLoading());
+
+    final result = await _getProductsUseCase.execute(discoAlias);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        products: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (products) =>
+          state = state.copyWith(products: AsyncData(products)),
+    );
+  }
+
+  Future<void> buyToken() async {
+    if (!state.isFormValid) return;
+
+    state = state.copyWith(purchaseState: const AsyncLoading());
+
+    final request = buildPurchaseRequest();
+    final result = await _buyTokenUseCase.execute(request);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        purchaseState: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (_) =>
+          state = state.copyWith(purchaseState: const AsyncData(null)),
+    );
   }
 }

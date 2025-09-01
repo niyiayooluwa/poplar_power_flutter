@@ -35,15 +35,26 @@ final GoRouter appRouter = GoRouter(
   redirect: (BuildContext context, GoRouterState state) async {
     final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
     final hasToken = await authRepository.hasToken();
-
-    // If the user has a token, redirect to home
-    if (hasToken) {
-      return '/home';
-    }
-
     final settingsService = SettingsService();
     final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
 
+    final guestRoutes = [
+      '/onboarding',
+      '/get-started',
+      '/login',
+      '/signup',
+      '/signup-two',
+      '/otp'
+    ];
+
+    final isOnGuestRoute = guestRoutes.contains(state.matchedLocation);
+
+    // If the user has a token AND is currently on a guest route, redirect to home.
+    if (hasToken && isOnGuestRoute) {
+      return '/home';
+    }
+
+    // --- The rest of the original logic for logged-out users ---
     final protectedRoutes = [
       '/home',
       '/send',

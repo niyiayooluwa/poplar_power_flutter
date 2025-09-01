@@ -31,5 +31,5 @@ sealed class AuthFailure {
 }
 
 class _AuthFailureImpl extends AuthFailure {
-  const _AuthFailureImpl(String message) : super(message);
+  const _AuthFailureImpl(super.message);
 }
