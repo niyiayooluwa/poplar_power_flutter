@@ -14,6 +14,7 @@ import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
 import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
+import 'package:poplar_power/ui/webview/widget/webview_screen.dart';
 
 import '../ui/primary/send/widget/send_screen.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
@@ -221,5 +222,10 @@ final GoRouter appRouter = GoRouter(
         return TransactionDetailScreen(transaction: transaction);
       },
     ),
+
+    GoRoute(
+      path: '/webview',
+      builder: (context, state) => const WebViewScreen(),
+    )
   ],
 );
