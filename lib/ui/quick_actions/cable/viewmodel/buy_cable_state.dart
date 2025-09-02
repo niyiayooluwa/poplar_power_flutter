@@ -1,51 +1,56 @@
-import 'package:poplar_power/domain/models/cable_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
-/// Represents the state for the Buy Cable feature.
-///
-/// This class holds the information related to cable providers,
-/// selected provider, selected package, and account number.
 class BuyCableState {
-  /// A list of available cable providers.
-  final List<CableProvider> cableProviders;
-  /// The currently selected cable provider. Can be null if no provider is selected.
-  final CableProvider? selectedProvider;
-  /// The currently selected cable package. Can be null if no package is selected.
-  final CablePackage? selectedPackage;
-  /// The account number associated with the cable subscription. Can be null or empty.
+  final AsyncValue<List<Biller>> cableProviders;
+  final AsyncValue<List<BillerProduct>> products;
+  final AsyncValue<List<SelectableOption>> mappedCableProviders;
+  final AsyncValue<List<SelectableOption>> mappedProducts;
+  final Biller? selectedProvider;
+  final BillerProduct? selectedProduct;
   final String? accountNumber;
+  final String? amount;
 
-  /// Creates an instance of [BuyCableState].
-  BuyCableState({
-    required this.cableProviders,
-    required this.selectedProvider,
-    required this.selectedPackage,
-    required this.accountNumber,
+  const BuyCableState({
+    this.cableProviders = const AsyncData([]),
+    this.products = const AsyncData([]),
+    this.mappedCableProviders = const AsyncData([]),
+    this.mappedProducts = const AsyncData([]),
+    this.selectedProvider,
+    this.selectedProduct,
+    this.accountNumber = '',
+    this.amount = '',
   });
 
-  /// Creates an initial state for the Buy Cable feature.
-  factory BuyCableState.initial() {
-    return BuyCableState(
-      cableProviders: [],
-      selectedProvider: null,
-      selectedPackage: null,
-      accountNumber: '',
-    );
-  }
+  factory BuyCableState.initial() => const BuyCableState();
 
-  /// Creates a new [BuyCableState] by copying the current state and updating
-  /// the provided fields.
   BuyCableState copyWith({
-    List<CableProvider>? cableProviders,
-    CableProvider? selectedProvider,
-    CablePackage? selectedPackage,
+    AsyncValue<List<Biller>>? cableProviders,
+    AsyncValue<List<BillerProduct>>? products,
+    AsyncValue<List<SelectableOption>>? mappedCableProviders,
+    AsyncValue<List<SelectableOption>>? mappedProducts,
+    Biller? selectedProvider,
+    BillerProduct? selectedProduct,
     String? accountNumber,
+    String? amount,
   }) {
     return BuyCableState(
-
       cableProviders: cableProviders ?? this.cableProviders,
+      products: products ?? this.products,
+      mappedCableProviders: mappedCableProviders ?? this.mappedCableProviders,
+      mappedProducts: mappedProducts ?? this.mappedProducts,
       selectedProvider: selectedProvider ?? this.selectedProvider,
-      selectedPackage: selectedPackage ?? this.selectedPackage,
+      selectedProduct: selectedProduct ?? this.selectedProduct,
       accountNumber: accountNumber ?? this.accountNumber,
+      amount: amount ?? this.amount,
     );
   }
+
+  bool get isFormValid =>
+      selectedProvider != null &&
+      selectedProduct != null &&
+      accountNumber != null &&
+      accountNumber!.length <= 15;
 }

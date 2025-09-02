@@ -77,7 +77,7 @@ class ElectricityScreen extends HookConsumerWidget {
                     viewModel.selectDisco(selected);
                   }
                 },
-                fallbackIcon: const Icon(Icons.power_rounded),
+                fallbackIcon: const Icon(Icons.power_rounded, color: Colors.grey),
               ),
               const SizedBox(height: 16),
 
@@ -101,6 +101,7 @@ class ElectricityScreen extends HookConsumerWidget {
                     }
                   },
                 ),
+              if (state.selectedDisco != null)
               const SizedBox(height: 16),
 
               SmartInputField(
