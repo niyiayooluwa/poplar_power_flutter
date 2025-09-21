@@ -3,10 +3,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/network_provider.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
-import 'package:poplar_power/ui/core/widgets/pin_input.dart';
+import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
-import 'package:poplar_power/ui/core/widgets/transaction_confirmation.dart';
 import 'package:poplar_power/ui/quick_actions/airtime/viewmodel/buy_airtime_viewmodel.dart';
 
 class AirtimeScreen extends HookConsumerWidget {
@@ -18,10 +17,11 @@ class AirtimeScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.read(airtimePurchaseProvider.notifier);
     final state = ref.watch(airtimePurchaseProvider);
+    final transactionFlow = ref.read(transactionFlowProvider.notifier);
+    final transactionState = ref.watch(transactionFlowProvider);
 
     final amountController = useTextEditingController();
     final phoneController = useTextEditingController();
-    final isProcessing = useState(false);
 
     useEffect(() {
       // Only update controllers if the values are different to prevent loops
@@ -34,69 +34,17 @@ class AirtimeScreen extends HookConsumerWidget {
       return null;
     }, [state.customAmount, state.phoneNumber]);
 
-    void showAirtimeConfirmation(BuildContext context) {
-      TransactionSheetService.showConfirmation(
-        context,
-        title: 'Confirm Airtime Purchase',
-        amount: '₦${state.effectiveAmount}',
-        description: 'Airtime Purchase',
-        transactionConfig: TransactionSheetService.airtimeConfig,
-        fields: TransactionSheetService.createAirtimeFields(
-          phoneNumber: state.phoneNumber,
-          network: state.selectedNetwork?.label ?? 'Unknown',
-          amount: '₦${state.effectiveAmount}',
-        ),
-        onConfirm: () async {
-          try {
-            context.pop(); // Dismiss the bottom sheet
-            await Future.delayed(const Duration(milliseconds: 500));
-
-            // Show the bottom sheet and wait for the result (PIN)
-            final pin = await PinEntryService.showPinEntryWithRetry(
-              context,
-              title: 'Authentication Required',
-              validator: (pin) => pin == '1234', // Your validation logic
-              maxAttempts: 3,
-            );
-
-            // If user completed PIN entry
-            if (pin != null) {
-              isProcessing.value = true;
-
-              await Future.delayed(
-                const Duration(seconds: 1),
-              ); // Simulate API call
-
-              isProcessing.value = false;
-
-              if (context.mounted) {
-                context.replace(
-                  '/transaction-detail',
-                  extra: Transaction(
-                    title: 'Airtime Purchase',
-                    amount: -state.effectiveAmount.toDouble(),
-                    date: DateTime.timestamp(),
-                    status: TransactionStatus.success,
-                    icon: Icons.call,
-                  ),
-                );
-              }
-            }
-          } catch (error) {
-            isProcessing.value = false;
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Purchase failed: $error')),
-              );
-            }
-          }
-        },
-      );
-    }
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('Buy Airtime')),
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            viewModel.reset();
+            context.pop();
+          },
+        ),
+        title: const Text('Buy Airtime'),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -107,47 +55,57 @@ class AirtimeScreen extends HookConsumerWidget {
                 'Select Network',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-
               const SizedBox(height: 12),
               _buildNetworkSelector(state, viewModel, context),
-
               const SizedBox(height: 24),
               SmartInputField(
-                label: 'Phone Number',
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                maxLength: 11,
+                  label: 'Phone Number',
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 11,
                   onChanged: (value) {
                     viewModel.setPhoneNumber(value);
-                  }
-              ),
-
+                  }),
               const SizedBox(height: 16),
               SmartInputField(
-                label: 'Amount',
-                keyboardType: TextInputType.number,
-                controller: amountController,
-                maxLength: 6,
-                onChanged: (value) {
-                  viewModel.setCustomAmount(int.tryParse(value) ?? 0);
-                }
-              ),
-
+                  label: 'Amount',
+                  keyboardType: TextInputType.number,
+                  controller: amountController,
+                  maxLength: 6,
+                  onChanged: (value) {
+                    viewModel.setCustomAmount(int.tryParse(value) ?? 0);
+                  }),
               const SizedBox(height: 24),
               Text(
                 'Or select Amount',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-
               const SizedBox(height: 12),
               _buildAmountGrid(state, viewModel, context),
-
               const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: state.isFormValid
-                      ? () => showAirtimeConfirmation(context)
+                      ? () {
+                          transactionFlow.startTransaction(
+                            title: 'Confirm Airtime Purchase',
+                            amount: '₦${state.effectiveAmount}',
+                            fields: [
+                              TransactionField(
+                                  label: 'Phone Number',
+                                  value: state.phoneNumber),
+                              TransactionField(
+                                  label: 'Network',
+                                  value: state.selectedNetwork?.label ??
+                                      'Unknown'),
+                              TransactionField(
+                                  label: 'Amount',
+                                  value: '₦${state.effectiveAmount}',
+                                  isHighlighted: true),
+                            ],
+                          );
+                        }
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -156,7 +114,8 @@ class AirtimeScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: isProcessing.value
+                  child: transactionState.step ==
+                          TransactionFlowStep.processing
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -171,7 +130,9 @@ class AirtimeScreen extends HookConsumerWidget {
                           state.isFormValid
                               ? 'Continue'
                               : 'Please complete the form',
-                          style: Theme.of(context).textTheme.bodyLarge
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
                               ?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,

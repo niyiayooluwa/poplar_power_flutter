@@ -5,6 +5,7 @@ import 'package:poplar_power/domain/models/biller_product.dart';
 import 'package:poplar_power/domain/use_cases/electricity/buy_electricity_token_use_case.dart';
 import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
 import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 import 'buy_electricity_state.dart';
 
@@ -18,6 +19,24 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
     this._getProductsUseCase,
     this._buyTokenUseCase,
   ) : super(BuyElectricityState.initial());
+
+  void selectDiscoByOption(SelectableOption option) {
+    final selected = state.discos.valueOrNull?.where(
+      (d) => d.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectDisco(selected.first);
+    }
+  }
+
+  void selectProductByOption(SelectableOption option) {
+    final selected = state.products.valueOrNull?.where(
+      (p) => p.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectProduct(selected.first);
+    }
+  }
 
   void selectDisco(Biller disco) {
     state = state.copyWith(
@@ -105,6 +124,10 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
       ifRight: (_) =>
           state = state.copyWith(purchaseState: const AsyncData(null)),
     );
+  }
+
+  void reset() {
+    state = BuyElectricityState.initial();
   }
 }
 

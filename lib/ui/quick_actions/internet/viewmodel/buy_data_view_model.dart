@@ -1,79 +1,94 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../data/mock/mock_repository/mock_data_repository.dart';
+import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+
 import 'buy_data_state.dart';
 
-/// ViewModel for the Buy Data screen.
-///
-/// Manages the state of the screen, including the list of ISPs,
-/// the selected ISP, and the selected data bundle.
 class BuyDataViewModel extends StateNotifier<BuyDataState> {
-  /// The repository used to fetch data bundles.
-  final DataBundleRepository _repository;
+  final GetBillersForCategoryUseCase _getIsps;
+  final GetProductsForBillerUseCase _getProducts;
 
-  /// Creates a new instance of [BuyDataViewModel].
-  ///
-  /// Takes a [DataBundleRepository] as a parameter and initializes
-  /// the state with [BuyDataState.initial()].
-  ///
-  /// Also calls [_loadISPs] to fetch the list of ISPs on initialization.
-  BuyDataViewModel(this._repository) : super(BuyDataState.initial()) {
-    _loadISPs(); // fetch ISPs on initialization
+  BuyDataViewModel(this._getIsps, this._getProducts)
+    : super(BuyDataState.initial());
+
+  void selectISPByOption(SelectableOption option) {
+    final selected = state.isps.valueOrNull?.where(
+      (p) => p.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectISP(selected.first);
+    }
   }
 
-  void setPhoneNumber(String number) {
-    state = state.copyWith(phoneNumber: number);
+  void selectProductByOption(SelectableOption option) {
+    final selected = state.products.valueOrNull?.where(
+      (p) => p.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectProduct(selected.first);
+    }
   }
 
-  /// Loads the list of ISPs from the repository.
-  ///
-  /// Updates the state with the fetched ISPs.
-  void _loadISPs() async {
-    final providers = await _repository.fetchISPs();
-    state = state.copyWith(isps: providers);
-  }
-
-  /// Selects an ISP.
-  ///
-  /// Takes the name of the ISP as a parameter and updates the state
-  /// with the selected ISP.
-  ///
-  /// Also resets the selected bundle if the ISP changes.
-  void selectISP(String name) {
-    final selected = state.isps.firstWhere((isp) => isp.name == name);
+  void selectISP(Biller isp) {
     state = state.copyWith(
-      selectedISP: selected,
-      selectedBundle: null, // Reset bundle if ISP changes
+      selectedIsp: isp,
+      selectedProduct: null,
+      products: const AsyncData([]),
     );
   }
 
-  /// Selects a data bundle.
-  ///
-  /// Takes the name of the bundle as a parameter and updates the state
-  /// with the selected bundle.
-  void selectBundle(String bundleName) {
-    final bundle = state.selectedISP?.bundles.firstWhere(
-      (b) => b.name == bundleName /*orElse: () => null*/,
-    );
-
-    state = state.copyWith(selectedBundle: bundle);
+  void selectProduct(BillerProduct product) {
+    if (state.selectedIsp != null) {
+      state = state.copyWith(selectedProduct: product);
+    }
   }
+
+  void setPhoneNumber(String phoneNumber) =>
+      state = state.copyWith(phoneNumber: phoneNumber);
 
   void reset() {
     state = state.copyWith(
-      selectedISP: null,
-      selectedBundle: null,
+      selectedIsp: null,
+      selectedProduct: null,
       phoneNumber: '',
     );
   }
 
-  /// Returns true if the form is valid, false otherwise.
-  ///
-  /// The form is considered valid if both an ISP and a data bundle
-  /// have been selected.
-  bool get isFormValid {
-    return state.selectedISP != null &&
-        state.selectedBundle != null &&
-        state.phoneNumber != null &&
-        state.phoneNumber!.length == 11;
+  Future<void> fetchISPs() async {
+    state = state.copyWith(isps: const AsyncLoading());
+    final result = await _getIsps.execute('AIRTIME_AND_DATA');
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        isps: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (isps) => state = state.copyWith(isps: AsyncData(isps)),
+    );
+  }
+
+  Future<void> fetchProducts(String ispAlias) async {
+    if (state.selectedIsp == null) return;
+    state = state.copyWith(products: const AsyncLoading());
+
+    final result = await _getProducts.execute(ispAlias);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        products: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (products) =>
+          state = state.copyWith(products: AsyncData(products)),
+    );
   }
 }
+
+final buyDataViewModelProvider =
+    StateNotifierProvider<BuyDataViewModel, BuyDataState>((ref) {
+      final getISPs = ref.watch(getBillersForCategoryUseCaseProvider);
+      final getProducts = ref.watch(getProductsForBillerUseCaseProvider);
+
+      return BuyDataViewModel(getISPs, getProducts);
+    });

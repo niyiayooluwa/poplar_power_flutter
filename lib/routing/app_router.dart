@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/services/settings_service.dart';
+import 'package:poplar_power/routing/navigator_key.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
@@ -27,13 +28,12 @@ import '../ui/user_onboarding/onboarding/widget/get_started.dart';
 import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-//final _shellNavigatorKey = GlobalKey<NavigatorState>();
-
-final GoRouter appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
+final appRouter = GoRouter(
+  navigatorKey: navigatorKey,
   initialLocation: '/splash',
-  redirect: (BuildContext context, GoRouterState state) async {
+  redirect: (BuildContext context, GoRouterState state) async
+
+  {
     final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
     final hasToken = await authRepository.hasToken();
     final settingsService = SettingsService();
@@ -166,7 +166,6 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const Send2ndStepScreen(),
     ),
 
-    //GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
     GoRoute(
         path: '/topup',
         builder: (context, state) => const TopUpScreen()

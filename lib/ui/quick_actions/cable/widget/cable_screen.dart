@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
+import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
-import 'package:poplar_power/ui/core/widgets/pin_input.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
-import 'package:poplar_power/ui/core/widgets/transaction_confirmation.dart';
 import 'package:poplar_power/ui/quick_actions/cable/viewmodel/buy_cable_viewmodel.dart';
 
 class CableScreen extends HookConsumerWidget {
@@ -17,6 +16,8 @@ class CableScreen extends HookConsumerWidget {
     // Viewmodel and state
     final viewModel = ref.read(buyCableViewModelProvider.notifier);
     final state = ref.watch(buyCableViewModelProvider);
+    final transactionFlow = ref.read(transactionFlowProvider.notifier);
+    final transactionState = ref.watch(transactionFlowProvider);
 
     // Text editing controllers for input fields
     final cableController = useTextEditingController();
@@ -24,96 +25,44 @@ class CableScreen extends HookConsumerWidget {
     final priceController = useTextEditingController();
     final accountNumberController = useTextEditingController();
 
-    final isProcessing = useState(false);
-
     useEffect(() {
-      if (state.selectedProvider == null) {
-        productController.clear();
-        priceController.clear();
+      final newText = state.selectedProvider?.name ?? '';
+      if (cableController.text != newText) {
+        cableController.text = newText;
       }
       return null;
     }, [state.selectedProvider]);
 
-    useEffect(
-      () {
-        cableController.text = state.selectedProvider?.name ?? '';
-        productController.text = state.selectedProduct?.name ?? '';
-        priceController.text = state.amount ?? '';
-        accountNumberController.text = state.accountNumber!;
-        return null;
-      },
-      [
-        state.selectedProvider,
-        state.selectedProduct,
-        state.amount,
-        state.accountNumber,
-      ],
-    );
+    useEffect(() {
+      final newText = state.selectedProduct?.name ?? '';
+      if (productController.text != newText) {
+        productController.text = newText;
+      }
+      return null;
+    }, [state.selectedProduct]);
 
-    /// Resets the buy cable flow by clearing all input fields and resetting the view model state.
-    void reset() {
-      cableController.clear();
-      productController.clear();
-      priceController.clear();
-      accountNumberController.clear();
-      //viewModel.reset(); // Reset the view model state
-    }
+    useEffect(() {
+      final newText = state.selectedProduct?.amount.toString() ?? '';
+      if (priceController.text != newText) {
+        priceController.text = newText;
+      }
+      return null;
+    }, [state.selectedProduct]);
 
-    void showCableConfirmation(BuildContext context) {
-      TransactionSheetService.showConfirmation(
-        context,
-        title: 'Confirm Cable Subscription',
-        amount: '₦{someAmount?.price}',
-        description: '${state.selectedProduct?.name}',
-        transactionConfig: TransactionSheetService.billConfig,
-        fields: TransactionSheetService.createBillFields(
-          service: cableController.text,
-          accountNumber: accountNumberController.text,
-          package: state.selectedProduct!.name,
-          fee: priceController.text,
-          total: priceController.text,
-        ),
-        onConfirm: () async {
-          context.pop(); // Dismiss the bottom sheet
-          await Future.delayed(
-            Duration(milliseconds: 500),
-          ); // Simulate API call
-          // Show the bottom sheet and wait for the result (PIN)
-          final pin =  await PinEntryService.showPinEntryWithRetry(
-            context,
-            title: 'Authentication Required',
-            validator: (pin) => pin == '1234',
-            maxAttempts: 3,
-          );
-
-          // If user completed PIN entry
-          if (pin != null) {
-            isProcessing.value = true;
-
-            await Future.delayed(Duration(seconds: 1)); // Simulate API call
-
-            isProcessing.value = false; // Optional slight delay
-            context.replace(
-              '/transaction-detail',
-              extra: Transaction(
-                title: 'Cable Subscription',
-                amount: 2233,
-                date: DateTime.timestamp(),
-                status: TransactionStatus.success,
-                icon: Icons.wifi,
-              ),
-            );
-          }
-        },
-      );
-    }
+    useEffect(() {
+      final newText = state.accountNumber ?? '';
+      if (accountNumberController.text != newText) {
+        accountNumberController.text = newText;
+      }
+      return null;
+    }, [state.accountNumber]);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
           onPressed: () async {
-            reset();
+            viewModel.reset();
             context.pop();
           },
         ),
@@ -125,7 +74,7 @@ class CableScreen extends HookConsumerWidget {
           child: Column(
             children: [
               AsyncSelectableField(
-                label: 'Select TV ',
+                label: 'Select TV Provider',
                 controller: cableController,
                 optionsProvider: mappedCableProvider,
                 onTap: () async {
@@ -134,18 +83,10 @@ class CableScreen extends HookConsumerWidget {
                     viewModel.fetchProviders();
                   }
                 },
-                onSelected: (name) {
-                  final selected = state.cableProviders.valueOrNull?.firstWhere(
-                    (c) => c.name == name,
-                  );
-                  if (selected != null) {
-                    viewModel.selectCableProvider(selected);
-                  }
-                },
+                onSelected: viewModel.selectCableProviderByOption,
                 fallbackIcon: const Icon(Icons.tv, color: Colors.grey),
               ),
               const SizedBox(height: 16),
-
               if (state.selectedProvider != null)
                 AsyncSelectableField(
                   label: 'Package',
@@ -157,49 +98,49 @@ class CableScreen extends HookConsumerWidget {
                       viewModel.fetchProducts(state.selectedProvider!.alias);
                     }
                   },
-                  onSelected: (name) {
-                    final selected = state.products.valueOrNull?.firstWhere(
-                          (p) => p.name == name,
-                    );
-                    if (selected != null) {
-                      viewModel.selectPackage(selected);
-                    }
-                  },
+                  onSelected: viewModel.selectPackageByOption,
                   fallbackIcon: const Icon(Icons.tv, color: Colors.grey),
                 ),
-              if (state.selectedProvider != null)
-                const SizedBox(height: 16),
-
-
-              /// Account Number
+              if (state.selectedProvider != null) const SizedBox(height: 16),
               SmartInputField(
-                label: 'Account Number',
-                controller: accountNumberController,
-                keyboardType: TextInputType.number,
-                maxLength: state.selectedProvider?.accountNumberSize,
-                onChanged: viewModel.setAccountNumber
-              ),
+                  label: 'Account Number',
+                  controller: accountNumberController,
+                  keyboardType: TextInputType.number,
+                  maxLength: state.selectedProvider?.accountNumberSize,
+                  onChanged: viewModel.setAccountNumber),
               const SizedBox(height: 16),
-
-
-              /// Price Display
-              /*if (selectedPackage != null)
-                // Show bundle price if a bundle is selected
+              if (state.selectedProduct != null)
                 SmartInputField(
                   label: 'Price',
                   controller: priceController,
                   readOnly: true,
-                ),*/
-
-              Spacer(),
+                ),
+              const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: state.isFormValid
-                      ? () =>
-                            showCableConfirmation(
-                              context,
-                            ) //context.push('/confirm-details')
+                      ? () {
+                          transactionFlow.startTransaction(
+                            title: 'Confirm Cable Subscription',
+                            amount: '₦${state.selectedProduct?.amount ?? 0}',
+                            fields: [
+                              TransactionField(
+                                  label: 'TV Provider',
+                                  value: state.selectedProvider?.name ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Account Number',
+                                  value: state.accountNumber ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Package',
+                                  value: state.selectedProduct?.name ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Amount',
+                                  value: '₦${state.selectedProduct?.amount ?? 0}',
+                                  isHighlighted: true),
+                            ],
+                          );
+                        }
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -208,13 +149,26 @@ class CableScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    'Next',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: transactionState.step ==
+                          TransactionFlowStep.processing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          'Next',
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
                 ),
               ),
             ],

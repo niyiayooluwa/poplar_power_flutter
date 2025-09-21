@@ -18,7 +18,7 @@ class AsyncSelectableField extends ConsumerWidget {
   /// Instead of passing AsyncValue directly, pass the provider itself.
   final ProviderListenable<AsyncValue<List<SelectableOption>>> optionsProvider;
 
-  final void Function(String)? onSelected;
+  final void Function(SelectableOption)? onSelected;
   final Widget? fallbackIcon;
 
   const AsyncSelectableField({
@@ -54,7 +54,7 @@ class AsyncSelectableField extends ConsumerWidget {
         ).then((selected) {
           if (selected != null) {
             controller.text = selected.name;
-            onSelected?.call(selected.name);
+            onSelected?.call(selected);
           }
         });
       },
@@ -140,8 +140,7 @@ class _SelectionModal extends ConsumerWidget {
                         final option = options[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor:
-                            Theme.of(context).colorScheme.secondaryContainer,
+                            backgroundColor: Colors.white,
                             child: option.imageUrl != null
                                 ? Image.network(
                               option.imageUrl!,

@@ -3,6 +3,7 @@ import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
 import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
 import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 import 'buy_cable_state.dart';
 
@@ -12,6 +13,24 @@ class BuyCableViewModel extends StateNotifier<BuyCableState> {
 
   BuyCableViewModel(this._getProvidersUseCase, this._getProductsUseCase)
       : super(BuyCableState.initial());
+
+  void selectCableProviderByOption(SelectableOption option) {
+    final selected = state.cableProviders.valueOrNull?.where(
+      (p) => p.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectCableProvider(selected.first);
+    }
+  }
+
+  void selectPackageByOption(SelectableOption option) {
+    final selected = state.products.valueOrNull?.where(
+      (p) => p.name == option.name,
+    );
+    if (selected != null && selected.isNotEmpty) {
+      selectPackage(selected.first);
+    }
+  }
 
   void selectCableProvider(Biller provider) {
     state = state.copyWith(
@@ -29,6 +48,8 @@ class BuyCableViewModel extends StateNotifier<BuyCableState> {
       state = state.copyWith(accountNumber: num);
 
   void setAmount(String amount) => state = state.copyWith(amount: amount);
+  
+  void reset() => state = BuyCableState.initial();
 
 
   Future<void> fetchProviders() async {

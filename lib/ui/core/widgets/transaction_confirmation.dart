@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
 import 'package:poplar_power/domain/models/transaction_config.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
 
-class ConfirmTransactionSheet extends HookConsumerWidget {
+class ConfirmTransactionSheet extends StatelessWidget {
   final String title;
   final List<TransactionField> fields;
   final VoidCallback onConfirm;
@@ -20,6 +17,11 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
   final String confirmButtonText;
   final String cancelButtonText;
   final bool isLoading;
+
+  // New parameters for stateless payment method handling
+  final List<PaymentMethodConfig> availablePaymentMethods;
+  final PaymentMethodConfig? selectedPaymentMethod;
+  final ValueChanged<PaymentMethodConfig> onPaymentMethodSelected;
 
   const ConfirmTransactionSheet({
     super.key,
@@ -36,63 +38,42 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
     this.confirmButtonText = "Confirm Payment",
     this.cancelButtonText = "Cancel",
     this.isLoading = false,
+    // New parameters
+    required this.availablePaymentMethods,
+    required this.selectedPaymentMethod,
+    required this.onPaymentMethodSelected,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider);
-
-    final walletConfig = PaymentMethodConfig(
-      name: 'Main Wallet',
-      balance: user.balance.toString(),
-      icon: Icons.account_balance_wallet,
-      color: Colors.blue,
-    );
-
-    final cardConfig = const PaymentMethodConfig(
-      name: 'Card',
-      balance: '**** **** **** 1234',
-      icon: Icons.credit_card,
-      color: Colors.red,
-    );
-
-    final webPayConfig = const PaymentMethodConfig(
-      name: 'Web Pay',
-      balance: 'Pay with a web browser',
-      icon: Icons.language,
-      color: Colors.green,
-    );
-
-    final paymentMethods = [walletConfig, cardConfig, webPayConfig];
-
-    final selectedPaymentMethod = useState(walletConfig);
-
+  Widget build(BuildContext context) {
     void showPaymentMethodSelector(BuildContext context) {
       showModalBottomSheet(
         context: context,
         builder: (context) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            padding: EdgeInsets.fromLTRB(16, 4, 16, MediaQuery.of(context).padding.bottom + 24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildDragHandle(),
                 Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: paymentMethods.map((method) {
+                  // Use the list of methods passed into the widget
+                  children: availablePaymentMethods.map((method) {
                     return ListTile(
                       leading: Icon(method.icon, color: method.color),
                       title: Text(method.name),
                       subtitle: Text(method.balance),
                       onTap: () {
-                        selectedPaymentMethod.value = method;
+                        // Report the selection back to the controller
+                        onPaymentMethodSelected(method);
                         Navigator.pop(context);
                       },
                     );
                   }).toList(),
                 )
               ],
-            )
+            ),
           );
         },
       );
@@ -103,7 +84,7 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
 
     return Container(
       constraints: BoxConstraints(
-        //maxHeight: MediaQuery.of(context).size.height * 0.7,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -127,11 +108,15 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
                         const SizedBox(height: 16),
                         if (amount != null) _buildAmountSection(context),
                         _buildTransactionDetails(context),
-                        if (referenceNumber != null) _buildReferenceNumber(context),
-                        GestureDetector(
-                          onTap: () => showPaymentMethodSelector(context),
-                          child: _buildPaymentMethod(context, selectedPaymentMethod.value),
-                        ),
+                        if (referenceNumber != null)
+                          _buildReferenceNumber(context),
+                        // Only show payment method if there is one selected
+                        if (selectedPaymentMethod != null)
+                          GestureDetector(
+                            onTap: () => showPaymentMethodSelector(context),
+                            child: _buildPaymentMethod(
+                                context, selectedPaymentMethod!),
+                          ),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -140,11 +125,13 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
               ),
             ),
           ),
-          _buildActionButtons(context),
+          Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24.0),
+            child: _buildActionButtons(context),
+          ),
           if (processingTime != null) _buildProcessingTime(context),
-          const SizedBox(height: 36),
         ],
-      )
+      ),
     );
   }
 
@@ -308,7 +295,7 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: selectedPaymentMethod.color.withValues(alpha: 0.1),
+        color: selectedPaymentMethod.color.withAlpha(25),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -316,7 +303,7 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: selectedPaymentMethod.color.withValues(alpha: 0.2),
+              color: selectedPaymentMethod.color.withAlpha(50),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -400,22 +387,6 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: isLoading
-                  ? null
-                  : (onCancel ?? () => Navigator.of(context).pop()),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(cancelButtonText),
-            ),
-          ),
         ],
       ),
     );
@@ -438,159 +409,5 @@ class ConfirmTransactionSheet extends HookConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-class TransactionSheetService {
-  static const TransactionConfig transferConfig = TransactionConfig(
-    type: 'Money Transfer',
-    icon: Icons.send,
-    color: Colors.blue,
-    subtitle: 'Send money to bank account',
-  );
-
-  static const TransactionConfig airtimeConfig = TransactionConfig(
-    type: 'Buy Airtime',
-    icon: Icons.phone,
-    color: Colors.green,
-    subtitle: 'Mobile airtime top-up',
-  );
-
-  static const TransactionConfig dataConfig = TransactionConfig(
-    type: 'Buy Data',
-    icon: Icons.wifi,
-    color: Colors.purple,
-    subtitle: 'Mobile data bundle',
-  );
-
-  static const TransactionConfig electricityConfig = TransactionConfig(
-    type: 'Buy Electricity',
-    icon: Icons.electric_bolt,
-    color: Colors.orange,
-    subtitle: 'Electricity bill payment',
-  );
-
-  static const TransactionConfig billConfig = TransactionConfig(
-    type: 'Pay Bill',
-    icon: Icons.receipt,
-    color: Colors.red,
-    subtitle: 'Utility bill payment',
-  );
-
-  static Future<void> showConfirmation(
-      BuildContext context, {
-        required String title,
-        required List<TransactionField> fields,
-        required VoidCallback onConfirm,
-        VoidCallback? onCancel,
-        TransactionConfig? transactionConfig,
-        String? amount,
-        String? description,
-        String? referenceNumber,
-        String? processingTime,
-        bool showSecurityBadge = true,
-        String confirmButtonText = "Confirm Payment",
-        String cancelButtonText = "Cancel",
-        bool isLoading = false,
-      }) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ConfirmTransactionSheet(
-        title: title,
-        fields: fields,
-        onConfirm: onConfirm,
-        onCancel: onCancel,
-        transactionConfig: transactionConfig,
-        amount: amount,
-        description: description,
-        referenceNumber: referenceNumber,
-        processingTime: processingTime,
-        showSecurityBadge: showSecurityBadge,
-        confirmButtonText: confirmButtonText,
-        cancelButtonText: cancelButtonText,
-        isLoading: isLoading,
-      ),
-    );
-  }
-
-  /// Creates transaction fields for money transfer
-  static List<TransactionField> createTransferFields({
-    required String recipientName,
-    required String accountNumber,
-    required String bankName,
-    required String fee,
-    required String total,
-  }) {
-    return [
-      TransactionField(label: 'To', value: recipientName),
-      TransactionField(label: 'Account', value: accountNumber),
-      TransactionField(label: 'Bank', value: bankName),
-      TransactionField(label: 'Transaction Fee', value: fee),
-      TransactionField(label: 'Total Amount', value: total, isHighlighted: true),
-    ];
-  }
-
-  /// Creates transaction fields for airtime purchase
-  static List<TransactionField> createAirtimeFields({
-    required String phoneNumber,
-    required String network,
-    required String amount,
-  }) {
-    return [
-      TransactionField(label: 'Phone Number', value: phoneNumber),
-      TransactionField(label: 'Network', value: network),
-      TransactionField(label: 'Amount', value: amount, isHighlighted: true),
-    ];
-  }
-
-  /// Creates transaction fields for data purchase
-  static List<TransactionField> createDataFields({
-    required String phoneNumber,
-    required String network,
-    required String plan,
-    required String amount,
-  }) {
-    return [
-      TransactionField(label: 'Phone Number', value: phoneNumber),
-      TransactionField(label: 'Network', value: network),
-      TransactionField(label: 'Plan', value: plan),
-      TransactionField(label: 'Amount', value: amount, isHighlighted: true),
-    ];
-  }
-
-  /// Creates transaction fields for billers purchase
-  static List<TransactionField> createElectricityFields({
-    required String disco,
-    required String meterNumber,
-    required String customerName,
-    required String fee,
-    required String total,
-  }) {
-    return [
-      TransactionField(label: 'Disco', value: disco),
-      TransactionField(label: 'Meter Number', value: meterNumber),
-      TransactionField(label: 'Customer Name', value: customerName),
-      TransactionField(label: 'Service Fee', value: fee),
-      TransactionField(label: 'Total Amount', value: total, isHighlighted: true),
-    ];
-  }
-
-  /// Creates transaction fields for bill payment
-  static List<TransactionField> createBillFields({
-    required String service,
-    required String accountNumber,
-    required String package,
-    required String fee,
-    required String total,
-  }) {
-    return [
-      TransactionField(label: 'Service', value: service),
-      TransactionField(label: 'Account Number', value: accountNumber),
-      TransactionField(label: 'Package', value: package),
-      TransactionField(label: 'Service Fee', value: fee),
-      TransactionField(label: 'Total Amount', value: total, isHighlighted: true),
-    ];
   }
 }

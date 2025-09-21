@@ -1,56 +1,57 @@
-import '../../../../domain/models/data_bundle.dart';
-import '../../../../domain/models/internet_service_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 /// Represents the state of the Buy Data screen.
 class BuyDataState {
-  /// A list of available Internet Service Providers (ISPs).
-  final List<InternetServiceProvider> isps;
-
-  /// The currently selected ISP.
-  final InternetServiceProvider? selectedISP;
-
-  /// The currently selected data bundle.
-  final DataBundle? selectedBundle;
-
-  /// The recepient phone number
+  final AsyncValue<List<Biller>> isps;
+  final AsyncValue<List<BillerProduct>> products;
+  final AsyncValue<List<SelectableOption>> mappedIsps;
+  final AsyncValue<List<SelectableOption>> mappedProducts;
+  final Biller? selectedIsp;
+  final BillerProduct? selectedProduct;
   final String? phoneNumber;
+  final String? price;
 
-  /// Creates an instance of [BuyDataState].
-  ///
-  /// [isps] is the list of available ISPs.
-  /// [selectedISP] is the currently selected ISP.
-  /// [selectedBundle] is the currently selected data bundle.
   const BuyDataState({
-    required this.isps,
-    required this.selectedISP,
-    required this.selectedBundle,
-    required this.phoneNumber
+    this.isps = const AsyncData([]),
+    this.products = const AsyncData([]),
+    this.mappedIsps = const AsyncData([]),
+    this.mappedProducts = const AsyncData([]),
+    this.selectedIsp,
+    this.selectedProduct,
+    this.phoneNumber,
+    this.price,
   });
 
-  /// Creates an initial state for the Buy Data screen.
-  ///
-  /// The initial state has an empty list of ISPs, no selected ISP, and no selected data bundle.
-  factory BuyDataState.initial() {
-    return const BuyDataState(
-      isps: [],
-      selectedISP: null,
-      selectedBundle: null,
-      phoneNumber: null,
-    );
-  }
+  factory BuyDataState.initial() => const BuyDataState();
 
-  /// Creates a copy of the current state with the given fields replaced with the new values.
   BuyDataState copyWith({
-    List<InternetServiceProvider>? isps,
-    InternetServiceProvider? selectedISP,
-    DataBundle? selectedBundle,
+    AsyncValue<List<Biller>>? isps,
+    AsyncValue<List<BillerProduct>>? products,
+    AsyncValue<List<SelectableOption>>? mappedIsps,
+    AsyncValue<List<SelectableOption>>? mappedProducts,
+    Biller? selectedIsp,
+    BillerProduct? selectedProduct,
     String? phoneNumber,
+    String? price,
   }) {
     return BuyDataState(
       isps: isps ?? this.isps,
-      selectedISP: selectedISP ?? this.selectedISP,
-      selectedBundle: selectedBundle ?? this.selectedBundle,
+      products: products ?? this.products,
+      mappedIsps: mappedIsps ?? this.mappedIsps,
+      mappedProducts: mappedProducts ?? this.mappedProducts,
+      selectedIsp: selectedIsp ?? this.selectedIsp,
+      selectedProduct: selectedProduct ?? this.selectedProduct,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      price: price ?? this.price,
     );
   }
+
+  bool get isFormValid =>
+      selectedIsp != null &&
+      selectedProduct != null &&
+      phoneNumber != null &&
+      phoneNumber!.length == 11;
 }

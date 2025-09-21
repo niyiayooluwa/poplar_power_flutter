@@ -2,141 +2,100 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
-import 'package:poplar_power/ui/core/widgets/pin_input.dart';
+import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
-import 'package:poplar_power/ui/core/widgets/transaction_confirmation.dart';
-import 'package:poplar_power/ui/quick_actions/internet/viewmodel/buy_data_provider.dart';
+import 'package:poplar_power/ui/quick_actions/internet/viewmodel/buy_data_view_model.dart';
 
-/// [InternetScreen] is a widget that allows users to purchase internet data bundles.
-///
-/// It uses a [HookConsumerWidget] to manage state and interact with the [buyDataViewModelProvider].
 class InternetScreen extends HookConsumerWidget {
-  /// Creates an [InternetScreen] widget.
   const InternetScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Text editing controllers for input fields
     final ispController = useTextEditingController();
-    final bundleController = useTextEditingController();
+    final productController = useTextEditingController();
     final priceController = useTextEditingController();
     final phoneController = useTextEditingController();
 
-    // Access the view model and state
     final viewModel = ref.read(buyDataViewModelProvider.notifier);
     final state = ref.watch(buyDataViewModelProvider);
+    final transactionFlow = ref.read(transactionFlowProvider.notifier);
+    final transactionState = ref.watch(transactionFlowProvider);
 
-    // Get the currently selected ISP and bundle, and the available bundles for the selected ISP
-    final selectedISP = state.selectedISP;
-    final selectedBundle = state.selectedBundle;
-    final bundles = selectedISP?.bundles ?? [];
-
-    final isProcessing = useState(false);
-
-    /// Resets the buy data flow by clearing all input fields and resetting the view model state.
     void resetBuyDataFlow() {
       ispController.clear();
-      bundleController.clear();
+      productController.clear();
       priceController.clear();
       phoneController.clear();
-      viewModel.reset(); // Reset the view model state
+      viewModel.reset();
     }
 
-    void showDataConfirmation(BuildContext context) {
-      TransactionSheetService.showConfirmation(
-        context,
-        title: 'Confirm Data\nPurchase',
-        amount: '₦${selectedBundle?.price}',
-        description: 'Data Purchase of ${selectedBundle?.name} for ${selectedBundle?.validity}',
-        transactionConfig: TransactionSheetService.dataConfig,
-        fields: TransactionSheetService.createDataFields(
-          phoneNumber: phoneController.text,
-          network: selectedISP!.name,
-          amount: '₦${selectedBundle?.price}',
-          plan: '${selectedBundle?.name}',
-        ),
-
-        onConfirm: () async {
-          context.pop(); // Dismiss the bottom sheet
-          await Future.delayed(Duration(milliseconds: 500)); // Simulate API call
-          // Show the bottom sheet and wait for the result (PIN)
-          final pin = await PinEntryService.showPinEntryWithRetry(
-            context,
-            title: 'Authentication Required',
-            validator: (pin) => pin == '1234', // Your validation logic
-            maxAttempts: 3,
-          );
-
-          // If user completed PIN entry
-          if (pin != null) {
-            isProcessing.value = true;
-
-            await Future.delayed(Duration(seconds: 1)); // Simulate API call
-
-            isProcessing.value = false; // Optional slight delay
-            context.replace(
-              '/transaction-detail',
-              extra: Transaction(
-                title: 'Data Purchase',
-                amount: -selectedBundle!.price,
-                date: DateTime.timestamp(),
-                status: TransactionStatus.success,
-                icon: Icons.wifi,
-              ),
-            );
-          }
-        }
-      );
-    }
-
-    // Effect hook to reset the buy data flow when the widget is disposed
-    /// This ensures that the state is clean when the user navigates away from the screen.
     useEffect(() {
-      // Return a function that calls resetBuyDataFlow when the widget is disposed
-      return () {
-        resetBuyDataFlow();
-      };
-    }, const []);
+      final newText = state.selectedIsp?.name ?? '';
+      if (ispController.text != newText) {
+        ispController.text = newText;
+      }
+      return null;
+    }, [state.selectedIsp]);
+
+    useEffect(() {
+      final newText = state.selectedProduct?.name ?? '';
+      if (productController.text != newText) {
+        productController.text = newText;
+      }
+      return null;
+    }, [state.selectedProduct]);
+
+    useEffect(() {
+      final newText = state.selectedProduct?.amount.toString() ?? '';
+      if (priceController.text != newText) {
+        priceController.text = newText;
+      }
+      return null;
+    }, [state.selectedProduct]);
+
+    useEffect(() {
+      final newText = state.phoneNumber ?? '';
+      if (phoneController.text != newText) {
+        phoneController.text = newText;
+      }
+      return null;
+    }, [state.phoneNumber]);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
-          // When the back button is pressed, reset the flow and pop the current route
           onPressed: () async {
             resetBuyDataFlow();
             context.pop();
           },
         ),
-        title: const Text('Internet'), // Title of the app bar
-        //centerTitle: true, // Center the title
+        title: const Text('Internet'),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              /// ISP Selection
-              SmartInputField(
+              AsyncSelectableField(
                 label: 'Select ISP',
                 controller: ispController,
-                readOnly: true,
-                options: state.isps.map((isp) => isp.name).toList(),
-                // When an ISP is selected, update the controller and view model
-                onSelected: (name) {
-                  ispController.text = name;
-                  bundleController.clear();
-                  priceController.clear();
-                  viewModel.selectISP(
-                    name,
-                  ); // Update the selected ISP in the view model
+                optionsProvider: mappedIspProvider,
+                onTap: () async {
+                  if (!state.isps.isLoading &&
+                      (state.isps.valueOrNull?.isEmpty ?? true)) {
+                    viewModel.fetchISPs();
+                  }
                 },
+                onSelected: viewModel.selectISPByOption,
+                fallbackIcon: const Icon(
+                  Icons.wifi,
+                  color: Colors.grey,
+                ),
               ),
-
               const SizedBox(height: 16),
-
-              ///Phone Number
               SmartInputField(
                 label: 'Phone Number',
                 controller: phoneController,
@@ -146,51 +105,57 @@ class InternetScreen extends HookConsumerWidget {
                   viewModel.setPhoneNumber(value);
                 },
               ),
-
               const SizedBox(height: 16),
-
-              /// Bundle Selection
-              if (selectedISP != null)
-                // Show bundle picker
-                SmartInputField(
+              if (state.selectedIsp != null)
+                AsyncSelectableField(
                   label: 'Select Bundle',
-                  controller: bundleController,
-                  readOnly: true,
-                  options: bundles.map((b) => b.name).toList(),
-                  // When a bundle is selected, update the controller, view model, and price
-                  onSelected: (name) {
-                    bundleController.text = name;
-                    viewModel.selectBundle(
-                      name,
-                    ); // Update the selected bundle in the view model
-
-                    final bundle = bundles.firstWhere((b) => b.name == name);
-                    // Display the price of the selected bundle
-                    priceController.text = '₦${bundle.price}';
+                  controller: productController,
+                  optionsProvider: mappedProductsProvider,
+                  onTap: () async {
+                    if (!state.products.isLoading &&
+                        (state.products.valueOrNull?.isEmpty ?? true)) {
+                      viewModel.fetchProducts(state.selectedIsp!.alias);
+                    }
                   },
+                  onSelected: viewModel.selectProductByOption,
+                  fallbackIcon: const Icon(
+                    Icons.wifi_tethering,
+                    color: Colors.grey,
+                  ),
                 ),
-
-              const SizedBox(height: 16),
-
-              /// Price Display
-              if (selectedBundle != null)
-                // Show bundle price if a bundle is selected
+              if (state.selectedIsp != null) const SizedBox(height: 16),
+              if (state.selectedProduct != null)
                 SmartInputField(
                   label: 'Price',
                   controller: priceController,
                   readOnly: true,
                 ),
-
-              Spacer(),
-
-              /// Buy Button
-              /// When the buy button is pressed, it navigates to the payment screen
-              /// with the selected ISP, bundle, and phone number having been set in the view model.
+              const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: viewModel.isFormValid
-                      ? () => showDataConfirmation(context)//context.push('/confirm-details')
+                  onPressed: state.isFormValid
+                      ? () {
+                          transactionFlow.startTransaction(
+                            title: 'Confirm Data Purchase',
+                            amount: '₦${state.selectedProduct?.amount ?? 0}',
+                            fields: [
+                              TransactionField(
+                                  label: 'ISP',
+                                  value: state.selectedIsp?.name ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Phone Number',
+                                  value: state.phoneNumber ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Bundle',
+                                  value: state.selectedProduct?.name ?? 'N/A'),
+                              TransactionField(
+                                  label: 'Amount',
+                                  value: '₦${state.selectedProduct?.amount ?? 0}',
+                                  isHighlighted: true),
+                            ],
+                          );
+                        }
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -199,13 +164,26 @@ class InternetScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    'Next',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: transactionState.step ==
+                          TransactionFlowStep.processing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          'Next',
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
                 ),
               ),
             ],
@@ -215,3 +193,24 @@ class InternetScreen extends HookConsumerWidget {
     );
   }
 }
+
+// Computed providers for UI-ready options
+final mappedIspProvider = Provider<AsyncValue<List<SelectableOption>>>((ref) {
+  final state = ref.watch(buyDataViewModelProvider);
+  return state.isps.whenData(
+    (list) => list
+        .map(
+          (isps) => SelectableOption(name: isps.name, imageUrl: isps.logoUrl),
+        )
+        .toList(),
+  );
+});
+
+final mappedProductsProvider = Provider<AsyncValue<List<SelectableOption>>>((
+  ref,
+) {
+  final state = ref.watch(buyDataViewModelProvider);
+  return state.products.whenData(
+    (list) => list.map((p) => SelectableOption(name: p.name)).toList(),
+  );
+});
