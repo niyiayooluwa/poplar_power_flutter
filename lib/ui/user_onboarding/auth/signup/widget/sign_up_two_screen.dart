@@ -178,7 +178,13 @@ class SignupStep2Screen extends HookConsumerWidget {
                           context.go('/home');
                         },
                         onOtpRequired: (email) {
-                          context.go('/otp/$email');
+                          context.go(
+                            '/otp',
+                            extra: {
+                              'email': email,
+                              'password': password,
+                            },
+                          );
                         },
                       );
                     },

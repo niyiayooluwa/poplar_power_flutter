@@ -16,7 +16,7 @@ class UserDto {
   final int failedAuthAttempts;
   final int? lockAt;
   final int? unlockAt;
-  final int lastLogin;
+  final int? lastLogin;
   final int modified;
   final int created;
   final bool active;
@@ -62,7 +62,7 @@ class UserDto {
       failedAuthAttempts: json['failedAuthAttempts'] as int,
       lockAt: json['lockAt'] as int?,
       unlockAt: json['unlockAt'] as int?,
-      lastLogin: json['lastLogin'] as int,
+      lastLogin: json['lastLogin'] as int?,
       modified: json['modified'] as int,
       created: json['created'] as int,
       active: json['active'] as bool,

@@ -39,19 +39,12 @@ final appRouter = GoRouter(
     final settingsService = SettingsService();
     final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
 
-    final guestRoutes = [
-      '/onboarding',
-      '/get-started',
-      '/login',
-      '/signup',
-      '/signup-two',
-      '/otp'
-    ];
+    // Define routes that a returning user should be redirected AWAY from.
+    final preAuthRoutes = ['/onboarding', '/get-started'];
+    final isOnPreAuthRoute = preAuthRoutes.contains(state.matchedLocation);
 
-    final isOnGuestRoute = guestRoutes.contains(state.matchedLocation);
-
-    // If the user has a token AND is currently on a guest route, redirect to home.
-    if (hasToken && isOnGuestRoute && state.matchedLocation != '/login') {
+    // If the user has a token and is on a pre-auth page, send them to login.
+    if (hasToken && isOnPreAuthRoute) {
       return '/login';
     }
 
@@ -70,6 +63,7 @@ final appRouter = GoRouter(
       '/more-actions',
       '/transaction-history',
       '/transaction-detail',
+      '/webview'
     ];
 
     final isProtected = protectedRoutes.contains(state.matchedLocation);

@@ -22,8 +22,8 @@ abstract class AuthRemoteDataSource {
   /// Attempts to register a new user with the provided details.
   ///
   /// Takes a [SignupRequestDto] containing the new user's information.
-  /// Returns a [Future] that resolves to an [AuthResponseDto] containing authentication tokens and user details upon successful registration.
-  Future<AuthResponseDto> register(SignupRequestDto requestDto);
+  /// Returns a [Future] that resolves to an [UserDto] containing user details upon successful registration.
+  Future<UserDto> register(SignupRequestDto requestDto);
 
   /// Fetches the details of the currently authenticated user.
   ///
@@ -33,8 +33,8 @@ abstract class AuthRemoteDataSource {
   /// Verifies the OTP for a user.
   ///
   /// Takes a [VerifyOtpRequestDto] containing the user's email and OTP.
-  /// Returns a [Future] that resolves to an [AuthResponseDto] upon successful verification.
-  Future<AuthResponseDto> verifyOtp(VerifyOtpRequestDto requestDto);
+  /// Returns a [Future] that resolves to a Map upon successful verification.
+  Future<Map<String, dynamic>> verifyOtp(VerifyOtpRequestDto requestDto);
 
   /// Resends the OTP to a user.
   ///
@@ -81,17 +81,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   /// The [requestDto] contains the user's registration details.
   /// Custom authentication headers are added to the request.
   ///
-  /// Returns an [AuthResponseDto] upon successful registration.
+  /// Returns an [UserDto] upon successful registration.
   /// Rethrows a [DioException] if an error occurs during the API call.
   @override
-  Future<AuthResponseDto> register(SignupRequestDto requestDto) async {
+  Future<UserDto> register(SignupRequestDto requestDto) async {
     try {
       final response = await _dio.post(
         '/auth/register',
         data: requestDto.toJson(),
         options: Options(headers: _getAuthHeaders()),
       );
-      return AuthResponseDto.fromJson(response.data);
+      return UserDto.fromJson(response.data);
     } on DioException {
       rethrow;
     }
@@ -121,17 +121,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   /// The [requestDto] contains the user's email and OTP.
   /// Custom authentication headers are added to the request.
   ///
-  /// Returns an [AuthResponseDto] upon successful verification.
+  /// Returns a [Map] upon successful verification.
   /// Rethrows a [DioException] if an error occurs during the API call.
   @override
-  Future<AuthResponseDto> verifyOtp(VerifyOtpRequestDto requestDto) async {
+  Future<Map<String, dynamic>> verifyOtp(VerifyOtpRequestDto requestDto) async {
     try {
       final response = await _dio.post(
         '/auth/verify',
         data: requestDto.toJson(),
         options: Options(headers: _getAuthHeaders()),
       );
-      return AuthResponseDto.fromJson(response.data);
+      return response.data as Map<String, dynamic>;
     } on DioException {
       rethrow;
     }

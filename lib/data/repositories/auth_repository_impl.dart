@@ -53,16 +53,8 @@ class AuthRepositoryImpl implements AuthRepository {
         fullName: fullName,
         customRef: customRef,
       );
-      final authResponseDto = await remoteDataSource.register(requestDto);
-
-      if (authResponseDto.success &&
-          authResponseDto.token != null &&
-          authResponseDto.user != null) {
-        await TokenStorage.saveToken(authResponseDto.token!);
-        return Right(authResponseDto.user!.toEntity());
-      } else {
-        return Left(AuthFailure.serverError(authResponseDto.message));
-      }
+      final userDto = await remoteDataSource.register(requestDto);
+      return Right(userDto.toEntity());
     } on DioException catch (e) {
       return Left(_handleDioException(e));
     } catch (e) {
@@ -105,24 +97,16 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
         otp: otp,
       );
-      final authResponseDto = await remoteDataSource.verifyOtp(requestDto);
+      final otpResponse = await remoteDataSource.verifyOtp(requestDto);
 
-      if (authResponseDto.success) {
-        if (authResponseDto.token != null) {
-          await TokenStorage.saveToken(authResponseDto.token!);
-        }
-
-        if (authResponseDto.user != null) {
-          return Right(authResponseDto.user!.toEntity());
-        } else {
-          // If OTP verification is successful but no user object is returned,
-          // attempt to log in the user using the provided email and password.
-          // This assumes the account is now verified and can be logged into.
-          final loginResult = await login(email, password);
-          return loginResult;
-        }
+      if (otpResponse['success'] == true) {
+        // If OTP verification is successful, attempt to log in the user.
+        // This assumes the account is now verified and can be logged into.
+        final loginResult = await login(email, password);
+        return loginResult;
       } else {
-        return Left(AuthFailure.serverError(authResponseDto.message));
+        final message = otpResponse['message'] as String? ?? 'OTP verification failed.';
+        return Left(AuthFailure.serverError(message));
       }
     } on DioException catch (e) {
       return Left(_handleDioException(e));
