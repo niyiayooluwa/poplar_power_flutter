@@ -1,9 +1,11 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_billers_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_products_for_biller_use_case.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
 
 import 'buy_data_state.dart';
 
@@ -12,7 +14,7 @@ class BuyDataViewModel extends StateNotifier<BuyDataState> {
   final GetProductsForBillerUseCase _getProducts;
 
   BuyDataViewModel(this._getIsps, this._getProducts)
-    : super(BuyDataState.initial());
+      : super(BuyDataState.initial());
 
   void selectISPByOption(SelectableOption option) {
     final selected = state.isps.valueOrNull?.where(
@@ -48,6 +50,15 @@ class BuyDataViewModel extends StateNotifier<BuyDataState> {
 
   void setPhoneNumber(String phoneNumber) =>
       state = state.copyWith(phoneNumber: phoneNumber);
+
+  void setPrice(String price) => state = state.copyWith(price: price);
+
+  void setWalletPin(String pin) => state = state.copyWith(walletPin: pin);
+
+  void setPreference(NotificationPreference pref) =>
+      state = state.copyWith(notificationPreference: pref);
+
+  void setEmail(String email) => state = state.copyWith(email: email);
 
   void reset() {
     state = state.copyWith(

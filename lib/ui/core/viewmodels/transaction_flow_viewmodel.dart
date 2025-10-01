@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
+import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/domain/use_cases/biller/purchase_product_use_case.dart';
+import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 
 /// Represents the steps in the transaction flow.
 enum TransactionFlowStep {
@@ -40,6 +45,9 @@ class TransactionFlowState {
   /// Web payment URL, if applicable.
   final String? webPaymentUrl;
 
+  /// The core data required for the API transaction.
+  final TransactionPayload? payload;
+
   /// Creates a [TransactionFlowState] instance.
   const TransactionFlowState({
     this.title = '',
@@ -50,6 +58,7 @@ class TransactionFlowState {
     this.selectedPaymentMethod,
     this.errorMessage,
     this.webPaymentUrl,
+    this.payload,
   });
 
   /// Returns the initial state for the transaction flow.
@@ -65,6 +74,7 @@ class TransactionFlowState {
     PaymentMethodConfig? selectedPaymentMethod,
     String? errorMessage,
     String? webPaymentUrl,
+    TransactionPayload? payload,
   }) {
     return TransactionFlowState(
       title: title ?? this.title,
@@ -77,53 +87,72 @@ class TransactionFlowState {
           selectedPaymentMethod ?? this.selectedPaymentMethod,
       errorMessage: errorMessage ?? this.errorMessage,
       webPaymentUrl: webPaymentUrl ?? this.webPaymentUrl,
+      payload: payload ?? this.payload,
     );
   }
 }
 
 /// Manages the transaction flow state and logic.
 class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
+  final Ref _ref;
+
   /// Creates a [TransactionFlowViewModel] with the initial state.
-  TransactionFlowViewModel() : super(TransactionFlowState.initial());
+  TransactionFlowViewModel(this._ref) : super(TransactionFlowState.initial());
 
   /// Starts a new transaction flow.
-  ///
-  /// [title] is the transaction title.
-  /// [amount] is the transaction amount.
-  /// [fields] are the transaction fields.
   void startTransaction({
     required String title,
     required String? amount,
     required List<TransactionField> fields,
-    // TODO(): Fetch payment methods from repository in future implementation.
+    required TransactionPayload payload,
   }) {
     final walletConfig = PaymentMethodConfig(
-      name: 'Main Wallet',
-      balance:
-          'Fetching balance...', // TODO(): Replace with actual balance from userProvider.
+      name: 'Nettpay',
+      balance: '4,000.00', // TODO(): Replace with actual balance from userProvider.
       icon: Icons.account_balance_wallet,
       color: Colors.blue,
+      provider: PaymentProvider.nettpay,
     );
-    final cardConfig = const PaymentMethodConfig(
-      name: 'Card',
-      balance: '**** **** **** 1234',
-      icon: Icons.credit_card,
-      color: Colors.red,
-    );
-    final webPayConfig = const PaymentMethodConfig(
-      name: 'Web Pay',
-      balance: 'Pay with a web browser',
+
+    final paystackConfig = const PaymentMethodConfig(
+      name: 'Paystack',
+      balance: 'Pay with Paystack',
       icon: Icons.language,
       color: Colors.green,
+      provider: PaymentProvider.paystack,
     );
-    final paymentMethods = [walletConfig, cardConfig, webPayConfig];
+
+    final stripeConfig = const PaymentMethodConfig(
+      name: 'Stripe',
+      balance: 'Pay with Stripe',
+      icon: Icons.credit_card,
+      color: Colors.purple,
+      provider: PaymentProvider.stripe,
+    );
+
+    final flutterwaveConfig = const PaymentMethodConfig(
+      name: 'Flutterwave',
+      balance: 'Pay with Flutterwave',
+      icon: Icons.waves,
+      color: Colors.orange,
+      provider: PaymentProvider.flutterwave,
+    );
+
+    final paymentMethods = [
+      walletConfig,
+      paystackConfig,
+      stripeConfig,
+      flutterwaveConfig
+    ];
 
     state = state.copyWith(
       title: title,
       amount: amount,
       fields: fields,
+      payload: payload,
       availablePaymentMethods: paymentMethods,
-      selectedPaymentMethod: paymentMethods.first,
+      selectedPaymentMethod:
+          paymentMethods.isNotEmpty ? paymentMethods.first : null,
       step: TransactionFlowStep.showingConfirmation,
     );
   }
@@ -135,28 +164,66 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
 
   /// Confirms the transaction and advances the flow.
   void confirmTransaction() {
-    if (state.selectedPaymentMethod?.name == 'Main Wallet') {
+    if (state.selectedPaymentMethod?.provider == PaymentProvider.nettpay) {
       state = state.copyWith(step: TransactionFlowStep.awaitingPin);
-    } else if (state.selectedPaymentMethod?.name == 'Web Pay') {
-      // TODO(): Replace with API call to get actual payment URL.
-      final fakeUrl = 'https://flutter.dev';
-      state = state.copyWith(
-        step: TransactionFlowStep.processingWebPayment,
-        webPaymentUrl: fakeUrl,
-      );
+    } else {
+      // For all other providers, we can directly call the purchase logic
+      // without a PIN.
+      _executePurchase();
     }
   }
 
   /// Submits the PIN for wallet transactions.
-  ///
-  /// [pin] is the entered PIN.
   void submitPin(String pin) {
-    // TODO(): Validate the PIN with backend.
+    _executePurchase(pin: pin);
+  }
+
+  Future<void> _executePurchase({String? pin}) async {
+    if (state.payload == null || state.selectedPaymentMethod == null) {
+      state = state.copyWith(
+          step: TransactionFlowStep.error,
+          errorMessage: 'Transaction payload is missing.');
+      return;
+    }
     state = state.copyWith(step: TransactionFlowStep.processing);
 
-    Future.delayed(const Duration(seconds: 2), () {
-      state = state.copyWith(step: TransactionFlowStep.success);
-    });
+    final user = _ref.read(userProvider).value;
+    final payload = state.payload!;
+    final paymentProvider = state.selectedPaymentMethod!.provider;
+
+    final requestDto = PaymentRequestDto(
+      customerIdentifier: payload.customerIdentifier,
+      amount: payload.amount,
+      categoryGroup: payload.categoryGroup,
+      categoryOrBiller: payload.categoryOrBiller,
+      billerOrProductId: payload.billerOrProductId,
+      notificationPreference: payload.notificationPreference,
+      provider: paymentProvider,
+      walletPin: pin, // Will be null if not a NETTPAY transaction
+      email: user?.email,
+      phoneNumber: user?.phone,
+    );
+
+    final purchaseUseCase = _ref.read(purchaseProductUseCaseProvider);
+    final result = await purchaseUseCase.execute(requestDto);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        step: TransactionFlowStep.error,
+        errorMessage: failure.message,
+      ),
+      ifRight: (response) {
+        if (response.clientSecret != null) {
+          state = state.copyWith(
+            step: TransactionFlowStep.processingWebPayment,
+            webPaymentUrl:
+                response.clientSecret, // Or a constructed URL from this
+          );
+        } else {
+          state = state.copyWith(step: TransactionFlowStep.success);
+        }
+      },
+    );
   }
 
   /// Completes the web payment flow.
@@ -178,5 +245,5 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
 /// Provider for the transaction flow view model.
 final transactionFlowProvider =
     StateNotifierProvider<TransactionFlowViewModel, TransactionFlowState>(
-      (ref) => TransactionFlowViewModel(),
-    );
+  (ref) => TransactionFlowViewModel(ref),
+);

@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
@@ -50,7 +51,7 @@ class CableScreen extends HookConsumerWidget {
     }, [state.selectedProduct]);
 
     useEffect(() {
-      final newText = state.accountNumber ?? '';
+      final newText = state.accountNumber;
       if (accountNumberController.text != newText) {
         accountNumberController.text = newText;
       }
@@ -121,7 +122,17 @@ class CableScreen extends HookConsumerWidget {
                 child: FilledButton(
                   onPressed: state.isFormValid
                       ? () {
+                          final payload = TransactionPayload(
+                            customerIdentifier: state.accountNumber,
+                            amount: state.selectedProduct?.amount ?? 0,
+                            categoryGroup: 'PAY_TV',
+                            categoryOrBiller: state.selectedProvider!.alias,
+                            billerOrProductId: state.selectedProduct!.id,
+                            notificationPreference:
+                                state.notificationPreference,
+                          );
                           transactionFlow.startTransaction(
+                            payload: payload,
                             title: 'Confirm Cable Subscription',
                             amount: '₦${state.selectedProduct?.amount ?? 0}',
                             fields: [
@@ -130,13 +141,14 @@ class CableScreen extends HookConsumerWidget {
                                   value: state.selectedProvider?.name ?? 'N/A'),
                               TransactionField(
                                   label: 'Account Number',
-                                  value: state.accountNumber ?? 'N/A'),
+                                  value: state.accountNumber),
                               TransactionField(
                                   label: 'Package',
                                   value: state.selectedProduct?.name ?? 'N/A'),
                               TransactionField(
                                   label: 'Amount',
-                                  value: '₦${state.selectedProduct?.amount ?? 0}',
+                                  value:
+                                      '₦${state.selectedProduct?.amount ?? 0}',
                                   isHighlighted: true),
                             ],
                           );

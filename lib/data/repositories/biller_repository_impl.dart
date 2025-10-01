@@ -2,10 +2,11 @@ import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/biller_remote_data_source.dart';
-import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
+import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/domain/failures/biller_failure.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/purchase_response.dart';
 import 'package:poplar_power/domain/repositories/biller_repository.dart';
 
 class BillerRepositoryImpl implements BillerRepository {
@@ -14,12 +15,12 @@ class BillerRepositoryImpl implements BillerRepository {
   BillerRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<Either<BillerFailure, void>> buyToken(
-    BuyTokenRequestDto request,
+  Future<Either<BillerFailure, PurchaseResponse>> purchase(
+    PaymentRequestDto request,
   ) async {
     try {
-      await _remoteDataSource.buyToken(request);
-      return const Right(null);
+      final dto = await _remoteDataSource.purchase(request);
+      return Right(dto.toEntity());
     } on DioException catch (e) {
       return Left(_handleDioException(e));
     } catch (e) {

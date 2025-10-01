@@ -1,11 +1,13 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
+import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_billers_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_products_for_biller_use_case.dart';
 import 'package:poplar_power/domain/use_cases/electricity/buy_electricity_token_use_case.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_billers_for_category_use_case.dart';
-import 'package:poplar_power/domain/use_cases/electricity/get_products_for_biller_use_case.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+
 
 import 'buy_electricity_state.dart';
 
@@ -58,7 +60,7 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
 
   void setWalletPin(String pin) => state = state.copyWith(walletPin: pin);
 
-  void setPreference(String pref) =>
+  void setPreference(NotificationPreference pref) =>
       state = state.copyWith(notificationPreference: pref);
 
   void setEmail(String email) => state = state.copyWith(email: email);
@@ -66,19 +68,18 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
   void setPhoneNumber(String phoneNumber) =>
       state = state.copyWith(phoneNumber: phoneNumber);
 
-  BuyTokenRequestDto buildPurchaseRequest() {
-    return BuyTokenRequestDto(
-      meterNumber: state.meterNumber,
+  PaymentRequestDto buildPurchaseRequest() {
+    return PaymentRequestDto(
+      customerIdentifier: state.meterNumber,
       amount: int.tryParse(state.amount) ?? 0,
       walletPin: state.walletPin,
       notificationPreference: state.notificationPreference,
       email: state.email,
       phoneNumber: state.phoneNumber,
       provider: state.provider,
-      categoryOrBillerGroups: "ELECTRIC_DISCO",
-      categoryIdOrBillers: state.selectedDisco!.alias,
-      billerIdOrProductId:
-          state.selectedProduct!.id, // Fixed: removed quotes around 'state'
+      categoryGroup: "ELECTRICITY",
+      categoryOrBiller: state.selectedDisco!.alias,
+      billerOrProductId: state.selectedProduct!.id,
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 import 'package:poplar_power/ui/core/widgets/smart_input_field.dart';
@@ -56,7 +57,7 @@ class InternetScreen extends HookConsumerWidget {
     }, [state.selectedProduct]);
 
     useEffect(() {
-      final newText = state.phoneNumber ?? '';
+      final newText = state.phoneNumber;
       if (phoneController.text != newText) {
         phoneController.text = newText;
       }
@@ -90,10 +91,7 @@ class InternetScreen extends HookConsumerWidget {
                   }
                 },
                 onSelected: viewModel.selectISPByOption,
-                fallbackIcon: const Icon(
-                  Icons.wifi,
-                  color: Colors.grey,
-                ),
+                fallbackIcon: const Icon(Icons.wifi, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               SmartInputField(
@@ -136,23 +134,38 @@ class InternetScreen extends HookConsumerWidget {
                 child: FilledButton(
                   onPressed: state.isFormValid
                       ? () {
+                          final payload = TransactionPayload(
+                            customerIdentifier: state.phoneNumber,
+                            amount: state.selectedProduct?.amount ?? 0,
+                            categoryGroup: 'AIRTIME_AND_DATA',
+                            categoryOrBiller: state.selectedIsp!.alias,
+                            billerOrProductId: state.selectedProduct!.id,
+                            notificationPreference:
+                                state.notificationPreference,
+                          );
+
                           transactionFlow.startTransaction(
+                            payload: payload,
                             title: 'Confirm Data Purchase',
                             amount: '₦${state.selectedProduct?.amount ?? 0}',
                             fields: [
                               TransactionField(
-                                  label: 'ISP',
-                                  value: state.selectedIsp?.name ?? 'N/A'),
+                                label: 'ISP',
+                                value: state.selectedIsp?.name ?? 'N/A',
+                              ),
                               TransactionField(
-                                  label: 'Phone Number',
-                                  value: state.phoneNumber ?? 'N/A'),
+                                label: 'Phone Number',
+                                value: state.phoneNumber,
+                              ),
                               TransactionField(
-                                  label: 'Bundle',
-                                  value: state.selectedProduct?.name ?? 'N/A'),
+                                label: 'Bundle',
+                                value: state.selectedProduct?.name ?? 'N/A',
+                              ),
                               TransactionField(
-                                  label: 'Amount',
-                                  value: '₦${state.selectedProduct?.amount ?? 0}',
-                                  isHighlighted: true),
+                                label: 'Amount',
+                                value: '₦${state.selectedProduct?.amount ?? 0}',
+                                isHighlighted: true,
+                              ),
                             ],
                           );
                         }
@@ -164,8 +177,7 @@ class InternetScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: transactionState.step ==
-                          TransactionFlowStep.processing
+                  child: transactionState.step == TransactionFlowStep.processing
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -178,11 +190,11 @@ class InternetScreen extends HookConsumerWidget {
                         )
                       : Text(
                           'Next',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                 ),
               ),

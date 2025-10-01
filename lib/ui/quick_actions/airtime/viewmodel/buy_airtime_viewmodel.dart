@@ -1,46 +1,10 @@
+/*
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/network_provider.dart';
+import 'package:poplar_power/ui/quick_actions/airtime/viewmodel/buy_airtime_state.dart';
 
-class AirtimePurchaseState {
-  final String phoneNumber;
-  final int? selectedAmount;
-  final int? customAmount;
-  final NetworkProvider? selectedNetwork;
-
-  const AirtimePurchaseState({
-    this.phoneNumber = '',
-    this.selectedAmount,
-    this.customAmount,
-    this.selectedNetwork,
-  });
-
-  int get effectiveAmount => selectedAmount ?? customAmount ?? 0;
-
-  bool get isFormValid =>
-      phoneNumber.length == 11 &&
-      effectiveAmount >= 50 &&
-      effectiveAmount <= 150000 &&
-      selectedNetwork != null;
-
-  AirtimePurchaseState copyWith({
-    String? phoneNumber,
-    int? selectedAmount,
-    int? customAmount,
-    NetworkProvider? selectedNetwork,
-    bool clearSelectedAmount = false,
-    bool clearCustomAmount = false,
-  }) {
-    return AirtimePurchaseState(
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      selectedAmount: clearSelectedAmount ? null : (selectedAmount ?? this.selectedAmount),
-      customAmount: clearCustomAmount ? null : (customAmount ?? this.customAmount),
-      selectedNetwork: selectedNetwork ?? this.selectedNetwork,
-    );
-  }
-}
-
-class AirtimePurchaseViewModel extends StateNotifier<AirtimePurchaseState> {
-  AirtimePurchaseViewModel() : super(const AirtimePurchaseState());
+class AirtimePurchaseViewModel extends StateNotifier<BuyAirtimeState> {
+  AirtimePurchaseViewModel() : super(const BuyAirtimeState());
 
   void setPhoneNumber(String number) {
     state = state.copyWith(phoneNumber: number);
@@ -72,12 +36,13 @@ class AirtimePurchaseViewModel extends StateNotifier<AirtimePurchaseState> {
   }
 
   void reset() {
-    state = const AirtimePurchaseState();
+    state = const BuyAirtimeState();
   }
 }
 
 final airtimePurchaseProvider =
     StateNotifierProvider.autoDispose<
       AirtimePurchaseViewModel,
-      AirtimePurchaseState
+      BuyAirtimeState
     >((ref) => AirtimePurchaseViewModel());
+*/

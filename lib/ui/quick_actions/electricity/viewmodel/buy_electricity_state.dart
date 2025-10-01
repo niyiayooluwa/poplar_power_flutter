@@ -1,26 +1,30 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/domain/models/biller_product.dart';
 import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
 
 class BuyElectricityState {
   final AsyncValue<List<Biller>> discos;
   final AsyncValue<List<BillerProduct>> products;
 
-  // New fields for mapped data
   final AsyncValue<List<SelectableOption>> mappedDiscos;
   final AsyncValue<List<SelectableOption>> mappedProducts;
 
   final Biller? selectedDisco;
   final BillerProduct? selectedProduct;
+
   final String meterNumber;
   final String amount;
-  final String walletPin;
-  final String notificationPreference;
-  final String? email;
-  final String? phoneNumber;
-  final String provider;
 
+  final String walletPin;
+  final NotificationPreference notificationPreference;
+
+  final String email;
+  final String phoneNumber;
+
+  final PaymentProvider provider;
   final AsyncValue<void> purchaseState;
 
   const BuyElectricityState({
@@ -28,15 +32,18 @@ class BuyElectricityState {
     this.products = const AsyncData([]),
     this.mappedDiscos = const AsyncData([]),
     this.mappedProducts = const AsyncData([]),
+
     this.selectedDisco,
     this.selectedProduct,
     this.meterNumber = '',
     this.amount = '',
+
     this.walletPin = '',
-    this.notificationPreference = 'EMAIL',
-    this.email,
-    this.phoneNumber,
-    this.provider = 'PAYSTACK',
+    this.notificationPreference = NotificationPreference.both,
+    this.email = '',
+    this.phoneNumber = '',
+
+    this.provider = PaymentProvider.paystack,
     this.purchaseState = const AsyncData(null),
   });
 
@@ -52,10 +59,10 @@ class BuyElectricityState {
     String? meterNumber,
     String? amount,
     String? walletPin,
-    String? notificationPreference,
+    NotificationPreference? notificationPreference,
     String? email,
     String? phoneNumber,
-    String? provider,
+    PaymentProvider? provider,
     AsyncValue<void>? purchaseState,
   }) {
     return BuyElectricityState(

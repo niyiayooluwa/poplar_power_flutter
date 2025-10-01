@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:poplar_power/domain/models/transaction_status.dart' as domain;
 
 enum TransactionStatus {
   success,
@@ -14,6 +15,11 @@ class Transaction {
   final DateTime date;
   final TransactionStatus status;
   final IconData icon;
+  final String transactionId;
+  final String merchant;
+  final String paymentMethod;
+  final String fee;
+
 
   Transaction({
     required this.title,
@@ -21,7 +27,55 @@ class Transaction {
     required this.date,
     required this.status,
     required this.icon,
+    required this.transactionId,
+    required this.merchant,
+    required this.paymentMethod,
+    required this.fee,
   });
+
+
+  factory Transaction.fromStatus(domain.TransactionStatus domainStatus) {
+    final uiStatus = _getUiStatus(domainStatus);
+    final isCredit = domainStatus.amount.isNegative;
+
+    return Transaction(
+      title: domainStatus.provider,
+      amount: domainStatus.amount,
+      date: DateTime.parse(domainStatus.createdAt),
+      status: uiStatus,
+      icon: _getIcon(uiStatus, isCredit),
+      transactionId: domainStatus.nettpayRef,
+      merchant: domainStatus.billerId, // Using provider as merchant
+      paymentMethod: domainStatus.provider,
+      // TODO: Fee is not available in the API response. Defaulting to 0.
+      fee: '₦0',
+    );
+  }
+
+  static TransactionStatus _getUiStatus(domain.TransactionStatus domainStatus) {
+    if (domainStatus.reversed) {
+      return TransactionStatus.reversed;
+    }
+    if (domainStatus.delivered) {
+      return TransactionStatus.success;
+    }
+    // TODO: This assumes that if a transaction is not delivered and not reversed, it's pending.
+    // The backend doesn't provide an explicit 'failed' or 'pending' status.
+    return TransactionStatus.pending;
+  }
+
+  static IconData _getIcon(TransactionStatus status, bool isCredit) {
+    switch (status) {
+      case TransactionStatus.reversed:
+        return Icons.subdirectory_arrow_left_sharp;
+      case TransactionStatus.failed:
+        return Icons.cancel_outlined;
+      case TransactionStatus.pending:
+      case TransactionStatus.success:
+        return isCredit ? Icons.arrow_downward : Icons.arrow_upward;
+    }
+  }
+
 
   /// Whether this transaction_history_detail is a credit (income) type.
   bool get isCredit => amount > 0;

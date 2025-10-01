@@ -6,21 +6,21 @@ import 'package:poplar_power/domain/failures/biller_failure.dart';
 import 'package:poplar_power/domain/models/purchase_response.dart';
 import 'package:poplar_power/domain/repositories/biller_repository.dart';
 
-class BuyElectricityTokenUseCase {
+class PurchaseProductUseCase {
   final BillerRepository _repository;
 
-  BuyElectricityTokenUseCase(this._repository);
-  
-Future<Either<BillerFailure, PurchaseResponse>> execute(
+  PurchaseProductUseCase(this._repository);
+
+  Future<Either<BillerFailure, PurchaseResponse>> execute(
     PaymentRequestDto request,
   ) async {
     return await _repository.purchase(request);
   }
 }
 
-final buyElectricityTokenUseCaseProvider = Provider<BuyElectricityTokenUseCase>(
+final purchaseProductUseCaseProvider = Provider<PurchaseProductUseCase>(
   (ref) {
     final repository = ref.watch(billerRepositoryProvider);
-    return BuyElectricityTokenUseCase(repository);
+    return PurchaseProductUseCase(repository);
   },
 );

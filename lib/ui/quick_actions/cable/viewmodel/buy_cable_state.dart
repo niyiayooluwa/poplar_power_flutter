@@ -1,27 +1,50 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 class BuyCableState {
   final AsyncValue<List<Biller>> cableProviders;
   final AsyncValue<List<BillerProduct>> products;
+
   final AsyncValue<List<SelectableOption>> mappedCableProviders;
   final AsyncValue<List<SelectableOption>> mappedProducts;
+
   final Biller? selectedProvider;
   final BillerProduct? selectedProduct;
-  final String? accountNumber;
-  final String? amount;
+
+  final String accountNumber;
+  final String amount;
+
+  final String walletPin;
+  final String email;
+
+  final String phoneNumber;
+  final NotificationPreference notificationPreference;
+
+  final PaymentProvider provider;
+  final AsyncValue<void> purchaseState;
 
   const BuyCableState({
     this.cableProviders = const AsyncData([]),
     this.products = const AsyncData([]),
     this.mappedCableProviders = const AsyncData([]),
     this.mappedProducts = const AsyncData([]),
+
     this.selectedProvider,
     this.selectedProduct,
     this.accountNumber = '',
     this.amount = '',
+
+    this.phoneNumber = '',
+    this.email = '',
+    this.notificationPreference = NotificationPreference.both,
+    this.walletPin = '',
+
+    this.provider = PaymentProvider.paystack,
+    this.purchaseState = const AsyncData(null),
   });
 
   factory BuyCableState.initial() => const BuyCableState();
@@ -35,6 +58,12 @@ class BuyCableState {
     BillerProduct? selectedProduct,
     String? accountNumber,
     String? amount,
+    String? walletPin,
+    String? email,
+    String? phoneNumber,
+    NotificationPreference? notificationPreference,
+    PaymentProvider? provider,
+    AsyncValue<void>? purchaseState,
   }) {
     return BuyCableState(
       cableProviders: cableProviders ?? this.cableProviders,
@@ -45,12 +74,19 @@ class BuyCableState {
       selectedProduct: selectedProduct ?? this.selectedProduct,
       accountNumber: accountNumber ?? this.accountNumber,
       amount: amount ?? this.amount,
+      walletPin: walletPin ?? this.walletPin,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      notificationPreference:
+          notificationPreference ?? this.notificationPreference,
+      provider: provider ?? this.provider,
+      purchaseState: purchaseState ?? this.purchaseState,
     );
   }
 
   bool get isFormValid =>
       selectedProvider != null &&
       selectedProduct != null &&
-      accountNumber != null &&
-      accountNumber!.length <= 15;
+      accountNumber.isNotEmpty &&
+      accountNumber.length <= (selectedProvider?.accountNumberSize ?? 15);
 }

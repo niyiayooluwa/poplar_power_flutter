@@ -80,7 +80,60 @@ class UserDto {
       customRef: customRef,
       verified: verified,
       active: active,
-      balance: 40000.0,
+      balance: 40000.0, // TODO: This is hardcoded, should come from API if available
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'companyAppId': companyAppId,
+      'email': email,
+      'phone': phone,
+      'fullName': fullName,
+      'ref': ref,
+      'customRef': customRef,
+      'sessionId': sessionId,
+      'mfaCode': mfaCode,
+      'emailValid': emailValid,
+      'phoneValid': phoneValid,
+      'failedAuthAttempts': failedAuthAttempts,
+      'lockAt': lockAt,
+      'unlockAt': unlockAt,
+      'lastLogin': lastLogin,
+      'modified': modified,
+      'created': created,
+      'active': active,
+      'verified': verified,
+      'lock': lock,
+    };
+  }
+
+  factory UserDto.fromEntity(User user) {
+    // This is a partial conversion, as we can't reconstruct all API fields from the entity.
+    // It's primarily for saving the user profile to local storage.
+    return UserDto(
+      id: int.tryParse(user.id) ?? 0,
+      email: user.email,
+      phone: user.phone,
+      fullName: user.fullName,
+      verified: user.verified,
+      active: user.active,
+      customRef: user.customRef,
+      // Fields not in User entity are set to default/dummy values
+      companyAppId: 0,
+      ref: '',
+      sessionId: null,
+      mfaCode: null,
+      emailValid: false,
+      phoneValid: false,
+      failedAuthAttempts: 0,
+      lockAt: null,
+      unlockAt: null,
+      lastLogin: null,
+      modified: 0,
+      created: 0,
+      lock: false,
     );
   }
 }

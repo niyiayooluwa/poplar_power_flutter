@@ -10,7 +10,6 @@ import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/primary/send/widget/send_2nd_step.dart';
 import 'package:poplar_power/ui/primary/topup/widget/topup_screen.dart';
 import 'package:poplar_power/ui/profile/widget/profile_screen.dart';
-import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
@@ -182,10 +181,10 @@ final appRouter = GoRouter(
       builder: (context, state) => const InternetScreen(),
     ),
 
-    GoRoute(
+   /* GoRoute(
       path: '/airtime',
       builder: (context, state) => const AirtimeScreen(),
-    ),
+    ),*/
 
     GoRoute(
       path: '/billers',

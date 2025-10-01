@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:poplar_power/data/models/user/user_dto.dart';
 
 class AuthResponseDto {
@@ -30,35 +28,21 @@ class AuthResponseDto {
   });
 
   factory AuthResponseDto.fromJson(Map<String, dynamic> json) {
-    // Handle the nested JSON string in the message field
-    String finalMessage = json['message'];
-    // Regex to find a JSON string embedded within the message
-    final RegExp jsonRegex = RegExp(r'\{.*\}');
-    final Match? match = jsonRegex.firstMatch(json['message']);
-
-    if (match != null) {
-      try {
-        final nestedJsonString = match.group(0)!;
-        final nestedJson = jsonDecode(nestedJsonString);
-        finalMessage = nestedJson['message'] ?? json['message'];
-      } catch (e) {
-        // If parsing fails, fall back to the original message
-        finalMessage = json['message'];
-      }
-    }
-
+    final ssoResponse = json['ssoResponse'] as Map<String, dynamic>;
     return AuthResponseDto(
-      isAuthenticated: json['is_authenticated'] as bool,
-      sessionId: json['sessionId'] as String?,
-      user: json['user'] != null ? UserDto.fromJson(json['user'] as Map<String, dynamic>) : null,
-      token: json['token'] as String?,
-      mfaRequired: json['mfa_required'] as bool,
-      mfaType: json['mfa_type'] as String?,
-      deviceIsRegistered: json['device_is_registered'] as bool,
-      data: json['data'],
-      poplarToken: json['poplarToken'] as String?,
-      success: json['success'] as bool,
-      message: finalMessage,
+      isAuthenticated: ssoResponse['is_authenticated'] as bool,
+      sessionId: ssoResponse['sessionId'] as String?,
+      user: ssoResponse['user'] != null
+          ? UserDto.fromJson(ssoResponse['user'] as Map<String, dynamic>)
+          : null,
+      token: ssoResponse['token'] as String?,
+      mfaRequired: ssoResponse['mfa_required'] as bool,
+      mfaType: ssoResponse['mfa_type'] as String?,
+      deviceIsRegistered: ssoResponse['device_is_registered'] as bool,
+      data: ssoResponse['data'],
+      poplarToken: ssoResponse['poplarToken'] as String?,
+      success: ssoResponse['success'] as bool,
+      message: ssoResponse['message'] as String,
     );
   }
 }

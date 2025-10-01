@@ -16,13 +16,10 @@ class TransactionDetailScreen extends HookConsumerWidget {
     final isShared = ref.watch(shareStateProvider);
 
     final color = switch (transaction.status) {
-      TransactionStatus.success => switch (transaction.isCredit) {
-        true => const Color(0xFFE7FAE6),
-        false => const Color(0xFFFFB9BC),
-      },
-      TransactionStatus.failed => Colors.grey,
-      TransactionStatus.reversed => Color(0xFF89D1FF),
-      TransactionStatus.pending => Color(0xFFFBF4E8),
+      TransactionStatus.success => const Color(0xFFE7FAE6), // Green
+      TransactionStatus.failed => const Color(0xFFFFB9BC), // Red
+      TransactionStatus.reversed => const Color(0xFF89D1FF), // Blue
+      TransactionStatus.pending => const Color(0xFFFBF4E8), // Yellow
     };
 
     // Animation controller for the share button
@@ -225,7 +222,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
   Widget _buildTransactionDetails() {
     final color = switch (transaction.status) {
       TransactionStatus.success => Colors.green,
-      TransactionStatus.failed => Colors.grey,
+      TransactionStatus.failed => Colors.red,
       TransactionStatus.reversed => Colors.blue,
       TransactionStatus.pending => Colors.orange,
     };
@@ -236,7 +233,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withAlpha((255 * 0.05).round()),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -246,12 +243,12 @@ class TransactionDetailScreen extends HookConsumerWidget {
         children: [
           _buildDetailRow('Date', transaction.formattedDateOnly),
           _buildDetailRow('Time', transaction.formattedTimeOnly),
-          _buildDetailRow('Transaction ID', 'BCX11100002'),
+          _buildDetailRow('Transaction ID', transaction.transactionId),
           _buildDetailRow('Status', transaction.statusLabel, color),
           const Divider(color: Color(0xFFF3F4F6)),
-          _buildDetailRow('Fee', '₦0'),
-          _buildDetailRow('Merchant', 'MarketSquare'),
-          _buildDetailRow('Payment Method', 'Electronic Transfer'),
+          _buildDetailRow('Fee', transaction.fee),
+          _buildDetailRow('Merchant', transaction.merchant),
+          _buildDetailRow('Payment Method', transaction.paymentMethod),
         ],
       ),
     );

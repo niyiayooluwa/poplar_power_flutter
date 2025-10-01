@@ -2,14 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:poplar_power/core/constants/api_constants.dart';
 import 'package:poplar_power/data/models/billers/biller_dto.dart';
 import 'package:poplar_power/data/models/billers/biller_product_dto.dart';
-import 'package:poplar_power/data/models/billers/buy_token_request_dto.dart';
+import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
+import 'package:poplar_power/data/models/billers/purchase_response_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 abstract class BillerRemoteDataSource {
   Future<List<BillerDto>> getBillersForCategory(String categoryId);
   Future<List<BillerProductDto>> getProductsForBiller(String billerId);
-  Future<void> buyToken(BuyTokenRequestDto request);
+  Future<PurchaseResponseDto> purchase(PaymentRequestDto request);
 }
 
 class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
@@ -23,7 +24,7 @@ class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
   }
 
   @override
-  Future<List<BillerDto>> getBillersForCategory (String categoryId) async {
+  Future<List<BillerDto>> getBillersForCategory(String categoryId) async {
     try {
       final response = await _dio.get(
         '/autoPayBillers/categories/$categoryId/drill',
@@ -36,7 +37,7 @@ class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
   }
 
   @override
-  Future<List<BillerProductDto>> getProductsForBiller (String billerId) async {
+  Future<List<BillerProductDto>> getProductsForBiller(String billerId) async {
     try {
       final response = await _dio.get('/autoPayBillers/$billerId/products');
       final List<dynamic> data = response.data;
@@ -47,13 +48,14 @@ class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
   }
 
   @override
-  Future<void> buyToken(BuyTokenRequestDto request) async {
+  Future<PurchaseResponseDto> purchase(PaymentRequestDto request) async {
     try {
-      await _dio.post(
-        '/token/buy',
+      final response = await _dio.post(
+        '/buyProducts/purchase',
         data: request.toJson(),
         options: Options(headers: _getAuthHeaders()),
       );
+      return PurchaseResponseDto.fromJson(response.data);
     } on DioException {
       rethrow;
     }
@@ -61,7 +63,6 @@ class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
 }
 
 //Data Source Provider
-final billerRemoteDataSourceProvider =
-    Provider<BillerRemoteDataSource>((ref) {
-      return BillerRemoteDataSourceImpl();
-    });
+final billerRemoteDataSourceProvider = Provider<BillerRemoteDataSource>((ref) {
+  return BillerRemoteDataSourceImpl();
+});

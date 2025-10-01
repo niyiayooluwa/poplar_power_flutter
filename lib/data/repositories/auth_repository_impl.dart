@@ -7,12 +7,14 @@ import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
 import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
 import 'package:poplar_power/data/storage/token_storage.dart';
+import 'package:poplar_power/data/storage/user_profile_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/failures/auth_failure.dart';
 import 'package:poplar_power/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final UserProfileStorage _userProfileStorage = UserProfileStorage();
 
   AuthRepositoryImpl({required this.remoteDataSource});
 
@@ -26,7 +28,9 @@ class AuthRepositoryImpl implements AuthRepository {
           authResponseDto.token != null &&
           authResponseDto.user != null) {
         await TokenStorage.saveToken(authResponseDto.token!);
-        return Right(authResponseDto.user!.toEntity());
+        final user = authResponseDto.user!.toEntity();
+        await _userProfileStorage.saveUser(user);
+        return Right(user);
       } else {
         return Left(AuthFailure.serverError(authResponseDto.message));
       }
@@ -64,7 +68,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    //await TokenStorage.deleteToken();
+    await TokenStorage.deleteToken();
+    await _userProfileStorage.deleteUser();
   }
 
   @override

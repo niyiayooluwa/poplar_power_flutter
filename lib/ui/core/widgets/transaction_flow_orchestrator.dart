@@ -92,6 +92,10 @@ class TransactionFlowOrchestrator extends ConsumerWidget {
             date: DateTime.now(),
             status: TransactionStatus.success,
             icon: Icons.check_circle,
+            transactionId: 'flow_mock_id',
+            merchant: next.title, // Use title as a stand-in for merchant
+            paymentMethod: next.selectedPaymentMethod?.name ?? 'Unknown',
+            fee: '₦0.00',
           ));
           ref.read(transactionFlowProvider.notifier).reset();
           break;

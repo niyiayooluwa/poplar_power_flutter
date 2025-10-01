@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/primary/send/viewmodel/send_provider.dart';
 
@@ -227,14 +229,28 @@ class Send2ndStepScreen extends HookConsumerWidget {
                 child: FilledButton(
                   onPressed: amountString.length >= 3
                       ? () {
+                          // TODO(dev): This is a temporary fix. The 'Send' feature needs its own
+                          // transaction flow or a more generic payload.
+                          final dummyPayload = TransactionPayload(
+                            customerIdentifier: recipientAccountNumber,
+                            amount: int.tryParse(amountString) ?? 0,
+                            categoryGroup: 'TRANSFER',
+                            categoryOrBiller: recipientBank,
+                            billerOrProductId: '',
+                            notificationPreference:
+                                NotificationPreference.none,
+                          );
+
                           transactionFlow.startTransaction(
+                            payload: dummyPayload,
                             title: 'Transfer Money',
                             amount: '₦$amountString',
                             fields: [
                               TransactionField(
                                   label: 'To', value: recipientName),
                               TransactionField(
-                                  label: 'Account', value: recipientAccountNumber),
+                                  label: 'Account',
+                                  value: recipientAccountNumber),
                               TransactionField(
                                   label: 'Bank', value: recipientBank),
                               TransactionField(
