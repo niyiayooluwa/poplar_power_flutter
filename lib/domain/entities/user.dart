@@ -8,7 +8,13 @@ class User {
   final String? customRef;
   final bool verified;
   final bool active;
-  final double? balance;
+  final String? systemRef;
+  final String? serviceRef;
+  final String? walletAccountNo;
+  final String? currency;
+  final bool? pinCreated;
+  final String? customerStatus;
+  final String? accountStatus;
 
   User({
     required this.id,
@@ -18,6 +24,12 @@ class User {
     this.customRef,
     required this.verified,
     required this.active,
-    this.balance,
+    this.systemRef,
+    this.serviceRef,
+    this.walletAccountNo,
+    this.currency,
+    this.pinCreated,
+    this.customerStatus,
+    this.accountStatus,
   });
 }

@@ -22,6 +22,13 @@ class UserDto {
   final bool active;
   final bool verified;
   final bool lock;
+  final String? systemRef;
+  final String? serviceRef;
+  final String? walletAccountNo;
+  final String? currency;
+  final bool? pinCreated;
+  final String? customerStatus;
+  final String? accountStatus;
 
   UserDto({
     required this.id,
@@ -44,6 +51,13 @@ class UserDto {
     required this.active,
     required this.verified,
     required this.lock,
+    this.systemRef,
+    this.serviceRef,
+    this.walletAccountNo,
+    this.currency,
+    this.pinCreated,
+    this.customerStatus,
+    this.accountStatus,
   });
 
   factory UserDto.fromJson(Map<String, dynamic> json) {
@@ -68,6 +82,13 @@ class UserDto {
       active: json['active'] as bool,
       verified: json['verified'] as bool,
       lock: json['lock'] as bool,
+      systemRef: json['systemRef'] as String?,
+      serviceRef: json['serviceRef'] as String?,
+      walletAccountNo: json['walletAccountNo'] as String?,
+      currency: json['currency'] as String?,
+      pinCreated: json['pinCreated'] as bool?,
+      customerStatus: json['customerStatus'] as String?,
+      accountStatus: json['accountStatus'] as String?,
     );
   }
 
@@ -80,7 +101,13 @@ class UserDto {
       customRef: customRef,
       verified: verified,
       active: active,
-      balance: 40000.0, // TODO: This is hardcoded, should come from API if available
+      systemRef: systemRef,
+      serviceRef: serviceRef,
+      walletAccountNo: walletAccountNo,
+      currency: currency,
+      pinCreated: pinCreated,
+      customerStatus: customerStatus,
+      accountStatus: accountStatus,
     );
   }
 
@@ -106,6 +133,13 @@ class UserDto {
       'active': active,
       'verified': verified,
       'lock': lock,
+      'systemRef': systemRef,
+      'serviceRef': serviceRef,
+      'walletAccountNo': walletAccountNo,
+      'currency': currency,
+      'pinCreated': pinCreated,
+      'customerStatus': customerStatus,
+      'accountStatus': accountStatus,
     };
   }
 
@@ -120,6 +154,13 @@ class UserDto {
       verified: user.verified,
       active: user.active,
       customRef: user.customRef,
+      systemRef: user.systemRef,
+      serviceRef: user.serviceRef,
+      walletAccountNo: user.walletAccountNo,
+      currency: user.currency,
+      pinCreated: user.pinCreated,
+      customerStatus: user.customerStatus,
+      accountStatus: user.accountStatus,
       // Fields not in User entity are set to default/dummy values
       companyAppId: 0,
       ref: '',

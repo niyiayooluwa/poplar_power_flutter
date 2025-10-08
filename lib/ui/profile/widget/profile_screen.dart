@@ -10,6 +10,7 @@ class ProfileScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(profileViewModelProvider);
     final profileViewModel = ref.read(profileViewModelProvider.notifier);
+    final theme = Theme.of(context);
 
     ref.listen<ProfileState>(profileViewModelProvider, (previous, current) {
       if (current.isLoggedOut) {
@@ -29,39 +30,40 @@ class ProfileScreen extends HookConsumerWidget {
               if (profileState.isLoading)
                 const Center(child: CircularProgressIndicator())
               else
-                Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        title: const Text('Full Name'),
-                        subtitle: Text(profileState.profile!.fullName),
-                      ),
-                      ListTile(
-                        title: const Text('Email'),
-                        subtitle: Text(profileState.profile!.email),
-                      ),
-                      ListTile(
-                        title: const Text('Phone Number'),
-                        subtitle: Text(profileState.profile!.phoneNumber),
-                      ),
-                    ],
-                  ),
+                Column(
+                  children: [
+                    Text(
+                      profileState.user!.fullName,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      profileState.user!.email,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    ListTile(
+                      title: const Text('Phone Number'),
+                      subtitle: Text(profileState.user!.phone),
+                    ),
+                  ],
                 ),
               const SizedBox(height: 24),
+
               SwitchListTile(
                 title: const Text('Enable Biometrics'),
                 value: profileState.enableBiometrics,
                 onChanged: (value) => profileViewModel.setBiometrics(value),
               ),
               const SizedBox(height: 24),
+
               Center(
                 child: ElevatedButton(
                   onPressed: () => profileViewModel.changePassword(),
                   child: const Text('Change Password'),
                 ),
               ),
-
               const SizedBox(height: 24),
+
               Center(
                 child: ElevatedButton(
                   onPressed: () => profileViewModel.logout(),

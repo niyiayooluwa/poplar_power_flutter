@@ -1,10 +1,9 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
-import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
-import 'package:poplar_power/data/services/settings_service.dart';
-import 'package:poplar_power/domain/models/profile.dart';
+import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/use_cases/profile/get_profile_use_case.dart';
 import 'package:poplar_power/domain/use_cases/profile/logout_use_case.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/data/services/settings_service.dart';
 
 class ProfileViewModel extends StateNotifier<ProfileState> {
   final GetProfileUseCase _getProfileUseCase;
@@ -26,11 +25,7 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
     result.fold(
       ifLeft: (failure) => state = state.copyWith(isLoading: false),
       ifRight: (user) => state = state.copyWith(
-        profile: Profile(
-          fullName: user.fullName,
-          email: user.email,
-          phoneNumber: user.phone,
-        ),
+        user: user,
         isLoading: false,
       ),
     );
@@ -61,13 +56,13 @@ class ProfileViewModel extends StateNotifier<ProfileState> {
 }
 
 class ProfileState {
-  final Profile? profile;
+  final User? user;
   final bool isLoading;
   final bool enableBiometrics;
   final bool isLoggedOut;
 
   ProfileState({
-    this.profile,
+    this.user,
     this.isLoading = true,
     this.enableBiometrics = false,
     this.isLoggedOut = false,
@@ -76,13 +71,13 @@ class ProfileState {
   factory ProfileState.initial() => ProfileState();
 
   ProfileState copyWith({
-    Profile? profile,
+    User? user,
     bool? isLoading,
     bool? enableBiometrics,
     bool? isLoggedOut,
   }) {
     return ProfileState(
-      profile: profile ?? this.profile,
+      user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       enableBiometrics: enableBiometrics ?? this.enableBiometrics,
       isLoggedOut: isLoggedOut ?? this.isLoggedOut,
@@ -90,15 +85,22 @@ class ProfileState {
   }
 }
 
+final getProfileUseCaseProvider = Provider<GetProfileUseCase>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return GetProfileUseCase(authRepository);
+});
+
+final logOutUseCaseProvider = Provider<LogOutUseCase>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return LogOutUseCase(authRepository);
+});
+
 final profileViewModelProvider =
     StateNotifierProvider<ProfileViewModel, ProfileState>(
-      (ref) => ProfileViewModel(
-        GetProfileUseCase(
-          AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()),
-        ),
-        LogOutUseCase(
-          AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl()),
-        ),
-        SettingsService(),
-      ),
+      (ref) {
+        final getProfileUseCase = ref.watch(getProfileUseCaseProvider);
+        final logOutUseCase = ref.watch(logOutUseCaseProvider);
+        final settingsService = ref.watch(settingsServiceProvider);
+        return ProfileViewModel(getProfileUseCase, logOutUseCase, settingsService);
+      },
     );
