@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/ui/core/models/bank_notification.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
 
 class BankService {
   // Fake data - Replace this with real API calls
@@ -14,67 +13,6 @@ class BankService {
       verified: true,
       active: true,
     );
-  }
-
-  static List<Transaction> getRecentTransactions() {
-    return [
-      // Your existing transactions (kept for reference)
-      Transaction(
-        title: 'Starbucks',
-        amount: -400.67,
-        date: DateTime(2025, 7, 3, 9, 15, 48),
-        status: TransactionStatus.pending,
-        icon: Icons.arrow_upward,
-        transactionId: 'mock_id_1',
-        merchant: 'Starbucks',
-        paymentMethod: 'Wallet',
-        fee: '₦0.00',
-      ),
-      Transaction(
-        title: 'Transfer from Z-Merchant',
-        amount: 35000.00,
-        date: DateTime(2025, 7, 2, 13, 30, 18),
-        status: TransactionStatus.success,
-        icon: Icons.arrow_downward,
-        transactionId: 'mock_id_2',
-        merchant: 'Z-Merchant',
-        paymentMethod: 'Bank Transfer',
-        fee: '₦0.00',
-      ),
-      Transaction(
-        title: 'Temu',
-        amount: -5000.00,
-        date: DateTime(2025, 7, 1, 12, 18, 55),
-        status: TransactionStatus.success,
-        icon: Icons.arrow_upward,
-        transactionId: 'mock_id_3',
-        merchant: 'Temu',
-        paymentMethod: 'Wallet',
-        fee: '₦0.00',
-      ),
-      Transaction(
-        title: 'Temu',
-        amount: -5000.00,
-        date: DateTime(2025, 7, 1, 12, 15, 32),
-        icon: Icons.cancel_outlined,
-        status: TransactionStatus.failed,
-        transactionId: 'mock_id_4',
-        merchant: 'Temu',
-        paymentMethod: 'Wallet',
-        fee: '₦0.00',
-      ),
-      Transaction(
-        title: 'Electricity',
-        amount: -1890.99,
-        date: DateTime(2025, 6, 30, 15, 55, 29),
-        status: TransactionStatus.reversed,
-        icon: Icons.subdirectory_arrow_left_sharp,
-        transactionId: 'mock_id_5',
-        merchant: 'EKEDC',
-        paymentMethod: 'Wallet',
-        fee: '₦0.00',
-      ),
-    ];
   }
 
 
