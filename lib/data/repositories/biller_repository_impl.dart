@@ -9,8 +9,19 @@ import 'package:poplar_power/domain/models/biller_product.dart';
 import 'package:poplar_power/domain/models/purchase_response.dart';
 import 'package:poplar_power/domain/repositories/biller_repository.dart';
 
+class _CacheEntry<T> {
+  final T data;
+  final DateTime timestamp;
+
+  _CacheEntry(this.data) : timestamp = DateTime.now();
+
+  bool isStale(Duration maxAge) => DateTime.now().difference(timestamp) > maxAge;
+}
+
 class BillerRepositoryImpl implements BillerRepository {
   final BillerRemoteDataSource _remoteDataSource;
+  final Map<String, _CacheEntry> _cache = {};
+  static const Duration _cacheDuration = Duration(minutes: 5);
 
   BillerRepositoryImpl(this._remoteDataSource);
 
@@ -32,11 +43,19 @@ class BillerRepositoryImpl implements BillerRepository {
   Future<Either<BillerFailure, List<Biller>>> getBillersForCategory(
     String categoryId,
   ) async {
+    final cacheKey = 'billers_category_$categoryId';
+
+    // Check cache first
+    final cachedEntry = _cache[cacheKey];
+    if (cachedEntry != null && !cachedEntry.isStale(_cacheDuration)) {
+      return Right(cachedEntry.data as List<Biller>);
+    }
+
     try {
-      final dtos = await _remoteDataSource.getBillersForCategory(categoryId);
-      // Assuming ElectricityDiscoDto has a toEntity() method
-      final entities = dtos.map((dto) => dto.toEntity()).toList();
-      return Right(entities);
+      final billerDtos = await _remoteDataSource.getBillersForCategory(categoryId);
+      final billers = billerDtos.map((dto) => dto.toEntity()).toList();
+      _cache[cacheKey] = _CacheEntry(billers);
+      return Right(billers);
     } on DioException catch (e) {
       return Left(_handleDioException(e));
     } catch (e) {
@@ -48,10 +67,18 @@ class BillerRepositoryImpl implements BillerRepository {
   Future<Either<BillerFailure, List<BillerProduct>>> getProductsForBiller(
     String billerId,
   ) async {
+    final cacheKey = 'products_biller_$billerId';
+
+    // Check cache first
+    final cachedEntry = _cache[cacheKey];
+    if (cachedEntry != null && !cachedEntry.isStale(_cacheDuration)) {
+      return Right(cachedEntry.data as List<BillerProduct>);
+    }
+
     try {
       final dtos = await _remoteDataSource.getProductsForBiller(billerId);
-      // Assuming BillerProductDto has a toEntity() method
       final entities = dtos.map((dto) => dto.toEntity()).toList();
+      _cache[cacheKey] = _CacheEntry(entities);
       return Right(entities);
     } on DioException catch (e) {
       return Left(_handleDioException(e));
