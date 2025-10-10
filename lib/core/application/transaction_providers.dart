@@ -1,29 +1,49 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/core/application/user_provider.dart';
-import 'package:poplar_power/domain/use_cases/transaction/get_transaction_history_use_case.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
 
-final transactionsProvider = FutureProvider<List<Transaction>>((ref) async {
-  final userAsyncValue = ref.watch(userProvider);
-  final getTransactionHistory = ref.watch(getTransactionHistoryUseCaseProvider);
+import '../../data/repositories/transaction_repository_impl.dart';
+import '../../domain/models/transaction_status.dart';
+import '../../domain/use_cases/transaction/get_transaction_history_use_case.dart';
+import '../../domain/use_cases/transaction/get_transaction_status_use_case.dart';
 
-  return userAsyncValue.when(
-    data: (user) async {
-      // If there is no user, there are no transactions.
-      if (user == null) {
-        return [];
-      }
+final transactionsProvider = StateNotifierProvider.autoDispose<
+    TransactionsNotifier, AsyncValue<List<TransactionStatus>>>((ref) {
+  final getTransactionHistory =
+      GetTransactionHistoryUseCase(ref.watch(transactionRepositoryProvider));
+  final user = ref.watch(userProvider);
+  return TransactionsNotifier(
+      getTransactionHistory, user.user.value?.email ?? '');
+});
 
-      final result = await getTransactionHistory.execute(user.email);
+class TransactionsNotifier
+    extends StateNotifier<AsyncValue<List<TransactionStatus>>> {
+  final GetTransactionHistoryUseCase _getTransactionHistory;
+  final String _email;
 
-      return result.fold(
-        ifLeft: (failure) => throw failure,
-        ifRight: (transactionStatusList) => transactionStatusList
-            .map((status) => Transaction.fromStatus(status))
-            .toList(),
-      );
-    },
-    loading: () => [], // Return empty list while user is loading
-    error: (err, stack) => throw err, // Propagate user error
+  TransactionsNotifier(this._getTransactionHistory, this._email)
+      : super(const AsyncLoading()) {
+    if (_email.isNotEmpty) {
+      getTransactions();
+    }
+  }
+
+  Future<void> getTransactions() async {
+    state = const AsyncLoading();
+    final result = await _getTransactionHistory.execute(_email);
+    if (!mounted) return;
+    state = result.fold(
+      ifLeft: (failure) => AsyncError(failure, StackTrace.current),
+      ifRight: (data) => AsyncData(data),
+    );
+  }
+}
+
+final transactionStatusProvider =
+    FutureProvider.family<TransactionStatus, String>((ref, nettpayRef) async {
+  final getTransactionStatus = ref.watch(getTransactionStatusUseCaseProvider);
+  final result = await getTransactionStatus.execute(nettpayRef);
+  return result.fold(
+    ifLeft: (failure) => throw failure,
+    ifRight: (status) => status,
   );
 });

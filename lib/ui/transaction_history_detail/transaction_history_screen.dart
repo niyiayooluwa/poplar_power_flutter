@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 
 import '../../core/application/transaction_providers.dart';
 import '../core/widgets/transaction_widget.dart';
-
-import 'package:intl/intl.dart';
 
 class TransactionHistoryScreen extends HookConsumerWidget {
   const TransactionHistoryScreen({super.key});
@@ -23,11 +22,21 @@ class TransactionHistoryScreen extends HookConsumerWidget {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: transactionsAsync.when(
-          data: (transactions) =>
-              _TransactionHistoryList(transactions: transactions),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text(err.toString())),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(transactionsProvider);
+          },
+          child: transactionsAsync.when(
+            data: (transactions) {
+              final uiTransactions =
+                  transactions.map((t) => Transaction.fromDomainStatus(t)).toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
+              return _TransactionHistoryList(transactions: uiTransactions);
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) =>
+                const Center(child: Text("You haven't made any transactions yet.")),
+          ),
         ),
       ),
     );
@@ -103,7 +112,7 @@ class _TransactionHistoryList extends HookConsumerWidget {
             controller: searchController,
             onChanged: (value) => searchQuery.value = value,
             decoration: InputDecoration(
-              hintText: 'Search transactions...',
+              hintText: 'Search transactions...', 
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),

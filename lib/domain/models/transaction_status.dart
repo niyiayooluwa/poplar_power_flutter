@@ -16,6 +16,7 @@ class TransactionStatus {
   final String billerId;
   final String productId;
   final String customerReference;
+  final String? status;
 
   TransactionStatus({
     required this.id,
@@ -35,5 +36,6 @@ class TransactionStatus {
     required this.billerId,
     required this.productId,
     required this.customerReference,
+    this.status,
   });
 }

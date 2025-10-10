@@ -4,6 +4,7 @@ class PurchaseResponseDto {
   final bool success;
   final String transactionRef;
   final String? clientSecret;
+  final String? paymentLink;
   final String message;
 
   PurchaseResponseDto({
@@ -12,6 +13,7 @@ class PurchaseResponseDto {
     required this.success,
     required this.transactionRef,
     this.clientSecret,
+    this.paymentLink,
     required this.message,
   });
 
@@ -22,6 +24,7 @@ class PurchaseResponseDto {
       success: json['success'] as bool,
       transactionRef: json['transactionRef'] as String,
       clientSecret: json['clientSecret'] as String?,
+      paymentLink: json['paymentLink'] as String?,
       message: json['message'] as String,
     );
   }

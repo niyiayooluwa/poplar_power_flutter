@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:poplar_power/domain/models/transaction.dart'
+    as domain_transaction;
 import 'package:poplar_power/domain/models/transaction_status.dart' as domain;
 
-enum TransactionStatus {
-  success,
-  failed,
-  reversed,
-  pending,
+TransactionStatus uiStatusFromDomainStatus(
+  domain.TransactionStatus domainStatus,
+) {
+  switch (domainStatus.status?.toUpperCase()) {
+    case 'SUCCESS':
+      return TransactionStatus.success;
+    case 'REVERSED':
+      return TransactionStatus.reversed;
+    case 'PENDING':
+      return TransactionStatus.pending;
+    case 'FAILED':
+      return TransactionStatus.failed;
+    default:
+      return TransactionStatus.pending;
+  }
 }
+
+enum TransactionStatus { success, failed, reversed, pending }
 
 class Transaction {
   final String title;
@@ -18,8 +32,9 @@ class Transaction {
   final String transactionId;
   final String merchant;
   final String paymentMethod;
-  final String fee;
-
+  final String? fee;
+  final String? customerName;
+  final String recipientId;
 
   Transaction({
     required this.title,
@@ -30,38 +45,66 @@ class Transaction {
     required this.transactionId,
     required this.merchant,
     required this.paymentMethod,
-    required this.fee,
+    this.fee,
+    this.customerName,
+    required this.recipientId,
   });
 
-
-  factory Transaction.fromStatus(domain.TransactionStatus domainStatus) {
-    final uiStatus = _getUiStatus(domainStatus);
-    final isCredit = domainStatus.amount.isNegative;
+  factory Transaction.fromDomain(
+    domain_transaction.Transaction domainTransaction,
+  ) {
+    final uiStatus = _getUiStatusFromDomain(domainTransaction);
+    final isCredit = domainTransaction.amount.isNegative;
 
     return Transaction(
-      title: domainStatus.provider,
-      amount: domainStatus.amount,
-      date: DateTime.parse(domainStatus.createdAt),
+      title: domainTransaction.categoryId, // Changed from productName
+      amount: domainTransaction.amount,
+      date: DateTime.tryParse(domainTransaction.createdAt) ?? DateTime.now(),
       status: uiStatus,
       icon: _getIcon(uiStatus, isCredit),
-      transactionId: domainStatus.nettpayRef,
-      merchant: domainStatus.billerId, // Using provider as merchant
-      paymentMethod: domainStatus.provider,
-      // TODO: Fee is not available in the API response. Defaulting to 0.
-      fee: '₦0',
+      transactionId: domainTransaction.nettpayRef,
+      merchant: domainTransaction.billerId, // Changed from billerName
+      paymentMethod: domainTransaction.provider,
+      recipientId: domainTransaction.customerIdentifier,
+      // Fields not available in the domain model, providing defaults
+      customerName: 'N/A',
+      fee: '₦0.00',
     );
   }
 
-  static TransactionStatus _getUiStatus(domain.TransactionStatus domainStatus) {
-    if (domainStatus.reversed) {
-      return TransactionStatus.reversed;
+  factory Transaction.fromDomainStatus(domain.TransactionStatus domainStatus) {
+    final uiStatus = uiStatusFromDomainStatus(domainStatus);
+    final isCredit = domainStatus.amount.isNegative;
+
+    return Transaction(
+      title: domainStatus.categoryId,
+      amount: domainStatus.amount,
+      date: DateTime.tryParse(domainStatus.createdAt) ?? DateTime.now(),
+      status: uiStatus,
+      icon: _getIcon(uiStatus, isCredit),
+      transactionId: domainStatus.nettpayRef,
+      merchant: domainStatus.billerId,
+      paymentMethod: domainStatus.provider,
+      recipientId: domainStatus.customerIdentifier,
+      customerName: 'N/A',
+      fee: '₦0.00',
+    );
+  }
+
+  static TransactionStatus _getUiStatusFromDomain(
+    domain_transaction.Transaction domainStatus,
+  ) {
+    switch (domainStatus.status?.toUpperCase()) {
+      case 'SUCCESS':
+        return TransactionStatus.success;
+      case 'REVERSED':
+        return TransactionStatus.reversed;
+      case 'PENDING':
+        return TransactionStatus.pending;
+      case 'FAILED':
+      default:
+        return TransactionStatus.pending;
     }
-    if (domainStatus.delivered) {
-      return TransactionStatus.success;
-    }
-    // TODO: This assumes that if a transaction is not delivered and not reversed, it's pending.
-    // The backend doesn't provide an explicit 'failed' or 'pending' status.
-    return TransactionStatus.pending;
   }
 
   static IconData _getIcon(TransactionStatus status, bool isCredit) {
@@ -76,6 +119,33 @@ class Transaction {
     }
   }
 
+  Transaction copyWith({
+    String? title,
+    double? amount,
+    DateTime? date,
+    TransactionStatus? status,
+    IconData? icon,
+    String? transactionId,
+    String? merchant,
+    String? paymentMethod,
+    String? fee,
+    String? customerName,
+    String? recipientId,
+  }) {
+    return Transaction(
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      status: status ?? this.status,
+      icon: icon ?? this.icon,
+      transactionId: transactionId ?? this.transactionId,
+      merchant: merchant ?? this.merchant,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      fee: fee ?? this.fee,
+      customerName: customerName ?? this.customerName,
+      recipientId: recipientId ?? this.recipientId,
+    );
+  }
 
   /// Whether this transaction_history_detail is a credit (income) type.
   bool get isCredit => amount > 0;
@@ -94,8 +164,8 @@ class Transaction {
       decimalDigits: 2,
     );
 
-    final prefix = isCredit ? '+' : '-';
-    return '$prefix${formatter.format(amount.abs())}';
+    //final prefix = isCredit ? '+' : '-';
+    return '${formatter.format(amount.abs())}';
   }
 
   /// Returns the appropriate color depending on the status and amount.
@@ -134,10 +204,14 @@ class Transaction {
   String _getDaySuffix(int day) {
     if (day >= 11 && day <= 13) return 'th';
     switch (day % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
     }
   }
 

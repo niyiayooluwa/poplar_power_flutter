@@ -1,14 +1,17 @@
 import 'package:dio/dio.dart';
-import 'package:poplar_power/data/models/billers/get_balance_request_dto.dart';
-import 'package:poplar_power/data/models/billers/get_balance_response_dto.dart';
-import 'package:poplar_power/data/models/billers/transaction_status_dto.dart';
+import 'package:poplar_power/data/models/wallet/get_balance_request_dto.dart';
+import 'package:poplar_power/data/models/wallet/get_balance_response_dto.dart';
+import 'package:poplar_power/data/models/transaction/transaction_status_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:poplar_power/domain/models/verification_response.dart';
 
 abstract class TransactionRemoteDataSource {
   Future<TransactionStatusDto> getTransactionStatus(String nettpayRef);
   Future<List<TransactionStatusDto>> getTransactionHistory(String email);
   Future<GetBalanceResponseDto> getBalance(GetBalanceRequestDto request);
+  Future<VerificationResponse> verifyTransaction(String reference);
 }
 
 class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
@@ -46,6 +49,16 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         data: request.toJson(),
       );
       return GetBalanceResponseDto.fromJson(response.data);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<VerificationResponse> verifyTransaction(String reference) async {
+    try {
+      final response = await _dio.post('/buyProducts/verify/$reference');
+      return VerificationResponse.fromJson(response.data);
     } on DioException {
       rethrow;
     }

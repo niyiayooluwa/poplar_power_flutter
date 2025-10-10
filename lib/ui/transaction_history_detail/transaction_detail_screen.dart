@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/application/transaction_providers.dart';
 
 // Provider for managing share state
 final shareStateProvider = StateProvider<bool>((ref) => false);
@@ -14,8 +18,25 @@ class TransactionDetailScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isShared = ref.watch(shareStateProvider);
+    final transactionState = useState(transaction);
 
-    final color = switch (transaction.status) {
+    useEffect(() {
+      final timer = Timer.periodic(const Duration(seconds: 45), (_) {
+        ref
+            .watch(transactionStatusProvider(transaction.transactionId).future)
+            .then((status) {
+              final newStatus = uiStatusFromDomainStatus(status);
+              if (newStatus != transactionState.value.status) {
+                transactionState.value = transactionState.value.copyWith(
+                  status: newStatus,
+                );
+              }
+            });
+      });
+      return () => timer.cancel();
+    }, []);
+
+    final color = switch (transactionState.value.status) {
       TransactionStatus.success => const Color(0xFFE7FAE6), // Green
       TransactionStatus.failed => const Color(0xFFFFB9BC), // Red
       TransactionStatus.reversed => const Color(0xFF89D1FF), // Blue
@@ -45,10 +66,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              color,
-              Colors.white,
-            ],
+            colors: [color, Colors.white],
           ),
         ),
         child: SafeArea(
@@ -64,22 +82,26 @@ class TransactionDetailScreen extends HookConsumerWidget {
                   child: Column(
                     children: [
                       // Status Icon
-                      _buildStatusIcon(),
+                      _buildStatusIcon(transactionState.value),
 
                       const SizedBox(height: 24),
 
                       // Payment Status
-                      _buildPaymentStatus(),
+                      _buildPaymentStatus(transactionState.value),
 
                       const SizedBox(height: 32),
 
                       // Transaction Details
-                      _buildTransactionDetails(),
+                      _buildTransactionDetails(transactionState.value),
 
                       const SizedBox(height: 32),
 
                       // Share Button
-                      _buildShareButton(isShared, handleShare, animationController),
+                      _buildShareButton(
+                        isShared,
+                        handleShare,
+                        animationController,
+                      ),
                     ],
                   ),
                 ),
@@ -98,7 +120,10 @@ class TransactionDetailScreen extends HookConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildHeaderButton(Icons.arrow_back, () => Navigator.of(context).pop()),
+          _buildHeaderButton(
+            Icons.arrow_back,
+            () => GoRouter.of(context).go('/home'),
+          ),
           _buildHeaderButton(Icons.download, () {}),
         ],
       ),
@@ -126,7 +151,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildStatusIcon() {
+  Widget _buildStatusIcon(Transaction transaction) {
     return Stack(
       children: [
         Container(
@@ -144,11 +169,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
                 border: Border.all(color: Colors.white, width: 2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                  transaction.icon,
-                  color: Colors.white,
-                  size: 40
-              ),
+              child: Icon(transaction.icon, color: Colors.white, size: 40),
             ),
           ),
         ),
@@ -156,7 +177,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildPaymentStatus() {
+  Widget _buildPaymentStatus(Transaction transaction) {
     final method = switch (transaction.status) {
       TransactionStatus.success => switch (transaction.isCredit) {
         true => 'Received to Wallet',
@@ -170,17 +191,15 @@ class TransactionDetailScreen extends HookConsumerWidget {
       children: [
         Text(
           method,
-          style: TextStyle(
+          style: const TextStyle(
             color: Color(0xFF4C505C), // gray-600
             fontSize: 16,
           ),
         ),
-
         const SizedBox(height: 8),
-
         Text(
           transaction.formattedAmount,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             color: Color(0xFF111827), // gray-900
@@ -219,7 +238,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildTransactionDetails() {
+  Widget _buildTransactionDetails(Transaction transaction) {
     final color = switch (transaction.status) {
       TransactionStatus.success => Colors.green,
       TransactionStatus.failed => Colors.red,
@@ -241,22 +260,34 @@ class TransactionDetailScreen extends HookConsumerWidget {
       ),
       child: Column(
         children: [
-          _buildDetailRow('Date', transaction.formattedDateOnly),
-          _buildDetailRow('Time', transaction.formattedTimeOnly),
-          _buildDetailRow('Transaction ID', transaction.transactionId),
+          _buildDetailRow('Recipient ID', transaction.recipientId),
+          _buildDetailRow(
+            'Date',
+            '${transaction.formattedDateOnly}, ${transaction.formattedTimeOnly}',
+          ),
           _buildDetailRow('Status', transaction.statusLabel, color),
           const Divider(color: Color(0xFFF3F4F6)),
-          _buildDetailRow('Fee', transaction.fee),
           _buildDetailRow('Merchant', transaction.merchant),
           _buildDetailRow('Payment Method', transaction.paymentMethod),
+          const SizedBox(height: 24),
+          Text(
+            transaction.transactionId,
+            style: TextStyle(
+              color: Colors.grey, // gray-900
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildDetailRow(
-      String label, String value, [Color color = const Color(0xFF111827)]
-      ) {
+    String label,
+    String value, [
+    Color color = const Color(0xFF111827),
+  ]) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -282,7 +313,11 @@ class TransactionDetailScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildShareButton(bool isShared, VoidCallback onPressed, AnimationController controller) {
+  Widget _buildShareButton(
+    bool isShared,
+    VoidCallback onPressed,
+    AnimationController controller,
+  ) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
@@ -292,7 +327,9 @@ class TransactionDetailScreen extends HookConsumerWidget {
           child: ElevatedButton(
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isShared ? const Color(0xFF059669) : const Color(0xFF1F2937),
+              backgroundColor: isShared
+                  ? const Color(0xFF059669)
+                  : const Color(0xFF1F2937),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -302,10 +339,7 @@ class TransactionDetailScreen extends HookConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  isShared ? Icons.check : Icons.share,
-                  size: 20,
-                ),
+                Icon(isShared ? Icons.check : Icons.share, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   isShared ? 'Receipt Shared!' : 'Share Receipt',
