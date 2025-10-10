@@ -17,14 +17,14 @@ class UserDto {
   final int? lockAt;
   final int? unlockAt;
   final int? lastLogin;
-  final int modified;
-  final int created;
+  final int? modified;
+  final int? created;
   final bool active;
   final bool verified;
-  final bool lock;
-  final String? systemRef;
-  final String? serviceRef;
-  final String? walletAccountNo;
+  final bool? lock;
+  final int? systemRef;
+  final int? serviceRef;
+  final int? walletAccountNo;
   final String? currency;
   final bool? pinCreated;
   final String? customerStatus;
@@ -45,12 +45,12 @@ class UserDto {
     required this.failedAuthAttempts,
     this.lockAt,
     this.unlockAt,
-    required this.lastLogin,
-    required this.modified,
-    required this.created,
+    this.lastLogin,
+    this.modified,
+    this.created,
     required this.active,
     required this.verified,
-    required this.lock,
+    this.lock,
     this.systemRef,
     this.serviceRef,
     this.walletAccountNo,
@@ -77,14 +77,14 @@ class UserDto {
       lockAt: json['lockAt'] as int?,
       unlockAt: json['unlockAt'] as int?,
       lastLogin: json['lastLogin'] as int?,
-      modified: json['modified'] as int,
-      created: json['created'] as int,
+      modified: json['modified'] as int?,
+      created: json['created'] as int?,
       active: json['active'] as bool,
       verified: json['verified'] as bool,
-      lock: json['lock'] as bool,
-      systemRef: json['systemRef'] as String?,
-      serviceRef: json['serviceRef'] as String?,
-      walletAccountNo: json['walletAccountNo'] as String?,
+      lock: json['lock'] as bool?,
+      systemRef: json['systemRef'] as int?,
+      serviceRef: json['serviceRef'] as int?,
+      walletAccountNo: json['walletAccountNo'] as int?,
       currency: json['currency'] as String?,
       pinCreated: json['pinCreated'] as bool?,
       customerStatus: json['customerStatus'] as String?,
@@ -101,9 +101,9 @@ class UserDto {
       customRef: customRef,
       verified: verified,
       active: active,
-      systemRef: systemRef,
-      serviceRef: serviceRef,
-      walletAccountNo: walletAccountNo,
+      systemRef: systemRef?.toString(),
+      serviceRef: serviceRef?.toString(),
+      walletAccountNo: walletAccountNo?.toString(), // Convert int? to String?
       currency: currency,
       pinCreated: pinCreated,
       customerStatus: customerStatus,
@@ -133,8 +133,8 @@ class UserDto {
       'active': active,
       'verified': verified,
       'lock': lock,
-      'systemRef': systemRef,
-      'serviceRef': serviceRef,
+      'systemRef': systemRef?.toString(), // Convert int? to String?
+      'serviceRef': serviceRef?.toString(), // Convert int? to String?
       'walletAccountNo': walletAccountNo,
       'currency': currency,
       'pinCreated': pinCreated,
@@ -154,9 +154,9 @@ class UserDto {
       verified: user.verified,
       active: user.active,
       customRef: user.customRef,
-      systemRef: user.systemRef,
-      serviceRef: user.serviceRef,
-      walletAccountNo: user.walletAccountNo,
+      systemRef: int.tryParse(user.systemRef ?? ''),
+      serviceRef: int.tryParse(user.serviceRef ?? ''),
+      walletAccountNo: int.tryParse(user.walletAccountNo ?? ''),
       currency: user.currency,
       pinCreated: user.pinCreated,
       customerStatus: user.customerStatus,
@@ -172,9 +172,9 @@ class UserDto {
       lockAt: null,
       unlockAt: null,
       lastLogin: null,
-      modified: 0,
-      created: 0,
-      lock: false,
+      modified: null,
+      created: null,
+      lock: null,
     );
   }
 }

@@ -110,7 +110,7 @@ class _SelectionModal extends ConsumerWidget {
           child: Column(
             children: [
               Text(
-                'Select $label',
+                label,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),

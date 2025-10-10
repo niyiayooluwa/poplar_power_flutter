@@ -3,19 +3,47 @@ import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/storage/user_profile_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/repositories/auth_repository.dart';
+import 'package:poplar_power/domain/use_cases/wallet/get_wallet_balance_use_case.dart';
 
-class UserNotifier extends StateNotifier<AsyncValue<User?>> {
+class UserState {
+  final AsyncValue<User?> user;
+  final AsyncValue<double> balance;
+
+  UserState({
+    required this.user,
+    required this.balance,
+  });
+
+  factory UserState.initial() => UserState(
+    user: const AsyncLoading(),
+    balance: const AsyncLoading(),
+  );
+
+  UserState copyWith({
+    AsyncValue<User?>? user,
+    AsyncValue<double>? balance,
+  }) {
+    return UserState(
+      user: user ?? this.user,
+      balance: balance ?? this.balance,
+    );
+  }
+}
+
+class UserNotifier extends StateNotifier<UserState> {
   final AuthRepository _authRepository;
   final UserProfileStorage _profileStorage;
+  final GetWalletBalanceUseCase _getWalletBalanceUseCase;
 
-  UserNotifier(this._authRepository, this._profileStorage)
-      : super(const AsyncLoading());
+  UserNotifier(this._authRepository, this._profileStorage, this._getWalletBalanceUseCase)
+      : super(UserState.initial());
 
   Future<void> checkInitialStatus() async {
     // First, try to load from local storage
     final localUser = await _profileStorage.loadUser();
     if (localUser != null) {
-      state = AsyncData(localUser);
+      state = state.copyWith(user: AsyncData(localUser));
+      await _fetchBalance(localUser);
       return;
     }
 
@@ -24,33 +52,53 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
     if (hasToken) {
       final result = await _authRepository.getAuthenticatedUser();
       result.fold(
-        ifLeft: (failure) => state = const AsyncData(null),
-        ifRight: (user) {
+        ifLeft: (failure) => state = state.copyWith(user: const AsyncData(null)),
+        ifRight: (user) async {
           _profileStorage.saveUser(user); // Save to local storage
-          state = AsyncData(user);
+          state = state.copyWith(user: AsyncData(user));
+          await _fetchBalance(user);
         },
       );
     } else {
-      state = const AsyncData(null);
+      state = state.copyWith(user: const AsyncData(null));
     }
   }
 
-  void onLoginSuccess(User user) {
+  void onLoginSuccess(User user) async {
     _profileStorage.saveUser(user); // Save to local storage
-    state = AsyncData(user);
+    state = state.copyWith(user: AsyncData(user));
+    await _fetchBalance(user);
+  }
+
+  Future<void> _fetchBalance(User user) async {
+    if (user.walletAccountNo == null || user.pinCreated == false) {
+      state = state.copyWith(balance: const AsyncData(0.0)); // No wallet or PIN not set
+      return;
+    }
+
+    state = state.copyWith(balance: const AsyncLoading());
+    // TODO: The PIN is currently hardcoded or assumed. This needs to be securely handled.
+    // For now, using a dummy PIN or assuming it's not needed for initial fetch.
+    final result = await _getWalletBalanceUseCase.execute(user.walletAccountNo!, "0000"); // Dummy PIN
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(balance: AsyncError(failure, StackTrace.current)),
+      ifRight: (balance) => state = state.copyWith(balance: AsyncData(balance)),
+    );
   }
 
   Future<void> logout() async {
     await _authRepository.logout();
     await _profileStorage.deleteUser(); // Delete from local storage
-    state = const AsyncData(null);
+    state = state.copyWith(user: const AsyncData(null), balance: const AsyncData(0.0));
   }
 }
 
 final userProfileStorageProvider = Provider((_) => UserProfileStorage());
 
-final userProvider = StateNotifierProvider<UserNotifier, AsyncValue<User?>>((ref) {
+final userProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final profileStorage = ref.watch(userProfileStorageProvider);
-  return UserNotifier(authRepository, profileStorage)..checkInitialStatus();
+  final getWalletBalanceUseCase = ref.watch(getWalletBalanceUseCaseProvider);
+  return UserNotifier(authRepository, profileStorage, getWalletBalanceUseCase)..checkInitialStatus();
 });

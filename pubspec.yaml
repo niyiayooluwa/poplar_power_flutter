@@ -24,6 +24,7 @@ dependencies:
   intl: ^0.18.0
   dart_either: ^2.0.0
   webview_flutter: ^4.13.0
+  #paystack_flutter_sdk: ^0.0.1-alpha.2
 
 dependency_overrides:
   path_provider_android: 2.2.6
