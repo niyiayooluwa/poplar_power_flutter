@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:poplar_power/data/mock/mock_service/app_providers.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
 import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
 import 'package:poplar_power/ui/core/models/transaction_payload.dart';
@@ -25,7 +25,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
         state.accountName ?? 'Recipient'; // Use actual fetched name
     final recipientBank = state.selectedBank?.name ?? 'Bank';
     final recipientAccountNumber = state.accountNUmber ?? 'Account';
-    final currentBalance = ref.read(userProvider).balance; // Mock current balance
+    final currentBalance = ref.watch(userProvider).balance.value;
 
     String formatCurrency(double value) {
       final formatter = NumberFormat.currency(

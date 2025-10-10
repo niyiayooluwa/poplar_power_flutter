@@ -41,13 +41,6 @@ class TransactionFlowOrchestrator extends ConsumerWidget {
               title: next.title,
               fields: next.fields,
               amount: next.amount,
-              availablePaymentMethods: next.availablePaymentMethods,
-              selectedPaymentMethod: next.selectedPaymentMethod,
-              onPaymentMethodSelected: (method) {
-                ref
-                    .read(transactionFlowProvider.notifier)
-                    .selectPaymentMethod(method);
-              },
               onConfirm: () {
                 ref.read(transactionFlowProvider.notifier).confirmTransaction();
               },
@@ -78,26 +71,16 @@ class TransactionFlowOrchestrator extends ConsumerWidget {
 
         case TransactionFlowStep.processingWebPayment:
           if (next.webPaymentUrl != null) {
-            // TODO(dev): The WebViewScreen needs to be adapted to call
-            // ref.read(transactionFlowProvider.notifier).completeWebPayment() on success.
             GoRouter.of(navigatorKey.currentContext!).push('/webview', extra: {'url': next.webPaymentUrl});
           }
           break;
 
         case TransactionFlowStep.success:
-          // TODO(dev): Pass real transaction data here.
-          GoRouter.of(navigatorKey.currentContext!).push('/transaction-detail', extra: Transaction(
-            title: next.title,
-            amount: double.tryParse(next.amount ?? '0') ?? 0,
-            date: DateTime.now(),
-            status: TransactionStatus.success,
-            icon: Icons.check_circle,
-            transactionId: 'flow_mock_id',
-            merchant: next.title, // Use title as a stand-in for merchant
-            paymentMethod: next.selectedPaymentMethod?.name ?? 'Unknown',
-            fee: '₦0.00',
-          ));
-          ref.read(transactionFlowProvider.notifier).reset();
+          if (next.verifiedTransaction != null) {
+            final uiTransaction = Transaction.fromDomainStatus(next.verifiedTransaction!);
+            GoRouter.of(navigatorKey.currentContext!).push('/transaction-detail', extra: uiTransaction);
+            ref.read(transactionFlowProvider.notifier).reset();
+          }
           break;
 
         case TransactionFlowStep.error:
@@ -110,6 +93,19 @@ class TransactionFlowOrchestrator extends ConsumerWidget {
         case TransactionFlowStep.none:
         case TransactionFlowStep.processing:
           // Do nothing, these are intermediate states.
+          break;
+        case TransactionFlowStep.verifying:
+          // Do nothing, the webview is showing its own loading indicator.
+          break;
+        case TransactionFlowStep.verificationSuccess:
+          if (next.verifiedTransaction != null) {
+            final uiTransaction = Transaction.fromDomainStatus(next.verifiedTransaction!);
+            // Pop the webview
+            Navigator.of(navigatorKey.currentContext!).pop();
+            // Push the details screen
+            GoRouter.of(navigatorKey.currentContext!).push('/transaction-detail', extra: uiTransaction);
+            ref.read(transactionFlowProvider.notifier).reset();
+          }
           break;
       }
     });

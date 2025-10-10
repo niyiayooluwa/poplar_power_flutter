@@ -1,7 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart' show StateProvider;
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/ui/core/models/bank_notification.dart';
-import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'bank_service.dart';
 
@@ -14,9 +13,6 @@ final userProvider = Provider<User>((ref) {
   return BankService.getCurrentUser();
 });
 
-final transactionsProvider = Provider<List<Transaction>>((ref) {
-  return BankService.getRecentTransactions();
-});
 
 final notificationsProvider = Provider<List<BankNotification>>((ref) {
   return BankService.getNotifications();

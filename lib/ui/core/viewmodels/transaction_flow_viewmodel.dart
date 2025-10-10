@@ -5,7 +5,10 @@ import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
 import 'package:poplar_power/domain/models/payment_provider.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/domain/models/transaction_status.dart';
 import 'package:poplar_power/domain/use_cases/biller/purchase_product_use_case.dart';
+import 'package:poplar_power/domain/use_cases/transaction/get_transaction_status_use_case.dart';
+import 'package:poplar_power/domain/use_cases/transaction/verify_transaction_use_case.dart';
 import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 
 /// Represents the steps in the transaction flow.
@@ -15,40 +18,26 @@ enum TransactionFlowStep {
   awaitingPin,
   processing,
   processingWebPayment,
+  verifying,
+  verificationSuccess,
   success,
   error,
 }
 
 /// Holds all data for an active transaction.
 class TransactionFlowState {
-  /// Title for the transaction confirmation.
   final String title;
-
-  /// Transaction amount.
   final String? amount;
-
-  /// List of transaction fields.
   final List<TransactionField> fields;
-
-  /// Current step in the transaction flow.
   final TransactionFlowStep step;
-
-  /// Available payment methods for the transaction.
   final List<PaymentMethodConfig> availablePaymentMethods;
-
-  /// Selected payment method.
   final PaymentMethodConfig? selectedPaymentMethod;
-
-  /// Error message, if any.
   final String? errorMessage;
-
-  /// Web payment URL, if applicable.
   final String? webPaymentUrl;
-
-  /// The core data required for the API transaction.
   final TransactionPayload? payload;
+  final String? transactionRef;
+  final TransactionStatus? verifiedTransaction;
 
-  /// Creates a [TransactionFlowState] instance.
   const TransactionFlowState({
     this.title = '',
     this.amount,
@@ -59,12 +48,12 @@ class TransactionFlowState {
     this.errorMessage,
     this.webPaymentUrl,
     this.payload,
+    this.transactionRef,
+    this.verifiedTransaction,
   });
 
-  /// Returns the initial state for the transaction flow.
   factory TransactionFlowState.initial() => const TransactionFlowState();
 
-  /// Returns a copy of the current state with updated fields.
   TransactionFlowState copyWith({
     String? title,
     String? amount,
@@ -75,6 +64,8 @@ class TransactionFlowState {
     String? errorMessage,
     String? webPaymentUrl,
     TransactionPayload? payload,
+    String? transactionRef,
+    TransactionStatus? verifiedTransaction,
   }) {
     return TransactionFlowState(
       title: title ?? this.title,
@@ -88,18 +79,17 @@ class TransactionFlowState {
       errorMessage: errorMessage ?? this.errorMessage,
       webPaymentUrl: webPaymentUrl ?? this.webPaymentUrl,
       payload: payload ?? this.payload,
+      transactionRef: transactionRef ?? this.transactionRef,
+      verifiedTransaction: verifiedTransaction ?? this.verifiedTransaction,
     );
   }
 }
 
-/// Manages the transaction flow state and logic.
 class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
   final Ref _ref;
 
-  /// Creates a [TransactionFlowViewModel] with the initial state.
   TransactionFlowViewModel(this._ref) : super(TransactionFlowState.initial());
 
-  /// Starts a new transaction flow.
   void startTransaction({
     required String title,
     required String? amount,
@@ -108,7 +98,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
   }) {
     final walletConfig = PaymentMethodConfig(
       name: 'Nettpay',
-      balance: '4,000.00', // TODO(): Replace with actual balance from userProvider.
+      balance: _ref.read(userProvider).balance.value.toString(),
       icon: Icons.account_balance_wallet,
       color: Colors.blue,
       provider: PaymentProvider.nettpay,
@@ -116,7 +106,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
 
     final paystackConfig = const PaymentMethodConfig(
       name: 'Paystack',
-      balance: 'Pay with Paystack',
+      desc: 'Pay with Paystack',
       icon: Icons.language,
       color: Colors.green,
       provider: PaymentProvider.paystack,
@@ -124,7 +114,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
 
     final stripeConfig = const PaymentMethodConfig(
       name: 'Stripe',
-      balance: 'Pay with Stripe',
+      desc: 'Pay with Stripe',
       icon: Icons.credit_card,
       color: Colors.purple,
       provider: PaymentProvider.stripe,
@@ -132,7 +122,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
 
     final flutterwaveConfig = const PaymentMethodConfig(
       name: 'Flutterwave',
-      balance: 'Pay with Flutterwave',
+      desc: 'Pay with Flutterwave',
       icon: Icons.waves,
       color: Colors.orange,
       provider: PaymentProvider.flutterwave,
@@ -157,23 +147,18 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
     );
   }
 
-  /// Selects a payment method for the transaction.
   void selectPaymentMethod(PaymentMethodConfig paymentMethod) {
     state = state.copyWith(selectedPaymentMethod: paymentMethod);
   }
 
-  /// Confirms the transaction and advances the flow.
   void confirmTransaction() {
     if (state.selectedPaymentMethod?.provider == PaymentProvider.nettpay) {
       state = state.copyWith(step: TransactionFlowStep.awaitingPin);
     } else {
-      // For all other providers, we can directly call the purchase logic
-      // without a PIN.
       _executePurchase();
     }
   }
 
-  /// Submits the PIN for wallet transactions.
   void submitPin(String pin) {
     _executePurchase(pin: pin);
   }
@@ -187,7 +172,8 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
     }
     state = state.copyWith(step: TransactionFlowStep.processing);
 
-    final user = _ref.read(userProvider).value;
+    final userState = _ref.read(userProvider);
+    final user = userState.user.value;
     final payload = state.payload!;
     final paymentProvider = state.selectedPaymentMethod!.provider;
 
@@ -199,7 +185,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
       billerOrProductId: payload.billerOrProductId,
       notificationPreference: payload.notificationPreference,
       provider: paymentProvider,
-      walletPin: pin, // Will be null if not a NETTPAY transaction
+      walletPin: pin,
       email: user?.email,
       phoneNumber: user?.phone,
     );
@@ -212,37 +198,104 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
         step: TransactionFlowStep.error,
         errorMessage: failure.message,
       ),
-      ifRight: (response) {
-        if (response.clientSecret != null) {
+      ifRight: (response) async {
+        if (response.paymentLink != null) {
           state = state.copyWith(
             step: TransactionFlowStep.processingWebPayment,
-            webPaymentUrl:
-                response.clientSecret, // Or a constructed URL from this
+            webPaymentUrl: response.paymentLink,
+            transactionRef: response.transactionRef,
           );
         } else {
-          state = state.copyWith(step: TransactionFlowStep.success);
+          final ref = response.transactionRef;
+
+          final getStatusUseCase = _ref.read(getTransactionStatusUseCaseProvider);
+          final statusResult = await getStatusUseCase.execute(ref);
+
+          statusResult.fold(
+            ifLeft: (failure) {
+              state = state.copyWith(
+                step: TransactionFlowStep.error,
+                errorMessage: failure.message,
+              );
+            },
+            ifRight: (transactionStatus) {
+              state = state.copyWith(
+                step: TransactionFlowStep.verificationSuccess,
+                verifiedTransaction: transactionStatus,
+              );
+            },
+          );
         }
       },
     );
   }
 
-  /// Completes the web payment flow.
-  void completeWebPayment() {
-    state = state.copyWith(step: TransactionFlowStep.success);
+  Future<void> completeWebPayment() async {
+    final ref = state.transactionRef;
+    if (ref == null) {
+      state = state.copyWith(
+          step: TransactionFlowStep.error,
+          errorMessage: 'Transaction reference not found.');
+      return;
+    }
+
+    state = state.copyWith(step: TransactionFlowStep.verifying);
+
+    final verifyUseCase = _ref.read(verifyTransactionUseCaseProvider);
+    final verifyResult = await verifyUseCase.execute(ref);
+
+    await verifyResult.fold(
+      ifLeft: (failure) async {
+        state = state.copyWith(
+          step: TransactionFlowStep.error,
+          errorMessage: failure.message,
+        );
+      },
+      ifRight: (verificationResponse) async {
+        if (verificationResponse.success) {
+          final getStatusUseCase = _ref.read(getTransactionStatusUseCaseProvider);
+          final statusResult = await getStatusUseCase.execute(ref);
+
+          statusResult.fold(
+            ifLeft: (failure) {
+              state = state.copyWith(
+                step: TransactionFlowStep.error,
+                errorMessage: failure.message,
+              );
+            },
+            ifRight: (transactionStatus) {
+              state = state.copyWith(
+                step: TransactionFlowStep.verificationSuccess,
+                verifiedTransaction: transactionStatus,
+              );
+            },
+          );
+        } else {
+          state = state.copyWith(
+            step: TransactionFlowStep.error,
+            errorMessage: verificationResponse.message,
+          );
+        }
+      },
+    );
   }
 
-  /// Cancels the current transaction and resets the state.
   void cancelTransaction() {
     state = TransactionFlowState.initial();
   }
 
-  /// Resets the transaction flow to its initial state.
   void reset() {
     state = TransactionFlowState.initial();
   }
+
+  void setError(String message) {
+    state = state.copyWith(
+      step: TransactionFlowStep.error,
+      errorMessage: message,
+    );
+  }
 }
 
-/// Provider for the transaction flow view model.
 final transactionFlowProvider =
     StateNotifierProvider<TransactionFlowViewModel, TransactionFlowState>(
   (ref) => TransactionFlowViewModel(ref),

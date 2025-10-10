@@ -19,6 +19,7 @@ void main() {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
+  
   runApp(const ProviderScope(child: PoplarPowerApp()));
 }
 

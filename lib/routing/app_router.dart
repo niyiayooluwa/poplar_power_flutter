@@ -30,13 +30,14 @@ import '../ui/user_onboarding/splash/widget/splash_screen.dart';
 final appRouter = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/splash',
-  redirect: (BuildContext context, GoRouterState state) async
-
-  {
-    final authRepository = AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
+  redirect: (BuildContext context, GoRouterState state) async {
+    final authRepository = AuthRepositoryImpl(
+      remoteDataSource: AuthRemoteDataSourceImpl(),
+    );
     final hasToken = await authRepository.hasToken();
     final settingsService = SettingsService();
-    final hasCompletedOnboarding = await settingsService.hasCompletedOnboarding();
+    final hasCompletedOnboarding = await settingsService
+        .hasCompletedOnboarding();
 
     // Define routes that a returning user should be redirected AWAY from.
     final preAuthRoutes = ['/onboarding', '/get-started'];
@@ -62,7 +63,7 @@ final appRouter = GoRouter(
       '/more-actions',
       '/transaction-history',
       '/transaction-detail',
-      '/webview'
+      '/webview',
     ];
 
     final isProtected = protectedRoutes.contains(state.matchedLocation);
@@ -79,10 +80,7 @@ final appRouter = GoRouter(
   },
   routes: [
     /// Public routes - no navbar
-    GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen()
-    ),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
 
     GoRoute(
       path: '/onboarding',
@@ -94,10 +92,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const GetStartedScreen(),
     ),
 
-    GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen()
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
     GoRoute(
       path: '/signup',
@@ -119,50 +114,16 @@ final appRouter = GoRouter(
       },
     ),
 
-    GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen()
-    ),
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
 
-    /*/// Shell route - wraps screens with bottom nav
-    ShellRoute(
-      navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) => BottomNavShell(child: child),
-      routes: [
-        GoRoute(
-          path: '/home',
-          name: 'home',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HomeScreen()),
-        ),
-        GoRoute(
-          path: '/pay',
-          name: 'pay',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: PayScreen()),
-        ),
-        GoRoute(
-          path: '/more',
-          name: 'more',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: MoreScreen()),
-        ),
-      ],
-    ),*/
-    GoRoute(
-        path: '/send',
-        builder: (context, state) => const SendScreen()
-    ),
+    GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
 
     GoRoute(
       path: '/send2',
       builder: (context, state) => const Send2ndStepScreen(),
     ),
 
-    GoRoute(
-        path: '/topup',
-        builder: (context, state) => const TopUpScreen()
-    ),
+    GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
 
     GoRoute(
       path: '/notifications',
@@ -181,20 +142,16 @@ final appRouter = GoRouter(
       builder: (context, state) => const InternetScreen(),
     ),
 
-   /* GoRoute(
+    /* GoRoute(
       path: '/airtime',
       builder: (context, state) => const AirtimeScreen(),
     ),*/
-
     GoRoute(
       path: '/billers',
       builder: (context, state) => const ElectricityScreen(),
     ),
 
-    GoRoute(
-        path: '/cable',
-        builder: (context, state) => const CableScreen()
-    ),
+    GoRoute(path: '/cable', builder: (context, state) => const CableScreen()),
 
     GoRoute(
       path: '/more-actions',
@@ -217,7 +174,18 @@ final appRouter = GoRouter(
 
     GoRoute(
       path: '/webview',
-      builder: (context, state) => const WebViewScreen(),
-    )
+      builder: (context, state) {
+        final args = state.extra as Map<String, String?>?; // Allow null values
+        final url = args?['url'];
+
+        // Add null check and provide fallback
+        if (url == null) {
+          // Handle the case where url is null - maybe navigate back or show error
+          return const Scaffold(body: Center(child: Text('Invalid URL')));
+        }
+
+        return WebViewScreen(webPaymentUrl: url);
+      },
+    ),
   ],
 );

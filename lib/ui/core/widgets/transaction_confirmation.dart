@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
 import 'package:poplar_power/domain/models/transaction_config.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 
-class ConfirmTransactionSheet extends StatelessWidget {
+class ConfirmTransactionSheet extends ConsumerWidget {
   final String title;
   final List<TransactionField> fields;
   final VoidCallback onConfirm;
@@ -17,11 +19,6 @@ class ConfirmTransactionSheet extends StatelessWidget {
   final String confirmButtonText;
   final String cancelButtonText;
   final bool isLoading;
-
-  // New parameters for stateless payment method handling
-  final List<PaymentMethodConfig> availablePaymentMethods;
-  final PaymentMethodConfig? selectedPaymentMethod;
-  final ValueChanged<PaymentMethodConfig> onPaymentMethodSelected;
 
   const ConfirmTransactionSheet({
     super.key,
@@ -38,40 +35,48 @@ class ConfirmTransactionSheet extends StatelessWidget {
     this.confirmButtonText = "Confirm Payment",
     this.cancelButtonText = "Cancel",
     this.isLoading = false,
-    // New parameters
-    required this.availablePaymentMethods,
-    required this.selectedPaymentMethod,
-    required this.onPaymentMethodSelected,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(transactionFlowProvider);
+    final notifier = ref.read(transactionFlowProvider.notifier);
+
     void showPaymentMethodSelector(BuildContext context) {
       showModalBottomSheet(
         context: context,
         builder: (context) {
           return Padding(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, MediaQuery.of(context).padding.bottom + 24.0),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              4,
+              16,
+              MediaQuery.of(context).padding.bottom + 24.0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildDragHandle(),
                 Column(
                   mainAxisSize: MainAxisSize.min,
-                  // Use the list of methods passed into the widget
-                  children: availablePaymentMethods.map((method) {
+                  // Use the list of methods from the state
+                  children: state.availablePaymentMethods.map((method) {
                     return ListTile(
                       leading: Icon(method.icon, color: method.color),
                       title: Text(method.name),
-                      subtitle: Text(method.balance),
+                      subtitle: Text(
+                        method.balance == null
+                            ? '${method.desc}'
+                            : '${method.balance}',
+                      ),
                       onTap: () {
-                        // Report the selection back to the controller
-                        onPaymentMethodSelected(method);
+                        // Call the notifier to update the state
+                        notifier.selectPaymentMethod(method);
                         Navigator.pop(context);
                       },
                     );
                   }).toList(),
-                )
+                ),
               ],
             ),
           );
@@ -111,11 +116,13 @@ class ConfirmTransactionSheet extends StatelessWidget {
                         if (referenceNumber != null)
                           _buildReferenceNumber(context),
                         // Only show payment method if there is one selected
-                        if (selectedPaymentMethod != null)
+                        if (state.selectedPaymentMethod != null)
                           GestureDetector(
                             onTap: () => showPaymentMethodSelector(context),
                             child: _buildPaymentMethod(
-                                context, selectedPaymentMethod!),
+                              context,
+                              state.selectedPaymentMethod!,
+                            ),
                           ),
                         const SizedBox(height: 24),
                       ],
@@ -126,7 +133,9 @@ class ConfirmTransactionSheet extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24.0),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 24.0,
+            ),
             child: _buildActionButtons(context),
           ),
           if (processingTime != null) _buildProcessingTime(context),
@@ -287,7 +296,10 @@ class ConfirmTransactionSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentMethod(BuildContext context, PaymentMethodConfig selectedPaymentMethod) {
+  Widget _buildPaymentMethod(
+    BuildContext context,
+    PaymentMethodConfig selectedPaymentMethod,
+  ) {
     final theme = Theme.of(context);
 
     return Container(
@@ -323,8 +335,11 @@ class ConfirmTransactionSheet extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+
                 Text(
-                  'Balance: ${selectedPaymentMethod.balance}',
+                  selectedPaymentMethod.balance != null
+                      ? 'Balance: ${selectedPaymentMethod.balance}'
+                      : '${selectedPaymentMethod.desc}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
                   ),

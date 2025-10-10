@@ -88,6 +88,7 @@ class CableScreen extends HookConsumerWidget {
                 fallbackIcon: const Icon(Icons.tv, color: Colors.grey),
               ),
               const SizedBox(height: 16),
+
               if (state.selectedProvider != null)
                 AsyncSelectableField(
                   label: 'Package',
@@ -102,7 +103,9 @@ class CableScreen extends HookConsumerWidget {
                   onSelected: viewModel.selectPackageByOption,
                   fallbackIcon: const Icon(Icons.tv, color: Colors.grey),
                 ),
-              if (state.selectedProvider != null) const SizedBox(height: 16),
+              if (state.selectedProvider != null) 
+              const SizedBox(height: 16),
+              
               SmartInputField(
                   label: 'Account Number',
                   controller: accountNumberController,
