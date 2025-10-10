@@ -70,6 +70,11 @@ class SignupViewModel extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
 
+    if (password != confirmPassword) {
+      state = AsyncError('Passwords do not match', StackTrace.current);
+      return;
+    }
+
     final result = await _registerUseCase.execute(
       _email ?? '',
       password,

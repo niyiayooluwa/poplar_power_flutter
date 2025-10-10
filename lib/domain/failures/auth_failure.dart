@@ -25,6 +25,12 @@ sealed class AuthFailure {
   factory AuthFailure.unknown() =>
       const AuthFailure._('Unknown error occurred.');
 
+  factory AuthFailure.invalidCredentials() =>
+      const AuthFailure._('Email or password is incorrect.');
+
+  factory AuthFailure.accountLocked(String message) =>
+      AuthFailure._(message);
+
   factory AuthFailure.serverError(String message) => AuthFailure._(message);
 
   const factory AuthFailure._(String message) = _AuthFailureImpl;

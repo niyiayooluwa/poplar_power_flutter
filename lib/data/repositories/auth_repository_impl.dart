@@ -32,7 +32,8 @@ class AuthRepositoryImpl implements AuthRepository {
         await _userProfileStorage.saveUser(user);
         return Right(user);
       } else {
-        return Left(AuthFailure.serverError(authResponseDto.message));
+        final failureType = _getAuthFailureType(authResponseDto.message);
+        return Left(failureType);
       }
     } on DioException catch (e) {
       return Left(_handleDioException(e));
@@ -110,7 +111,8 @@ class AuthRepositoryImpl implements AuthRepository {
         final loginResult = await login(email, password);
         return loginResult;
       } else {
-        final message = otpResponse['message'] as String? ?? 'OTP verification failed.';
+        final message =
+            otpResponse['message'] as String? ?? 'OTP verification failed.';
         return Left(AuthFailure.serverError(message));
       }
     } on DioException catch (e) {
@@ -133,6 +135,25 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  AuthFailure _getAuthFailureType(String message) {
+    // Check for locked account
+    if (message.contains('Account is locked') ||
+        message.contains('locked due to multiple failed login attempts')) {
+      return AuthFailure.accountLocked(
+        'Account is locked due to multiple failed login attempts. Please try again later.',
+      );
+    }
+
+    // Check for invalid credentials
+    if (message.contains('Email or password is not correct') ||
+        message.contains('Email or password is incorrect')) {
+      return AuthFailure.invalidCredentials();
+    }
+
+    // Generic server error fallback
+    return AuthFailure.serverError(message);
+  }
+
   AuthFailure _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -141,13 +162,16 @@ class AuthRepositoryImpl implements AuthRepository {
       case DioExceptionType.connectionError:
         return AuthFailure.network();
       case DioExceptionType.badResponse:
-        final responseData = e.response?.data;
-        if (responseData is Map<String, dynamic> &&
-            responseData.containsKey('message')) {
-          return AuthFailure.serverError(responseData['message']);
-        } else {
-          return AuthFailure.unknown();
+        if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
+          return AuthFailure.invalidCredentials();
         }
+
+        final responseData = e.response?.data;
+        if (responseData is Map<String, dynamic>) {
+          final message = responseData['message'] as String?;
+          return AuthFailure.serverError(message ?? 'Unknown server error');
+        }
+        return AuthFailure.unknown();
       default:
         return AuthFailure.unknown();
     }

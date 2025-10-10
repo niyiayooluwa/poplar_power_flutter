@@ -29,6 +29,7 @@ class SignupStep2Screen extends HookConsumerWidget {
 
     // Holds the current password validation error
     final passwordError = useState<String?>(null);
+    final confirmPasswordError = useState<String?>(null);
 
     // Listen to the signup state for errors or loading
     final signupState = ref.watch(signupViewModelProvider);
@@ -134,8 +135,12 @@ class SignupStep2Screen extends HookConsumerWidget {
                       TextField(
                         controller: confirmPasswordController,
                         obscureText: !confirmPasswordVisible.value,
+                        onChanged: (value) {
+                          confirmPasswordError.value = null;
+                        },
                         decoration: InputDecoration(
                           labelText: 'Confirm Password',
+                          errorText: confirmPasswordError.value,
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -167,6 +172,11 @@ class SignupStep2Screen extends HookConsumerWidget {
                       final password = passwordController.text;
                       final confirm = confirmPasswordController.text;
                       final customRef = customRefController.text.trim();
+
+                      if (password != confirm) {
+                        confirmPasswordError.value = 'Passwords do not match';
+                        return;
+                      }
 
                       // Perform validation and signup
                       ref.read(signupViewModelProvider.notifier).signup(

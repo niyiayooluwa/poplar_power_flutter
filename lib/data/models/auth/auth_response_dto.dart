@@ -31,38 +31,78 @@ class AuthResponseDto {
   });
 
   factory AuthResponseDto.fromJson(Map<String, dynamic> json) {
-    final ssoResponse = json['ssoResponse'] as Map<String, dynamic>;
+    final ssoResponse = json['ssoResponse'] as Map<String, dynamic>? ?? {};
     final walletData = json['wallet']?['data'] as Map<String, dynamic>?;
-    final customerData = walletData?['customer'] as Map<String, dynamic>?;
     final accountData = walletData?['account'] as Map<String, dynamic>?;
 
-    // Merge user data from ssoResponse.user, wallet.data.customer, and wallet.data.account
+    // Merge user data from ssoResponse.user and wallet.data.account only
     final Map<String, dynamic> mergedUserJson = {};
     if (ssoResponse['user'] != null) {
       mergedUserJson.addAll(ssoResponse['user'] as Map<String, dynamic>);
     }
-    if (customerData != null) {
+
+    if (accountData != null) {
+      // Safely parse numeric values that might come as strings
+      final bankAccount = accountData['bankAccount'];
+      final sysAccount = accountData['sysAccount'];
+
       mergedUserJson.addAll({
-        'systemRef': customerData['systemRef'],
-        'serviceRef': customerData['serviceRef'],
-        'pinCreated': customerData['pinCreated'],
-        'customerStatus': customerData['status'],
+        'walletAccountNo': bankAccount is String
+            ? int.tryParse(bankAccount)
+            : bankAccount as int?,
+        'systemRef': sysAccount is String
+            ? int.tryParse(sysAccount)
+            : sysAccount as int?,
       });
     }
+
+    return AuthResponseDto(
+      isAuthenticated: ssoResponse['is_authenticated'] as bool? ?? false,
+      sessionId: ssoResponse['sessionId'] as String?,
+      user: mergedUserJson.isNotEmpty ? UserDto.fromJson(mergedUserJson) : null,
+      token: ssoResponse['token'] as String?,
+      mfaRequired: ssoResponse['mfa_required'] as bool? ?? false,
+      mfaType: ssoResponse['mfa_type'] as String?,
+      deviceIsRegistered: ssoResponse['device_is_registered'] as bool? ?? false,
+      data: ssoResponse['data'],
+      poplarToken: ssoResponse['poplarToken'] as String?,
+      success: json['success'] as bool? ?? false,
+      message: json['message'] as String? ?? 'Unknown error',
+      wallet: json['wallet'] != null
+          ? WalletDto.fromJson(json['wallet'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+  /*factory AuthResponseDto.fromJson(Map<String, dynamic> json) {
+    final ssoResponse = json['ssoResponse'] as Map<String, dynamic>;
+    final walletData = json['wallet']?['data'] as Map<String, dynamic>?;
+    final accountData = walletData?['account'] as Map<String, dynamic>?;
+
+    // Merge user data from ssoResponse.user and wallet.data.account only
+    final Map<String, dynamic> mergedUserJson = {};
+    if (ssoResponse['user'] != null) {
+      mergedUserJson.addAll(ssoResponse['user'] as Map<String, dynamic>);
+    }
+
     if (accountData != null) {
+      // Safely parse numeric values that might come as strings
+      final bankAccount = accountData['bankAccount'];
+      final sysAccount = accountData['sysAccount'];
+
       mergedUserJson.addAll({
-        'walletAccountNo': accountData['bankAccount'], // Using bankAccount as walletAccountNo
-        'currency': accountData['currency'],
-        'accountStatus': accountData['status'],
+        'walletAccountNo': bankAccount is String
+            ? int.tryParse(bankAccount)
+            : bankAccount as int?,
+        'systemRef': sysAccount is String
+            ? int.tryParse(sysAccount)
+            : sysAccount as int?,
       });
     }
 
     return AuthResponseDto(
       isAuthenticated: ssoResponse['is_authenticated'] as bool,
       sessionId: ssoResponse['sessionId'] as String?,
-      user: mergedUserJson.isNotEmpty
-          ? UserDto.fromJson(mergedUserJson)
-          : null,
+      user: mergedUserJson.isNotEmpty ? UserDto.fromJson(mergedUserJson) : null,
       token: ssoResponse['token'] as String?,
       mfaRequired: ssoResponse['mfa_required'] as bool,
       mfaType: ssoResponse['mfa_type'] as String?,
@@ -75,5 +115,5 @@ class AuthResponseDto {
           ? WalletDto.fromJson(json['wallet'] as Map<String, dynamic>)
           : null,
     );
-  }
+  }*/
 }

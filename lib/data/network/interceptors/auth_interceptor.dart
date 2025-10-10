@@ -18,7 +18,7 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     // Define paths that do not require authentication.
-    final publicPaths = ['/auth/login', '/auth/register'];
+    final publicPaths = ['/auth/login', '/auth/register', '/buyProducts/verify'];
 
     bool isPublicPath = publicPaths.any((path) => options.path.contains(path));
 
