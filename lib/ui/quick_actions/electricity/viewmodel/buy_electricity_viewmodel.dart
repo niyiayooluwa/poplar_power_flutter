@@ -73,7 +73,7 @@ class BuyElectricityViewModel extends StateNotifier<BuyElectricityState> {
       customerIdentifier: state.meterNumber,
       amount: int.tryParse(state.amount) ?? 0,
       walletPin: state.walletPin,
-      notificationPreference: state.notificationPreference,
+      notificationPreference: state.notificationPreference!,
       email: state.email,
       phoneNumber: state.phoneNumber,
       provider: state.provider,

@@ -149,7 +149,7 @@ class ElectricityScreen extends HookConsumerWidget {
                             categoryGroup: 'ELECTRICITY',
                             categoryOrBiller: state.selectedDisco!.alias,
                             billerOrProductId: state.selectedProduct!.id,
-                            notificationPreference: state.notificationPreference,
+                            notificationPreference: state.notificationPreference!,
                           );
 
                           transactionFlow.startTransaction(

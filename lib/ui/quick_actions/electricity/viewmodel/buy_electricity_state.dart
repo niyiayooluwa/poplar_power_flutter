@@ -19,7 +19,7 @@ class BuyElectricityState {
   final String amount;
 
   final String walletPin;
-  final NotificationPreference notificationPreference;
+  final NotificationPreference? notificationPreference;
 
   final String email;
   final String phoneNumber;
@@ -39,7 +39,7 @@ class BuyElectricityState {
     this.amount = '',
 
     this.walletPin = '',
-    this.notificationPreference = NotificationPreference.both,
+    this.notificationPreference,
     this.email = '',
     this.phoneNumber = '',
 
@@ -90,5 +90,6 @@ class BuyElectricityState {
       meterNumber.length >= 6 &&
       meterNumber.length <= 15 &&
       amount.length >= 3 &&
-      amount.length <= 6;
+      amount.length <= 6 &&
+      notificationPreference != null;
 }
