@@ -1,9 +1,10 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
-import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:poplar_power/domain/models/customer_verification.dart';
 import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/payment_provider.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 /// Represents the state of the Buy Data screen.
 class BuyDataState {
@@ -26,6 +27,7 @@ class BuyDataState {
   final PaymentProvider provider;
 
   final AsyncValue<void> purchaseState;
+  final AsyncValue<CustomerVerification?> verificationState;
 
   const BuyDataState({
     this.isps = const AsyncData([]),
@@ -41,6 +43,7 @@ class BuyDataState {
     this.provider = PaymentProvider.paystack,
     this.notificationPreference = NotificationPreference.both,
     this.purchaseState = const AsyncData(null),
+    this.verificationState = const AsyncData(null),
   });
 
   factory BuyDataState.initial() => const BuyDataState();
@@ -59,6 +62,7 @@ class BuyDataState {
     NotificationPreference? notificationPreference,
     PaymentProvider? provider,
     AsyncValue<void>? purchaseState,
+    AsyncValue<CustomerVerification>? verificationState,
   }) {
     return BuyDataState(
       isps: isps ?? this.isps,
@@ -75,6 +79,7 @@ class BuyDataState {
           notificationPreference ?? this.notificationPreference,
       provider: provider ?? this.provider,
       purchaseState: purchaseState ?? this.purchaseState,
+      verificationState: verificationState ?? this.verificationState,
     );
   }
 
@@ -82,5 +87,7 @@ class BuyDataState {
       selectedIsp != null &&
       selectedProduct != null &&
       phoneNumber.isNotEmpty &&
-      phoneNumber.length == 11;
+      phoneNumber.length == 11 &&
+      price != '' &&
+      price != '0';
 }

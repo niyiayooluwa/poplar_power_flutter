@@ -24,7 +24,7 @@ class InternetScreen extends HookConsumerWidget {
     final transactionFlow = ref.read(transactionFlowProvider.notifier);
     final transactionState = ref.watch(transactionFlowProvider);
 
-    void resetBuyDataFlow() {
+    void resetFlow() {
       ispController.clear();
       productController.clear();
       priceController.clear();
@@ -68,12 +68,12 @@ class InternetScreen extends HookConsumerWidget {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
-          onPressed: () async {
-            resetBuyDataFlow();
+          onPressed: () {
+            resetFlow();
             context.pop();
           },
         ),
-        title: const Text('Internet'),
+        title: const Text('Airtime/Data'),
       ),
       body: SafeArea(
         child: Padding(
@@ -105,6 +105,7 @@ class InternetScreen extends HookConsumerWidget {
               ),
               const SizedBox(height: 16),
               if (state.selectedIsp != null)
+
                 AsyncSelectableField(
                   label: 'Select Bundle',
                   controller: productController,
@@ -122,11 +123,18 @@ class InternetScreen extends HookConsumerWidget {
                   ),
                 ),
               if (state.selectedIsp != null) const SizedBox(height: 16),
+
               if (state.selectedProduct != null)
                 SmartInputField(
-                  label: 'Price',
+                  label: state.selectedProduct?.amount != 0
+                      ? 'Price'
+                      : 'Amount',
                   controller: priceController,
-                  readOnly: true,
+                  readOnly: state.selectedProduct?.amount != 0 ? true : false,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    viewModel.setPrice(value);
+                  },
                 ),
               const Spacer(),
               SizedBox(
@@ -134,12 +142,20 @@ class InternetScreen extends HookConsumerWidget {
                 child: FilledButton(
                   onPressed: state.isFormValid
                       ? () {
+                    final int transactionAmount;
+                    if (state.selectedProduct?.amount != 0 && state.selectedProduct?.amount != null) {
+                      // If the product has a fixed price, use it.
+                      transactionAmount = state.selectedProduct!.amount!;
+                    } else {
+                      // Otherwise, parse the user-entered amount, defaulting to 0 if invalid.
+                      transactionAmount = int.tryParse(state.price) ?? 0;
+                    }
                           final payload = TransactionPayload(
                             customerIdentifier: state.phoneNumber,
-                            amount: state.selectedProduct?.amount ?? 0,
+                            amount: transactionAmount,
                             categoryGroup: 'AIRTIME_AND_DATA',
                             categoryOrBiller: state.selectedIsp!.alias,
-                            billerOrProductId: state.selectedProduct!.id,
+                            billerOrProductId: state.selectedProduct!.name,
                             notificationPreference:
                                 state.notificationPreference,
                           );
@@ -147,7 +163,7 @@ class InternetScreen extends HookConsumerWidget {
                           transactionFlow.startTransaction(
                             payload: payload,
                             title: 'Confirm Data Purchase',
-                            amount: '₦${state.selectedProduct?.amount ?? 0}',
+                            amount: '₦$transactionAmount',
                             fields: [
                               TransactionField(
                                 label: 'ISP',
@@ -163,7 +179,7 @@ class InternetScreen extends HookConsumerWidget {
                               ),
                               TransactionField(
                                 label: 'Amount',
-                                value: '₦${state.selectedProduct?.amount ?? 0}',
+                                value: '₦$transactionAmount',
                                 isHighlighted: true,
                               ),
                             ],

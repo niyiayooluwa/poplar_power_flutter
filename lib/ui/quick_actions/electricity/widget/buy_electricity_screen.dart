@@ -15,6 +15,7 @@ class ElectricityScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Viewmodel and state
     final viewModel = ref.read(buyElectricityViewModelProvider.notifier);
     final state = ref.watch(buyElectricityViewModelProvider);
     final transactionFlow = ref.read(transactionFlowProvider.notifier);
@@ -27,7 +28,7 @@ class ElectricityScreen extends HookConsumerWidget {
     final meterNumberController = useTextEditingController();
     final notificationPreference = useTextEditingController();
 
-    // The local `isProcessing` state is no longer needed.
+    final theme = Theme.of(context);
 
     // Sync state to controllers individually to prevent unwanted resets.
     useEffect(() {
@@ -63,11 +64,20 @@ class ElectricityScreen extends HookConsumerWidget {
     // The `showElectricityConfirmation` function has been removed.
     // All its logic is now handled by the central TransactionFlowOrchestrator.
 
+    void resetFlow() {
+      discoController.clear();
+      productController.clear();
+      amountController.clear();
+      meterNumberController.clear();
+      notificationPreference.clear();
+      viewModel.reset();
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
           onPressed: () {
-            viewModel.reset();
+            resetFlow();
             context.pop();
           },
         ),
@@ -97,6 +107,7 @@ class ElectricityScreen extends HookConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
+
               if (state.selectedDisco != null)
                 AsyncSelectableField(
                   label: 'Package',
@@ -111,14 +122,102 @@ class ElectricityScreen extends HookConsumerWidget {
                   onSelected: viewModel.selectProductByOption,
                 ),
               if (state.selectedDisco != null) const SizedBox(height: 16),
-              SmartInputField(
-                label: 'Meter Number',
-                controller: meterNumberController,
-                keyboardType: TextInputType.number,
-                maxLength: state.selectedDisco?.accountNumberSize,
-                onChanged: viewModel.setMeterNumber,
+
+              SizedBox(
+                width: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      flex: 8,
+                      child: SmartInputField(
+                        label: 'Meter Number',
+                        controller: meterNumberController,
+                        keyboardType: TextInputType.number,
+                        maxLength: state.selectedDisco?.accountNumberSize,
+                        onChanged: viewModel.setMeterNumber,
+                      ),
+                    ),
+
+                    Flexible(
+                      flex: 2,
+                      child: FilledButton(
+                        onPressed:
+                            state.canVerify &&
+                                !state.verificationState.isLoading
+                            ? () {
+                                viewModel.verifyCustomer();
+                              }
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: state.verificationState.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                'Verify',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
+
+              state.verificationState.when(
+                // This function runs when data is available
+                data: (customer) {
+                  if (customer == null) {
+                    // Don't show anything until verification is successful
+                    return const SizedBox.shrink();
+                  }
+
+                  final customerName = customer.fullname;
+
+                  return Text(
+                    customerName,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.green,
+                    ),
+                  );
+                },
+
+                // This widget shows while the customer name is being fetched
+                loading: () => const SizedBox.shrink(),
+    /*const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),*/
+
+                error: (Object error, StackTrace stackTrace) {
+                  return Text(
+                    'Account verification failed',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.red,
+                    ),
+                  );
+                },
+              ),
 
               SmartInputField(
                 label: 'Amount',
@@ -148,8 +247,9 @@ class ElectricityScreen extends HookConsumerWidget {
                             amount: int.tryParse(state.amount) ?? 0,
                             categoryGroup: 'ELECTRICITY',
                             categoryOrBiller: state.selectedDisco!.alias,
-                            billerOrProductId: state.selectedProduct!.id,
-                            notificationPreference: state.notificationPreference!,
+                            billerOrProductId: state.selectedProduct!.name,
+                            notificationPreference:
+                                state.notificationPreference!,
                           );
 
                           transactionFlow.startTransaction(
@@ -165,10 +265,28 @@ class ElectricityScreen extends HookConsumerWidget {
                                 label: 'Meter Number',
                                 value: state.meterNumber,
                               ),
-                              TransactionField(
-                                label: 'Customer Name',
-                                value: 'John Doe',
-                              ), // TODO(dev): Get real name
+                              state.verificationState.when(
+                                // This function runs when data is available
+                                data: (customer) => TransactionField(
+                                  label: 'Customer Name',
+                                  // Check if customer is not null, otherwise show 'N/A'
+                                  value: customer?.fullname ?? 'N/A',
+                                ),
+
+                                // This widget shows while the customer name is being fetched
+                                loading: () => const TransactionField(
+                                  label: 'Customer Name',
+                                  value: 'Verifying...',
+                                ),
+
+                                // This widget shows if the verification fails
+                                error: (err, stack) => TransactionField(
+                                  label: 'Customer Name',
+                                  value: 'Verification Failed',
+                                  valueColor: Colors
+                                      .red, // Optional: highlight the error
+                                ),
+                              ),
                               TransactionField(
                                 label: 'Service Fee',
                                 value: '₦0.00',

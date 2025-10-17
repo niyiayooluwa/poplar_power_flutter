@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
 import 'package:poplar_power/ui/core/models/transaction_payload.dart';
 import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
@@ -25,6 +26,9 @@ class CableScreen extends HookConsumerWidget {
     final productController = useTextEditingController();
     final priceController = useTextEditingController();
     final accountNumberController = useTextEditingController();
+    final notificationPreference = useTextEditingController();
+
+    final theme = Theme.of(context);
 
     useEffect(() {
       final newText = state.selectedProvider?.name ?? '';
@@ -58,12 +62,21 @@ class CableScreen extends HookConsumerWidget {
       return null;
     }, [state.accountNumber]);
 
+    void resetFlow() {
+      cableController.clear();
+      productController.clear();
+      priceController.clear();
+      accountNumberController.clear();
+      notificationPreference.clear();
+      viewModel.reset();
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
-          onPressed: () async {
-            viewModel.reset();
+          onPressed: () {
+            resetFlow();
             context.pop();
           },
         ),
@@ -103,22 +116,121 @@ class CableScreen extends HookConsumerWidget {
                   onSelected: viewModel.selectPackageByOption,
                   fallbackIcon: const Icon(Icons.tv, color: Colors.grey),
                 ),
-              if (state.selectedProvider != null) 
-              const SizedBox(height: 16),
-              
-              SmartInputField(
-                  label: 'Account Number',
-                  controller: accountNumberController,
-                  keyboardType: TextInputType.number,
-                  maxLength: state.selectedProvider?.accountNumberSize,
-                  onChanged: viewModel.setAccountNumber),
-              const SizedBox(height: 16),
-              if (state.selectedProduct != null)
+              if (state.selectedProvider != null) const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Flexible(
+                      flex: 8,
+                      child: SmartInputField(
+                        label: 'SmartCard Number',
+                        controller: accountNumberController,
+                        keyboardType: TextInputType.number,
+                        maxLength: state.selectedProvider?.accountNumberSize,
+                        onChanged: viewModel.setAccountNumber,
+                      ),
+                    ),
+
+                    //const SizedBox(width: 8),
+
+                    Flexible(
+                      flex: 2,
+                      child: FilledButton(
+                        onPressed:
+                            state.canVerify &&
+                                !state.verificationState.isLoading
+                            ? () {
+                                viewModel.verifyCustomer();
+                              }
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: state.verificationState.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                'Verify',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              state.verificationState.when(
+                // This function runs when data is available
+                data: (customer) {
+                  if (customer == null) {
+                    // Don't show anything until verification is successful
+                    return const SizedBox.shrink();
+                  }
+
+                  final customerName = customer.fullname;
+
+                  return Text(
+                    customerName,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.green,
+                    ),
+                  );
+                },
+
+                // This widget shows while the customer name is being fetched
+                loading: () => const CircularProgressIndicator(),
+
+                error: (Object error, StackTrace stackTrace) {
+                  return Text(
+                    'Account verification failed',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.red,
+                    ),
+                  );
+                },
+              ),
+
+              if (state.selectedProduct?.amount != null)
                 SmartInputField(
                   label: 'Price',
                   controller: priceController,
                   readOnly: true,
                 ),
+
+              if (state.selectedProduct?.amount != null)
+                SizedBox(height: 8),
+
+              SmartInputField(
+                label: 'Notification Preference',
+                controller: notificationPreference,
+                options: ['Email', 'SMS', 'BOTH'],
+                onSelected: ((selected) => viewModel.setPreference(
+                  NotificationPreference.fromJson(selected),
+                )),
+              ),
+
               const Spacer(),
               SizedBox(
                 width: double.infinity,
@@ -130,9 +242,9 @@ class CableScreen extends HookConsumerWidget {
                             amount: state.selectedProduct?.amount ?? 0,
                             categoryGroup: 'PAY_TV',
                             categoryOrBiller: state.selectedProvider!.alias,
-                            billerOrProductId: state.selectedProduct!.id,
+                            billerOrProductId: state.selectedProduct!.name,
                             notificationPreference:
-                                state.notificationPreference,
+                                state.notificationPreference!,
                           );
                           transactionFlow.startTransaction(
                             payload: payload,
@@ -140,19 +252,22 @@ class CableScreen extends HookConsumerWidget {
                             amount: '₦${state.selectedProduct?.amount ?? 0}',
                             fields: [
                               TransactionField(
-                                  label: 'TV Provider',
-                                  value: state.selectedProvider?.name ?? 'N/A'),
+                                label: 'TV Provider',
+                                value: state.selectedProvider?.name ?? 'N/A',
+                              ),
                               TransactionField(
-                                  label: 'Account Number',
-                                  value: state.accountNumber),
+                                label: 'Smartcard Number',
+                                value: state.accountNumber,
+                              ),
                               TransactionField(
-                                  label: 'Package',
-                                  value: state.selectedProduct?.name ?? 'N/A'),
+                                label: 'Package',
+                                value: state.selectedProduct?.name ?? 'N/A',
+                              ),
                               TransactionField(
-                                  label: 'Amount',
-                                  value:
-                                      '₦${state.selectedProduct?.amount ?? 0}',
-                                  isHighlighted: true),
+                                label: 'Amount',
+                                value: '₦${state.selectedProduct?.amount ?? 0}',
+                                isHighlighted: true,
+                              ),
                             ],
                           );
                         }
@@ -164,8 +279,7 @@ class CableScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: transactionState.step ==
-                          TransactionFlowStep.processing
+                  child: transactionState.step == TransactionFlowStep.processing
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -178,11 +292,11 @@ class CableScreen extends HookConsumerWidget {
                         )
                       : Text(
                           'Next',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                 ),
               ),

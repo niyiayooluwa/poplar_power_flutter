@@ -2,10 +2,12 @@ import 'package:dart_either/dart_either.dart';
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/data_sources/remote/biller_remote_data_source.dart';
+import 'package:poplar_power/data/models/billers/customer_verification/customer_verification_request_dto.dart';
 import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/domain/failures/biller_failure.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/customer_verification.dart';
 import 'package:poplar_power/domain/models/purchase_response.dart';
 import 'package:poplar_power/domain/repositories/biller_repository.dart';
 
@@ -15,7 +17,8 @@ class _CacheEntry<T> {
 
   _CacheEntry(this.data) : timestamp = DateTime.now();
 
-  bool isStale(Duration maxAge) => DateTime.now().difference(timestamp) > maxAge;
+  bool isStale(Duration maxAge) =>
+      DateTime.now().difference(timestamp) > maxAge;
 }
 
 class BillerRepositoryImpl implements BillerRepository {
@@ -52,7 +55,9 @@ class BillerRepositoryImpl implements BillerRepository {
     }
 
     try {
-      final billerDtos = await _remoteDataSource.getBillersForCategory(categoryId);
+      final billerDtos = await _remoteDataSource.getBillersForCategory(
+        categoryId,
+      );
       final billers = billerDtos.map((dto) => dto.toEntity()).toList();
       _cache[cacheKey] = _CacheEntry(billers);
       return Right(billers);
@@ -80,6 +85,31 @@ class BillerRepositoryImpl implements BillerRepository {
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       _cache[cacheKey] = _CacheEntry(entities);
       return Right(entities);
+    } on DioException catch (e) {
+      return Left(_handleDioException(e));
+    } catch (e) {
+      return Left(BillerFailure.unknown());
+    }
+  }
+
+  @override
+  Future<Either<BillerFailure, CustomerVerification>> verifyCustomer(
+    CustomerVerificationRequestDto request,
+  ) async {
+    try {
+      final response = await _remoteDataSource.verifyCustomer(request);
+      final verification = CustomerVerification(
+        fullname: response.data.fullname,
+        enabled: response.data.enabled,
+        meterNumber: response.data.meterNumber,
+        accountNumber: response.data.accountNumber,
+        arrearsBalance: response.data.arrearsBalance,
+        accountType: response.data.accountType,
+        address: response.data.address,
+        minamount: response.data.minamount,
+        maxamount: response.data.maxamount,
+      );
+      return Right(verification);
     } on DioException catch (e) {
       return Left(_handleDioException(e));
     } catch (e) {

@@ -5,6 +5,8 @@ import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/payment_provider.dart';
 import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
+import '../../../../domain/models/customer_verification.dart';
+
 class BuyCableState {
   final AsyncValue<List<Biller>> cableProviders;
   final AsyncValue<List<BillerProduct>> products;
@@ -22,10 +24,12 @@ class BuyCableState {
   final String email;
 
   final String phoneNumber;
-  final NotificationPreference notificationPreference;
+  final NotificationPreference? notificationPreference;
 
   final PaymentProvider provider;
   final AsyncValue<void> purchaseState;
+
+  final AsyncValue<CustomerVerification?> verificationState;
 
   const BuyCableState({
     this.cableProviders = const AsyncData([]),
@@ -40,11 +44,12 @@ class BuyCableState {
 
     this.phoneNumber = '',
     this.email = '',
-    this.notificationPreference = NotificationPreference.both,
+    this.notificationPreference,
     this.walletPin = '',
 
     this.provider = PaymentProvider.paystack,
     this.purchaseState = const AsyncData(null),
+    this.verificationState = const AsyncData(null),
   });
 
   factory BuyCableState.initial() => const BuyCableState();
@@ -64,6 +69,7 @@ class BuyCableState {
     NotificationPreference? notificationPreference,
     PaymentProvider? provider,
     AsyncValue<void>? purchaseState,
+    AsyncValue<CustomerVerification>? verificationState,
   }) {
     return BuyCableState(
       cableProviders: cableProviders ?? this.cableProviders,
@@ -81,6 +87,7 @@ class BuyCableState {
           notificationPreference ?? this.notificationPreference,
       provider: provider ?? this.provider,
       purchaseState: purchaseState ?? this.purchaseState,
+      verificationState: verificationState ?? this.verificationState,
     );
   }
 
@@ -88,5 +95,14 @@ class BuyCableState {
       selectedProvider != null &&
       selectedProduct != null &&
       accountNumber.isNotEmpty &&
-      accountNumber.length <= (selectedProvider?.accountNumberSize ?? 15);
+      accountNumber.length <= (selectedProvider?.accountNumberSize ?? 15) &&
+      notificationPreference != null &&
+      verificationState.hasValue;
+
+  bool get canVerify =>
+      selectedProduct != null &&
+      selectedProvider != null &&
+      accountNumber.isNotEmpty &&
+      accountNumber.length >= 6 &&
+      accountNumber.length <= selectedProvider!.accountNumberSize;
 }

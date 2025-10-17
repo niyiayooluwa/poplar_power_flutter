@@ -96,9 +96,15 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
     required List<TransactionField> fields,
     required TransactionPayload payload,
   }) {
+    final userBalance = _ref.read(userProvider).balance;
+
     final walletConfig = PaymentMethodConfig(
       name: 'Nettpay',
-      balance: _ref.read(userProvider).balance.value.toString(),
+      balance: userBalance.when(
+        data: (balance) => balance.toString(),
+        loading: () => 'Loading...',
+        error: (error, stackTrace) => 'Error',
+      ),
       icon: Icons.account_balance_wallet,
       color: Colors.blue,
       provider: PaymentProvider.nettpay,
@@ -112,7 +118,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
       provider: PaymentProvider.paystack,
     );
 
-    final stripeConfig = const PaymentMethodConfig(
+    /*final stripeConfig = const PaymentMethodConfig(
       name: 'Stripe',
       desc: 'Pay with Stripe',
       icon: Icons.credit_card,
@@ -126,13 +132,13 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
       icon: Icons.waves,
       color: Colors.orange,
       provider: PaymentProvider.flutterwave,
-    );
+    );*/
 
     final paymentMethods = [
       walletConfig,
       paystackConfig,
-      stripeConfig,
-      flutterwaveConfig
+      //stripeConfig,
+      //flutterwaveConfig
     ];
 
     state = state.copyWith(

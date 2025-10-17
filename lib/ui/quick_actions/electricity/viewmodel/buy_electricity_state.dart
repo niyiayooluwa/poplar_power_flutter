@@ -1,9 +1,10 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/models/biller.dart';
 import 'package:poplar_power/domain/models/biller_product.dart';
-import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:poplar_power/domain/models/customer_verification.dart';
 import 'package:poplar_power/domain/models/notification_preference.dart';
 import 'package:poplar_power/domain/models/payment_provider.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 class BuyElectricityState {
   final AsyncValue<List<Biller>> discos;
@@ -27,6 +28,8 @@ class BuyElectricityState {
   final PaymentProvider provider;
   final AsyncValue<void> purchaseState;
 
+  final AsyncValue<CustomerVerification?> verificationState;
+
   const BuyElectricityState({
     this.discos = const AsyncData([]),
     this.products = const AsyncData([]),
@@ -45,6 +48,7 @@ class BuyElectricityState {
 
     this.provider = PaymentProvider.paystack,
     this.purchaseState = const AsyncData(null),
+    this.verificationState = const AsyncData(null),
   });
 
   factory BuyElectricityState.initial() => const BuyElectricityState();
@@ -64,6 +68,7 @@ class BuyElectricityState {
     String? phoneNumber,
     PaymentProvider? provider,
     AsyncValue<void>? purchaseState,
+    AsyncValue<CustomerVerification>? verificationState,
   }) {
     return BuyElectricityState(
       discos: discos ?? this.discos,
@@ -81,6 +86,7 @@ class BuyElectricityState {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       provider: provider ?? this.provider,
       purchaseState: purchaseState ?? this.purchaseState,
+      verificationState: verificationState ?? this.verificationState,
     );
   }
 
@@ -91,5 +97,13 @@ class BuyElectricityState {
       meterNumber.length <= 15 &&
       amount.length >= 3 &&
       amount.length <= 6 &&
-      notificationPreference != null;
+      notificationPreference != null &&
+      verificationState.hasValue;
+
+  bool get canVerify =>
+      selectedProduct != null &&
+      selectedDisco != null &&
+      meterNumber.isNotEmpty &&
+      meterNumber.length >= 6 &&
+      meterNumber.length <= selectedDisco!.accountNumberSize;
 }

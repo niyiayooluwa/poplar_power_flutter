@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:poplar_power/core/constants/api_constants.dart';
 import 'package:poplar_power/data/models/billers/biller_dto.dart';
 import 'package:poplar_power/data/models/billers/biller_product_dto.dart';
+import 'package:poplar_power/data/models/billers/customer_verification/customer_verification_request_dto.dart';
+import 'package:poplar_power/data/models/billers/customer_verification/customer_verification_response_dto.dart';
 import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
 import 'package:poplar_power/data/models/billers/purchase_response_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
@@ -11,6 +13,8 @@ abstract class BillerRemoteDataSource {
   Future<List<BillerDto>> getBillersForCategory(String categoryId);
   Future<List<BillerProductDto>> getProductsForBiller(String billerId);
   Future<PurchaseResponseDto> purchase(PaymentRequestDto request);
+  Future<CustomerVerificationResponseDto> verifyCustomer(
+      CustomerVerificationRequestDto request);
 }
 
 class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
@@ -56,6 +60,20 @@ class BillerRemoteDataSourceImpl implements BillerRemoteDataSource {
         options: Options(headers: _getAuthHeaders()),
       );
       return PurchaseResponseDto.fromJson(response.data);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CustomerVerificationResponseDto> verifyCustomer(
+      CustomerVerificationRequestDto request) async {
+    try {
+      final response = await _dio.post(
+        '/autoPayBillers/customer-query',
+        data: request.toJson(),
+      );
+      return CustomerVerificationResponseDto.fromJson(response.data);
     } on DioException {
       rethrow;
     }
