@@ -13,6 +13,8 @@ import 'package:poplar_power/ui/profile/widget/profile_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_four_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_three_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
 import 'package:poplar_power/ui/webview/widget/webview_screen.dart';
 
@@ -102,6 +104,16 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/signup-two',
       builder: (context, state) => const SignupStep2Screen(),
+    ),
+
+    GoRoute(
+        path: '/signup-three',
+        builder: (context, state) => const SignupStep3Screen()
+    ),
+    
+    GoRoute(
+        path: '/signup-four',
+        builder: (context, state) => const SignupStep4Screen()
     ),
 
     GoRoute(

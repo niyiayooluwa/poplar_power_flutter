@@ -1,23 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/progressBar.dart';
 
 import '../viewmodel/signup_view_model.dart';
 
-/// Step 1 of the Signup process
-///
-/// Collects:
-/// - First name
-/// - Last name
-/// - Email address
-/// - Phone number
-/// - Custom ref
-class SignupStep1Screen extends HookConsumerWidget {
-  const SignupStep1Screen({super.key});
+class SignupStep3Screen extends HookConsumerWidget {
+  const SignupStep3Screen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,17 +23,10 @@ class SignupStep1Screen extends HookConsumerWidget {
         ? const Color(0xFF1E293B).withValues(alpha: 0.98)
         : Colors.white.withValues(alpha: 0.3);
 
-    // Form controllers
-    final firstNameController = useTextEditingController();
-    final lastNameController = useTextEditingController();
-    final emailController = useTextEditingController();
-    final phoneController = useTextEditingController();
-    final customRefController = useTextEditingController();
+    final pinController = useTextEditingController();
+    final pinError = useState<String?>(null);
 
-    // Holds validation errors for each field
-    final errors = useState<Map<String, String>>({});
-
-    // Watch the signup state for progress
+    // Watch the signup state
     final state = ref.watch(signupViewModelProvider);
     final vm = ref.read(signupViewModelProvider.notifier);
 
@@ -79,7 +64,10 @@ class SignupStep1Screen extends HookConsumerWidget {
                           alignment: Alignment.centerLeft,
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_ios, size: 24),
-                            onPressed: () => context.pop(),
+                            onPressed: () {
+                              vm.goToPreviousStep();
+                              context.pop();
+                            },
                           ),
                         ),
 
@@ -88,17 +76,18 @@ class SignupStep1Screen extends HookConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 24),
-                            // Main heading
+
                             Text(
-                              "Welcome — let's set you up",
+                              "Secure your wallet 🔐",
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+
                             const SizedBox(height: 8),
-                            // Subheading
+
                             Text(
-                              "Tell us who you are and we'll do the rest",
+                              "Choose a 4-digit PIN you'll use for every transaction.",
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: theme.textTheme.titleMedium?.color
                                     ?.withValues(alpha: 0.7),
@@ -109,87 +98,79 @@ class SignupStep1Screen extends HookConsumerWidget {
 
                         const SizedBox(height: 32),
 
-                        //Input fields
+                        //Input Fields
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
                               children: [
-                                // First Name field
-                                TextField(
-                                  controller: firstNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'First Name',
-                                    errorText: errors.value['firstName'],
-                                    border: OutlineInputBorder(
+                                // PIN Input
+                                SizedBox(
+                                  width: 300,
+                                  child: PinCodeTextField(
+                                    appContext: context,
+                                    length: 4,
+                                    obscureText: true,
+                                    obscuringCharacter: '●',
+                                    animationType: AnimationType.fade,
+                                    controller: pinController,
+                                    keyboardType: TextInputType.number,
+                                    textStyle: theme.textTheme.headlineMedium,
+                                    pinTheme: PinTheme(
+                                      shape: PinCodeFieldShape.box,
                                       borderRadius: BorderRadius.circular(8),
+                                      fieldHeight: 60,
+                                      fieldWidth: 60,
+                                      activeFillColor: Colors.white,
+                                      inactiveFillColor: isDarkTheme
+                                          ? Colors.grey[800]!
+                                          : Colors.grey[200]!,
+                                      selectedFillColor: Colors.blue.shade50,
+                                      activeColor: Colors.blue,
+                                      inactiveColor: Colors.grey,
+                                      selectedColor: Colors.blue,
                                     ),
-                                  ),
-                                  textCapitalization: TextCapitalization.words,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Last Name field
-                                TextField(
-                                  controller: lastNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Last Name',
-                                    errorText: errors.value['lastName'],
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                    animationDuration: const Duration(
+                                      milliseconds: 300,
                                     ),
-                                  ),
-                                  textCapitalization: TextCapitalization.words,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Email field
-                                TextField(
-                                  controller: emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                    errorText: errors.value['email'],
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
+                                    enableActiveFill: true,
+                                    onChanged: (value) {
+                                      pinError.value = null;
+                                    },
+                                    errorTextSpace: 30,
                                   ),
                                 ),
-
-                                const SizedBox(height: 16),
-
-                                // Phone number field
-                                TextField(
-                                  controller: phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  maxLength: 11,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  decoration: InputDecoration(
-                                    labelText: 'Phone Number',
-                                    errorText: errors.value['phoneNumber'],
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                const Divider(),
 
                                 const SizedBox(height: 24),
 
-                                // Custom Ref field
-                                TextField(
-                                  controller: customRefController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Referral Code (Optional)',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
+                                // Info message
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isDarkTheme
+                                        ? Colors.blue.shade900.withValues(
+                                            alpha: 0.2,
+                                          )
+                                        : Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.blue.shade600,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          "Keep it private — don't reuse your ATM or phone PIN.",
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -199,24 +180,25 @@ class SignupStep1Screen extends HookConsumerWidget {
 
                         const SizedBox(height: 24),
 
-                        // "Next" button
+                        // Next button
                         FilledButton(
                           onPressed: () {
-                            final validationErrors = vm.validateAndSaveStep1(
-                              firstName: firstNameController.text.trim(),
-                              lastName: lastNameController.text.trim(),
-                              email: emailController.text.trim(),
-                              phoneNumber: phoneController.text.trim(),
-                              customRef: customRefController.text.trim(),
-                            );
+                            final pin = pinController.text.trim();
 
-                            if (validationErrors != null) {
-                              errors.value = validationErrors;
-                            } else {
-                              errors.value = {}; // Clear errors
-                              vm.goToNextStep();
-                              context.push('/signup-two');
+                            if (pin.isEmpty) {
+                              pinError.value = 'PIN is required';
+                              return;
                             }
+
+                            if (pin.length != 4) {
+                              pinError.value = 'PIN must be 4 digits';
+                              return;
+                            }
+
+                            // Save PIN to state and move to next step
+                            vm.savePinAndContinue(pin: int.parse(pin));
+                            vm.goToNextStep();
+                            context.push('/signup-four');
                           },
                           style: FilledButton.styleFrom(
                             fixedSize: const Size(double.infinity, 48),
