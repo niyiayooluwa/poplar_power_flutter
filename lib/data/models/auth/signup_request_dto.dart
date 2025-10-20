@@ -4,6 +4,7 @@ class SignupRequestDto {
   final String phone;
   final String fullName;
   final String? customRef;
+  final int pin;
 
   const SignupRequestDto({
     required this.email,
@@ -11,6 +12,7 @@ class SignupRequestDto {
     required this.phone,
     required this.fullName,
     this.customRef,
+    required this.pin
   });
 
   Map<String, dynamic> toJson() {
@@ -19,6 +21,7 @@ class SignupRequestDto {
       'password': password,
       'phone': phone,
       'fullName': fullName,
+      'pin': pin,
       if (customRef != null) 'customRef': customRef,
     };
   }

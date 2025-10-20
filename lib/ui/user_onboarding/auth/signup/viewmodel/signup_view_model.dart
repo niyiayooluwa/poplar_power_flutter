@@ -88,6 +88,7 @@ class SignupViewModel extends StateNotifier<SignupState> {
       '234${state.phoneNumber}',
       state.fullName,
       state.customRef,
+      state.pin!
     );
 
     result.fold(

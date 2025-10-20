@@ -16,6 +16,7 @@ class RegisterUseCase {
     String phone,
     String fullName,
     String? customRef,
+    int pin,
   ) async {
     return await _repository.register(
       email,
@@ -23,6 +24,7 @@ class RegisterUseCase {
       phone,
       fullName,
       customRef,
+      pin
     );
   }
 }

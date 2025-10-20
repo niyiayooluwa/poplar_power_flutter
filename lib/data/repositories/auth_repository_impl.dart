@@ -49,6 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String phone,
     String fullName,
     String? customRef,
+    int pin,
   ) async {
     try {
       final requestDto = SignupRequestDto(
@@ -57,6 +58,7 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
         fullName: fullName,
         customRef: customRef,
+        pin: pin
       );
       final userDto = await remoteDataSource.register(requestDto);
       return Right(userDto.toEntity());
