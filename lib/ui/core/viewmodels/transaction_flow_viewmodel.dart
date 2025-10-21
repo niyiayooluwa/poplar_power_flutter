@@ -206,10 +206,14 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
       ),
       ifRight: (response) async {
         if (response.paymentLink != null) {
+          final reference = paymentProvider == PaymentProvider.paystack
+              ? response.providerReference
+              : response.transactionRef;
+
           state = state.copyWith(
             step: TransactionFlowStep.processingWebPayment,
             webPaymentUrl: response.paymentLink,
-            transactionRef: response.transactionRef,
+            transactionRef: reference,
           );
         } else {
           final ref = response.transactionRef;

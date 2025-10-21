@@ -5,6 +5,7 @@ class PurchaseResponse {
   final String transactionRef;
   final String? clientSecret;
   final String? paymentLink;
+  final String providerReference;
   final String message;
 
   PurchaseResponse({
@@ -12,6 +13,7 @@ class PurchaseResponse {
     required this.transactionRef,
     this.clientSecret,
     this.paymentLink,
+    required this.providerReference,
     required this.message,
   });
 }
@@ -24,6 +26,7 @@ extension PurchaseResponseDtoX on PurchaseResponseDto {
       clientSecret: clientSecret,
       paymentLink: paymentLink,
       message: message,
+      providerReference: providerReference
     );
   }
 }

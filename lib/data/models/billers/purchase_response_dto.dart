@@ -6,6 +6,7 @@ class PurchaseResponseDto {
   final String? clientSecret;
   final String? paymentLink;
   final String message;
+  final String providerReference;
 
   PurchaseResponseDto({
     required this.paymentProvider,
@@ -15,6 +16,7 @@ class PurchaseResponseDto {
     this.clientSecret,
     this.paymentLink,
     required this.message,
+    required this.providerReference
   });
 
   factory PurchaseResponseDto.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class PurchaseResponseDto {
       clientSecret: json['clientSecret'] as String?,
       paymentLink: json['paymentLink'] as String?,
       message: json['message'] as String,
+      providerReference: json['paystackReference'] as String,
     );
   }
 }

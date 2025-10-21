@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewScreen extends HookConsumerWidget {
   final String webPaymentUrl;
+
   const WebViewScreen({super.key, required this.webPaymentUrl});
 
   @override
@@ -22,16 +23,16 @@ class WebViewScreen extends HookConsumerWidget {
         ..setUserAgent('Flutter;Webview')
         ..addJavaScriptChannel(
           'PaystackChannel',
-        onMessageReceived: (message) {
-          debugPrint('Message from PaystackChannel: ${message.message}');
-          if (message.message == 'success') {
-            transactionFlowNotifier.completeWebPayment();
-          } else if (message.message == 'closed') {
-            transactionFlowNotifier.cancelTransaction();
-          }
-          // context.pop(); // Removed: Orchestrator will handle popping the webview
-        },
-      )
+          onMessageReceived: (message) {
+            debugPrint('Message from PaystackChannel: ${message.message}');
+            if (message.message == 'success') {
+              transactionFlowNotifier.completeWebPayment();
+            } else if (message.message == 'closed') {
+              transactionFlowNotifier.cancelTransaction();
+            }
+            // context.pop(); // Removed: Orchestrator will handle popping the webview
+          },
+        )
         ..setNavigationDelegate(
           NavigationDelegate(
             onProgress: (int progress) {
@@ -70,7 +71,8 @@ class WebViewScreen extends HookConsumerWidget {
               }
 
               // Case 2: Paystack redirects to a callback URL
-              if (uri.queryParameters.containsKey('trxref') || uri.queryParameters.containsKey('reference')) {
+              if (uri.queryParameters.containsKey('trxref') ||
+                  uri.queryParameters.containsKey('reference')) {
                 debugPrint('Paystack callback detected: ${request.url}');
                 transactionFlowNotifier.completeWebPayment();
                 return NavigationDecision.prevent;
@@ -98,7 +100,7 @@ class WebViewScreen extends HookConsumerWidget {
         children: [
           WebViewWidget(controller: controller),
           if (transactionState.step == TransactionFlowStep.verifying)
-            // Show a loading overlay while verifying
+          // Show a loading overlay while verifying
             Container(
               color: Colors.black.withValues(alpha: 0.5),
               child: const Center(

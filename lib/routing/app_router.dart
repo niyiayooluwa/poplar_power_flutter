@@ -28,6 +28,7 @@ import '../ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
 import '../ui/user_onboarding/onboarding/widget/get_started.dart';
 import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
+import '../ui/webview/widget/payment_callback_screen.dart';
 
 final appRouter = GoRouter(
   navigatorKey: navigatorKey,
@@ -197,6 +198,15 @@ final appRouter = GoRouter(
         }
 
         return WebViewScreen(webPaymentUrl: url);
+      },
+    ),
+
+    GoRoute(
+      path: '/payment-callback',
+      builder: (context, state) {
+        final trxref = state.uri.queryParameters['trxref'];
+        final reference = state.uri.queryParameters['reference'];
+        return PaymentCallbackScreen(trxref: trxref, reference: reference);
       },
     ),
   ],
