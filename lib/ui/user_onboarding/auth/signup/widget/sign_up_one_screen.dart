@@ -79,7 +79,7 @@ class SignupStep1Screen extends HookConsumerWidget {
                           alignment: Alignment.centerLeft,
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_ios, size: 24),
-                            onPressed: () => context.pop(),
+                            onPressed: () => context.go('/get-started'),
                           ),
                         ),
 
