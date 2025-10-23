@@ -156,6 +156,18 @@ class AuthRepositoryImpl implements AuthRepository {
     return AuthFailure.serverError(message);
   }
 
+  @override
+  Future<AuthFailure?> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      await remoteDataSource.verifyOtpAndResetPassword(email, otp, newPassword);
+      return null; // Return null for success
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    } catch (e) {
+      return AuthFailure.unknown();
+    }
+  }
+
   AuthFailure _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -165,7 +177,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return AuthFailure.network();
       case DioExceptionType.badResponse:
         if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
-          return AuthFailure.invalidCredentials();
+          return AuthFailure.unknown();
         }
 
         final responseData = e.response?.data;

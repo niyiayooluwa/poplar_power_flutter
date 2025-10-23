@@ -7,6 +7,7 @@ import 'package:poplar_power/data/models/auth/login_request_dto.dart';
 import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
 import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
+import 'package:poplar_power/data/models/auth/password_reset_request_dto.dart'; // New import
 import 'package:poplar_power/data/models/user/user_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
 
@@ -41,6 +42,7 @@ abstract class AuthRemoteDataSource {
   /// Takes a [ResendOtpRequestDto] containing the user's email.
   /// Returns a [Future] that resolves to void upon successful resend.
   Future<void> resendOtp(ResendOtpRequestDto requestDto);
+  Future<void> verifyOtpAndResetPassword(String email, String otp, String newPassword);
 }
 
 /// Implementation of [AuthRemoteDataSource] that interacts with a remote API using Dio.
@@ -150,6 +152,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       await _dio.post(
         '/auth/resend-verification',
+        data: requestDto.toJson(),
+        options: Options(headers: _getAuthHeaders()),
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> verifyOtpAndResetPassword(String email, String otp, String newPassword) async {
+    try {
+      final requestDto = PasswordResetRequestDto(
+        username: email,
+        password: newPassword,
+        otp: otp,
+      );
+      await _dio.post(
+        '/auth/verify',
         data: requestDto.toJson(),
         options: Options(headers: _getAuthHeaders()),
       );

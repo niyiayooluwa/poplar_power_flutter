@@ -26,4 +26,5 @@ abstract class AuthRepository {
   );
 
   Future<Either<AuthFailure, void>> resendOtp(String email);
+  Future<AuthFailure?> resetPassword(String email, String otp, String newPassword);
 }

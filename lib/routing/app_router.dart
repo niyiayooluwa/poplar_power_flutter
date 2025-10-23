@@ -13,6 +13,7 @@ import 'package:poplar_power/ui/profile/widget/profile_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/password_recovery/widget/password_recovery_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_four_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_three_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
@@ -125,6 +126,11 @@ final appRouter = GoRouter(
         final password = args?['password'];
         return OtpScreen(email: email!, password: password!);
       },
+    ),
+
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const PasswordRecoveryScreen()
     ),
 
     GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),

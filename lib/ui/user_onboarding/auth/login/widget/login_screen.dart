@@ -109,7 +109,7 @@ class LoginScreen extends HookConsumerWidget {
                         alignment: Alignment.centerRight,
                         child: InkWell(
                           onTap: () {
-                            // TODO: Implement forgot password
+                            context.push('/forgot-password');
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
