@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:poplar_power/data/models/wallet/get_balance_request_dto.dart';
+
 import 'package:poplar_power/data/models/wallet/get_balance_response_dto.dart';
 import 'package:poplar_power/data/models/transaction/transaction_status_dto.dart';
 import 'package:poplar_power/data/network/dio_client.dart';
@@ -7,15 +7,35 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:poplar_power/domain/models/verification_response.dart';
 
+import 'package:poplar_power/data/network/interceptors/logging_interceptor.dart';
+import 'package:poplar_power/data/storage/token_storage.dart';
+
 abstract class TransactionRemoteDataSource {
   Future<TransactionStatusDto> getTransactionStatus(String nettpayRef);
   Future<List<TransactionStatusDto>> getTransactionHistory(String email);
-  Future<GetBalanceResponseDto> getBalance(GetBalanceRequestDto request);
+  Future<GetBalanceResponseDto> getBalance();
   Future<VerificationResponse> verifyTransaction(String reference);
 }
 
 class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   final Dio _dio = DioClient().dio;
+  late final Dio _dioForBalance;
+
+  TransactionRemoteDataSourceImpl() {
+    _dioForBalance = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
+    _dioForBalance.interceptors.add(LoggingInterceptor());
+    _dioForBalance.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await TokenStorage.getPoplarToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   @override
   Future<TransactionStatusDto> getTransactionStatus(String nettpayRef) async {
@@ -42,11 +62,10 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   }
 
   @override
-  Future<GetBalanceResponseDto> getBalance(GetBalanceRequestDto request) async {
+  Future<GetBalanceResponseDto> getBalance() async {
     try {
-      final response = await _dio.post(
+      final response = await _dioForBalance.get(
         '/transaction/getBalance',
-        data: request.toJson(),
       );
       return GetBalanceResponseDto.fromJson(response.data);
     } on DioException {
@@ -65,6 +84,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   }
 }
 
-final transactionRemoteDataSourceProvider = Provider<TransactionRemoteDataSource>((ref) {
+final transactionRemoteDataSourceProvider =
+    Provider<TransactionRemoteDataSource>((ref) {
   return TransactionRemoteDataSourceImpl();
 });

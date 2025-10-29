@@ -248,7 +248,7 @@ class SignupStep1Screen extends HookConsumerWidget {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    context.go('/login');
+                                    context.push('/login');
                                   },
                               ),
                             ],

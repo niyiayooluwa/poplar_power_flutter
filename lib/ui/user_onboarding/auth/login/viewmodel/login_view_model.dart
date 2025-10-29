@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/core/application/user_provider.dart';
 import 'package:poplar_power/domain/use_cases/auth/login_use_case.dart';
-import 'package:poplar_power/domain/use_cases/auth/resend_otp_use_case.dart';
+
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {

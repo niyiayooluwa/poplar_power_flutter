@@ -9,8 +9,8 @@ class GetWalletBalanceUseCase {
 
   GetWalletBalanceUseCase(this._repository);
 
-  Future<Either<Failure, double>> execute(String accountNo, String pin) async {
-    return await _repository.getBalance(accountNo, pin);
+  Future<Either<Failure, double>> execute() async {
+    return await _repository.getBalance();
   }
 }
 

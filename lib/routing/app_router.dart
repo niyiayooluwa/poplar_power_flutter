@@ -121,10 +121,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/otp',
       builder: (context, state) {
-        final args = state.extra as Map<String, String>?;
-        final email = args?['email'];
-        final password = args?['password'];
-        return OtpScreen(email: email!, password: password!);
+        final args = state.extra as Map<String, String>? ?? {};
+        final email = args['email'];
+        final password = args['password'];
+        return OtpScreen(email: email ?? '', password: password ?? '');
       },
     ),
 

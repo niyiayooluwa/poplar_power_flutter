@@ -28,6 +28,9 @@ class AuthRepositoryImpl implements AuthRepository {
           authResponseDto.token != null &&
           authResponseDto.user != null) {
         await TokenStorage.saveToken(authResponseDto.token!);
+        if (authResponseDto.poplarToken != null) {
+          await TokenStorage.savePoplarToken(authResponseDto.poplarToken!);
+        }
         final user = authResponseDto.user!.toEntity();
         await _userProfileStorage.saveUser(user);
         return Right(user);
@@ -72,6 +75,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     await TokenStorage.deleteToken();
+    await TokenStorage.deletePoplarToken();
     await _userProfileStorage.deleteUser();
   }
 

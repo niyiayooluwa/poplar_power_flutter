@@ -239,9 +239,9 @@ class SignupStep4Screen extends HookConsumerWidget {
 
                             // All validations passed - proceed with signup
                             vm.signup(
-                              onSuccess: () => context.go('/home'),
+                              onSuccess: () => context.push('/home'),
                               onOtpRequired: (email) {
-                                context.go('/otp', extra: {'email': email});
+                                context.push('/otp', extra: {'email': email});
                               },
                             );
                           },
@@ -286,7 +286,7 @@ class SignupStep4Screen extends HookConsumerWidget {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    context.go('/login');
+                                    context.push('/login');
                                   },
                               ),
                             ],

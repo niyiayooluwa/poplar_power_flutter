@@ -12,6 +12,7 @@ class TokenStorage {
   // The key under which the authentication token will be stored.
   // Using a constant for the key helps prevent typos and ensures consistency.
   static const _tokenKey = 'auth_token';
+  static const _poplarTokenKey = 'poplar_token';
 
 
   //============================================================================
@@ -37,5 +38,21 @@ class TokenStorage {
   static Future<void> deleteToken() async {
     // Deletes the token from secure storage using the predefined key.
     await _storage.delete(key: _tokenKey);
+  }
+
+  //============================================================================
+  // POPLAR TOKEN METHODS
+  //============================================================================
+
+  static Future<void> savePoplarToken(String token) async {
+    await _storage.write(key: _poplarTokenKey, value: token);
+  }
+
+  static Future<String?> getPoplarToken() async {
+    return await _storage.read(key: _poplarTokenKey);
+  }
+
+  static Future<void> deletePoplarToken() async {
+    await _storage.delete(key: _poplarTokenKey);
   }
 }
