@@ -191,7 +191,7 @@ class TransactionFlowViewModel extends StateNotifier<TransactionFlowState> {
       billerOrProductId: payload.billerOrProductId,
       notificationPreference: payload.notificationPreference,
       provider: paymentProvider,
-      walletPin: pin,
+      walletPin: pin ?? '',
       email: user?.email,
       phoneNumber: user?.phone,
     );

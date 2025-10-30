@@ -33,12 +33,11 @@ class DioClient {
   // These options are applied to all requests made by this Dio instance.
   static final BaseOptions _baseOptions = BaseOptions(
     baseUrl: ApiConstants.BASE_URL,
-    connectTimeout: const Duration(seconds: 80),
+    connectTimeout: const Duration(seconds: 40),
     receiveTimeout: const Duration(seconds: 40),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-
     },
     followRedirects: true,
     maxRedirects: 5,

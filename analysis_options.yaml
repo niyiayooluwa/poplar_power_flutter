@@ -12,6 +12,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   errors:
     use_build_context_synchronously: ignore
+    dangling_library_doc_comments: ignore
   plugins:
     - custom_lint
 

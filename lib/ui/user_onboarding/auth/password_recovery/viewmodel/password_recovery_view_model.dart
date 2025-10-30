@@ -1,6 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/domain/use_cases/auth/resend_otp_use_case.dart';
 import 'package:poplar_power/domain/use_cases/auth/password_recovery_use_case.dart';
+import 'package:poplar_power/domain/use_cases/auth/resend_user_otp_use_case.dart';
 
 /// Enum to represent the different steps of the password recovery flow.
 enum PasswordRecoveryStep {
@@ -15,12 +15,14 @@ class PasswordRecoveryState {
   final AsyncValue<void> status;
   final String? errorMessage;
   final String? email;
+  final bool passwordResetSuccess;
 
   PasswordRecoveryState({
     this.step = PasswordRecoveryStep.enterEmail,
     this.status = const AsyncData(null),
     this.errorMessage,
     this.email,
+    this.passwordResetSuccess = false,
   });
 
   PasswordRecoveryState copyWith({
@@ -28,22 +30,24 @@ class PasswordRecoveryState {
     AsyncValue<void>? status,
     String? errorMessage,
     String? email,
+    bool? passwordResetSuccess,
   }) {
     return PasswordRecoveryState(
       step: step ?? this.step,
       status: status ?? this.status,
       errorMessage: errorMessage,
       email: email ?? this.email,
+      passwordResetSuccess: passwordResetSuccess ?? this.passwordResetSuccess,
     );
   }
 }
 
 class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
-  final ResendOtpUseCase _resendOtpUseCase;
+  final ResendUserOtpUseCase _resendUserOtpUseCase;
   final PasswordRecoveryUseCase _passwordRecoveryUseCase;
 
   PasswordRecoveryViewModel(
-    this._resendOtpUseCase,
+    this._resendUserOtpUseCase,
     this._passwordRecoveryUseCase,
   ) : super(PasswordRecoveryState());
 
@@ -59,7 +63,7 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
   /// Requests an OTP to be sent to the provided email.
   Future<void> sendOtp(String email) async {
     state = state.copyWith(status: const AsyncLoading(), email: email);
-    final result = await _resendOtpUseCase.execute(email);
+    final result = await _resendUserOtpUseCase.execute(email);
     result.fold(
       ifLeft: (failure) => state = state.copyWith(
         status: AsyncError(failure.message, StackTrace.current),
@@ -101,18 +105,16 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
     } else {
       state = state.copyWith(
         status: const AsyncData(null),
-        step: PasswordRecoveryStep.enterNewPassword, // This step is actually the final success state
         errorMessage: null,
+        passwordResetSuccess: true,
       );
     }  }
 
-  /// Moves to the next step in the flow.
-  void nextStep() {
-    if (state.step == PasswordRecoveryStep.enterEmail) {
-      state = state.copyWith(step: PasswordRecoveryStep.enterOtp);
-    } else if (state.step == PasswordRecoveryStep.enterOtp) {
-      state = state.copyWith(step: PasswordRecoveryStep.enterNewPassword);
-    }
+  /// Verifies the OTP.
+  void verifyOtp(String otp) {
+    // For now, just move to the next step.
+    // In a real implementation, you would verify the OTP here.
+    state = state.copyWith(step: PasswordRecoveryStep.enterNewPassword);
   }
 
   /// Resets the state to the initial email entry step.
@@ -128,7 +130,7 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
 
 final passwordRecoveryViewModelProvider = StateNotifierProvider.autoDispose<
     PasswordRecoveryViewModel, PasswordRecoveryState>((ref) {
-  final resendOtpUseCase = ref.watch(resendOtpUseCaseProvider);
+  final resendUserOtpUseCase = ref.watch(resendUserOtpUseCaseProvider);
   final passwordRecoveryUseCase = ref.watch(passwordRecoveryUseCaseProvider);
-  return PasswordRecoveryViewModel(resendOtpUseCase, passwordRecoveryUseCase);
+  return PasswordRecoveryViewModel(resendUserOtpUseCase, passwordRecoveryUseCase);
 });

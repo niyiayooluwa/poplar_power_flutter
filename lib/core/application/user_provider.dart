@@ -9,24 +9,13 @@ class UserState {
   final AsyncValue<User?> user;
   final AsyncValue<double> balance;
 
-  UserState({
-    required this.user,
-    required this.balance,
-  });
+  UserState({required this.user, required this.balance});
 
-  factory UserState.initial() => UserState(
-    user: const AsyncLoading(),
-    balance: const AsyncLoading(),
-  );
+  factory UserState.initial() =>
+      UserState(user: const AsyncLoading(), balance: const AsyncLoading());
 
-  UserState copyWith({
-    AsyncValue<User?>? user,
-    AsyncValue<double>? balance,
-  }) {
-    return UserState(
-      user: user ?? this.user,
-      balance: balance ?? this.balance,
-    );
+  UserState copyWith({AsyncValue<User?>? user, AsyncValue<double>? balance}) {
+    return UserState(user: user ?? this.user, balance: balance ?? this.balance);
   }
 }
 
@@ -35,8 +24,11 @@ class UserNotifier extends StateNotifier<UserState> {
   final UserProfileStorage _profileStorage;
   final GetWalletBalanceUseCase _getWalletBalanceUseCase;
 
-  UserNotifier(this._authRepository, this._profileStorage, this._getWalletBalanceUseCase)
-      : super(UserState.initial());
+  UserNotifier(
+    this._authRepository,
+    this._profileStorage,
+    this._getWalletBalanceUseCase,
+  ) : super(UserState.initial());
 
   Future<void> checkInitialStatus() async {
     // First, try to load from local storage
@@ -52,7 +44,8 @@ class UserNotifier extends StateNotifier<UserState> {
     if (hasToken) {
       final result = await _authRepository.getAuthenticatedUser();
       result.fold(
-        ifLeft: (failure) => state = state.copyWith(user: const AsyncData(null)),
+        ifLeft: (failure) =>
+            state = state.copyWith(user: const AsyncData(null)),
         ifRight: (user) async {
           _profileStorage.saveUser(user); // Save to local storage
           state = state.copyWith(user: AsyncData(user));
@@ -71,18 +64,13 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   Future<void> _fetchBalance(User user) async {
-    if (user.walletAccountNo == null || user.pinCreated == false) {
-      state = state.copyWith(balance: const AsyncData(0.0)); // No wallet or PIN not set
-      return;
-    }
-
     state = state.copyWith(balance: const AsyncLoading());
-    // TODO: The PIN is currently hardcoded or assumed. This needs to be securely handled.
-    // For now, using a dummy PIN or assuming it's not needed for initial fetch.
-    final result = await _getWalletBalanceUseCase.execute(user.walletAccountNo!, "0000"); // Dummy PIN
+    final result = await _getWalletBalanceUseCase.execute();
 
     result.fold(
-      ifLeft: (failure) => state = state.copyWith(balance: AsyncError(failure, StackTrace.current)),
+      ifLeft: (failure) => state = state.copyWith(
+        balance: AsyncError(failure, StackTrace.current),
+      ),
       ifRight: (balance) => state = state.copyWith(balance: AsyncData(balance)),
     );
   }
@@ -90,7 +78,10 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> logout() async {
     await _authRepository.logout();
     await _profileStorage.deleteUser(); // Delete from local storage
-    state = state.copyWith(user: const AsyncData(null), balance: const AsyncData(0.0));
+    state = state.copyWith(
+      user: const AsyncData(null),
+      balance: const AsyncData(0.0),
+    );
   }
 }
 
@@ -100,5 +91,6 @@ final userProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final profileStorage = ref.watch(userProfileStorageProvider);
   final getWalletBalanceUseCase = ref.watch(getWalletBalanceUseCaseProvider);
-  return UserNotifier(authRepository, profileStorage, getWalletBalanceUseCase)..checkInitialStatus();
+  return UserNotifier(authRepository, profileStorage, getWalletBalanceUseCase)
+    ..checkInitialStatus();
 });

@@ -60,7 +60,7 @@ class ProfileScreen extends HookConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     // Navigate to the PasswordRecoveryScreen, passing the user's email
-                    context.push('/password-recovery', extra: {'email': profileState.user!.email});
+                    context.push('/forgot-password', extra: {'email': profileState.user!.email});
                   },
                   child: const Text('Change Password'),
                 ),

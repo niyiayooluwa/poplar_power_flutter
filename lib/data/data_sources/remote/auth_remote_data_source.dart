@@ -42,7 +42,12 @@ abstract class AuthRemoteDataSource {
   /// Takes a [ResendOtpRequestDto] containing the user's email.
   /// Returns a [Future] that resolves to void upon successful resend.
   Future<void> resendOtp(ResendOtpRequestDto requestDto);
-  Future<void> verifyOtpAndResetPassword(String email, String otp, String newPassword);
+  Future<void> resendUserOtp(String email);
+  Future<void> verifyOtpAndResetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  );
 }
 
 /// Implementation of [AuthRemoteDataSource] that interacts with a remote API using Dio.
@@ -161,7 +166,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> verifyOtpAndResetPassword(String email, String otp, String newPassword) async {
+  Future<void> resendUserOtp(String email) async {
+    try {
+      await _dio.post(
+        '/auth/resend-verification/{email}',
+        data: {'username': email},
+        options: Options(headers: _getAuthHeaders()),
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> verifyOtpAndResetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
     try {
       final requestDto = PasswordResetRequestDto(
         username: email,

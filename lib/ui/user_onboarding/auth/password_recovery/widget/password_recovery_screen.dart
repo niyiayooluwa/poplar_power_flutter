@@ -55,8 +55,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
         vm.setError(null);
       }
       // If password reset is successful, navigate to login
-      if (next.status is AsyncData &&
-          next.step == PasswordRecoveryStep.enterNewPassword) {
+      if (next.passwordResetSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Password reset successful! Please log in.'),
@@ -183,7 +182,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
                       return;
                     }
                     // Move to next step (new password input)
-                    vm.nextStep();
+                    vm.verifyOtp(otp);
                   },
             style: FilledButton.styleFrom(
               fixedSize: const Size(double.infinity, 48),

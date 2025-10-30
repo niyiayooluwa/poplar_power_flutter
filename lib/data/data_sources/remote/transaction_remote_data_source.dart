@@ -23,7 +23,6 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
 
   TransactionRemoteDataSourceImpl() {
     _dioForBalance = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
-    _dioForBalance.interceptors.add(LoggingInterceptor());
     _dioForBalance.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -35,6 +34,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         },
       ),
     );
+    _dioForBalance.interceptors.add(LoggingInterceptor());
   }
 
   @override
@@ -76,7 +76,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   @override
   Future<VerificationResponse> verifyTransaction(String reference) async {
     try {
-      final response = await _dio.post('/buyProducts/verify/$reference');
+      final response = await _dio.get('/buyProducts/verify/$reference');
       return VerificationResponse.fromJson(response.data);
     } on DioException {
       rethrow;

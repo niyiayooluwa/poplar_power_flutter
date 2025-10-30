@@ -141,6 +141,18 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Either<AuthFailure, void>> resendUserOtp(String email) async {
+    try {
+      await remoteDataSource.resendUserOtp(email);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleDioException(e));
+    } catch (e) {
+      return Left(AuthFailure.unknown());
+    }
+  }
+
   AuthFailure _getAuthFailureType(String message) {
     // Check for locked account
     if (message.contains('Account is locked') ||

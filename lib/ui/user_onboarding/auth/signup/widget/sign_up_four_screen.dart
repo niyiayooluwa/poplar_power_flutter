@@ -240,8 +240,8 @@ class SignupStep4Screen extends HookConsumerWidget {
                             // All validations passed - proceed with signup
                             vm.signup(
                               onSuccess: () => context.push('/home'),
-                              onOtpRequired: (email) {
-                                context.push('/otp', extra: {'email': email});
+                              onOtpRequired: (email, password) {
+                                context.push('/otp', extra: {'email': email, 'password': password});
                               },
                             );
                           },

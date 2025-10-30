@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
 import 'package:poplar_power/domain/models/payment_config.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
 import 'package:poplar_power/domain/models/transaction_config.dart';
 import 'package:poplar_power/domain/models/transaction_field.dart';
 import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
@@ -41,6 +43,13 @@ class ConfirmTransactionSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(transactionFlowProvider);
     final notifier = ref.read(transactionFlowProvider.notifier);
+
+    final userState = ref.watch(userProvider);
+    final balance = userState.balance.asData?.value ?? 0.0;
+    final transactionAmount = double.tryParse(amount?.replaceAll('₦', '') ?? '0.0') ?? 0.0;
+
+    final isPayingWithWallet = state.selectedPaymentMethod?.provider == PaymentProvider.nettpay;
+    final hasSufficientBalance = !isPayingWithWallet || (balance >= transactionAmount);
 
     void showPaymentMethodSelector(BuildContext context) {
       showModalBottomSheet(
@@ -136,7 +145,7 @@ class ConfirmTransactionSheet extends ConsumerWidget {
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).padding.bottom + 24.0,
             ),
-            child: _buildActionButtons(context),
+            child: _buildActionButtons(context, hasSufficientBalance),
           ),
           if (processingTime != null) _buildProcessingTime(context),
         ],
@@ -377,15 +386,23 @@ class ConfirmTransactionSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, bool hasSufficientBalance) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
+          if (!hasSufficientBalance)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                'Insufficient balance',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: isLoading ? null : onConfirm,
+              onPressed: isLoading || !hasSufficientBalance ? null : onConfirm,
               icon: isLoading
                   ? const SizedBox(
                       width: 20,

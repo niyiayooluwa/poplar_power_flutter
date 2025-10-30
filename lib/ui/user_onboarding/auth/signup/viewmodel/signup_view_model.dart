@@ -76,8 +76,8 @@ class SignupViewModel extends StateNotifier<SignupState> {
   }
 
   Future<void> signup({
-    required VoidCallback onSuccess,
-    required Function(String email) onOtpRequired,
+    required Function() onSuccess,
+    required Function(String email, String password) onOtpRequired,
   }) async {
     // Update the specific submission status part of the state
     state = state.copyWith(submissionStatus: const AsyncLoading());
@@ -97,7 +97,7 @@ class SignupViewModel extends StateNotifier<SignupState> {
       ),
       ifRight: (user) {
         if (!user.verified) {
-          onOtpRequired(user.email);
+          onOtpRequired(user.email, state.password);
         } else {
           onSuccess();
         }

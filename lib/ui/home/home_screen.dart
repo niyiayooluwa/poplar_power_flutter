@@ -45,8 +45,8 @@ class HomeScreen extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const BalanceCard(),
-              const SizedBox(height: 16),
-              const PrimaryActions(),
+              /*const SizedBox(height: 16),
+              const PrimaryActions(),*/
               const SizedBox(height: 12),
 
               Expanded(

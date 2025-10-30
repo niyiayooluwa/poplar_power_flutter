@@ -5,5 +5,5 @@ abstract class Failure {
 }
 
 class TransactionFailure extends Failure {
-  TransactionFailure(String message) : super(message);
+  TransactionFailure(super.message);
 }
