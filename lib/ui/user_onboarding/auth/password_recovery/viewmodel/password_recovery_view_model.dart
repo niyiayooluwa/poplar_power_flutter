@@ -16,12 +16,14 @@ class PasswordRecoveryState {
   final String? errorMessage;
   final String? email;
   final bool passwordResetSuccess;
+  final int currentStep;
 
   PasswordRecoveryState({
     this.step = PasswordRecoveryStep.enterEmail,
     this.status = const AsyncData(null),
     this.errorMessage,
     this.email,
+    this.currentStep = 1,
     this.passwordResetSuccess = false,
   });
 
@@ -31,15 +33,19 @@ class PasswordRecoveryState {
     String? errorMessage,
     String? email,
     bool? passwordResetSuccess,
+    int? currentStep,
   }) {
     return PasswordRecoveryState(
       step: step ?? this.step,
       status: status ?? this.status,
       errorMessage: errorMessage,
       email: email ?? this.email,
+      currentStep: currentStep ?? this.currentStep,
       passwordResetSuccess: passwordResetSuccess ?? this.passwordResetSuccess,
     );
   }
+
+  double get progress => currentStep / 3.0;
 }
 
 class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
@@ -50,6 +56,19 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
     this._resendUserOtpUseCase,
     this._passwordRecoveryUseCase,
   ) : super(PasswordRecoveryState());
+
+  void goToNextStep() {
+    if (state.currentStep < 3) {
+      // Update state immutably
+      state = state.copyWith(currentStep: state.currentStep + 1);
+    }
+  }
+
+  void goToPreviousStep() {
+    if (state.currentStep > 1) {
+      state = state.copyWith(currentStep: state.currentStep - 1);
+    }
+  }
 
   /// Sets the initial email if provided (for 'Change Password' flow).
   void initializeEmail(String? email) {
@@ -81,7 +100,8 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
   Future<void> resetPassword({
     required String otp,
     required String newPassword,
-  }) async {
+  })
+  async {
     if (state.email == null) {
       state = state.copyWith(
         status: AsyncError('Email not found.', StackTrace.current),
@@ -112,8 +132,6 @@ class PasswordRecoveryViewModel extends StateNotifier<PasswordRecoveryState> {
 
   /// Verifies the OTP.
   void verifyOtp(String otp) {
-    // For now, just move to the next step.
-    // In a real implementation, you would verify the OTP here.
     state = state.copyWith(step: PasswordRecoveryStep.enterNewPassword);
   }
 

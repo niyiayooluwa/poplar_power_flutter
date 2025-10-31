@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/password_recovery/viewmodel/password_recovery_view_model.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/progressBar.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
 import 'package:poplar_power/utils/validators.dart';
 
 class PasswordRecoveryScreen extends HookConsumerWidget {
@@ -35,6 +38,9 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
     final otpError = useState<String?>(null);
     final newPasswordError = useState<String?>(null);
     final confirmPasswordError = useState<String?>(null);
+
+    final passwordVisible = useState(false);
+    final confirmPasswordVisible = useState(false);
 
     useEffect(() {
       // Initialize email and step if initialEmail is provided (for Change Password' flow)
@@ -72,7 +78,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
           SizedBox(height: 24),
 
           Text(
-            "Reset your Password",
+            "Recover your Account",
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -81,7 +87,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
           const SizedBox(height: 8),
 
           Text(
-            "Type in the email associated with your account",
+            "Enter the email linked to your account. We’ll send you a code to reset your password.",
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.textTheme.titleMedium?.color?.withValues(alpha: 0.7),
             ),
@@ -117,6 +123,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
                       emailError.value = 'Email is not valid';
                       return;
                     }
+                    vm.goToNextStep();
                     vm.sendOtp(email);
                   },
             style: FilledButton.styleFrom(
@@ -128,7 +135,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
             child: state.status is AsyncLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : Text(
-                    "Next",
+                    "Send code",
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -146,42 +153,70 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
           SizedBox(height: 24),
 
           Text(
-            "Enter OTP",
+            "Verify your identity",
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            "An OTP has been sent to ${state.email ?? 'your email'}. Please enter it below.",
+            "Enter the 6-digit code we sent to your email.",
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.textTheme.titleMedium?.color?.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 32),
-          TextField(
+
+          PinCodeTextField(
+            appContext: context,
+            length: 6,
+            obscureText: true,
+            obscuringCharacter: '●',
+            animationType: AnimationType.fade,
             controller: otpController,
-            onChanged: (value) => otpError.value = null,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'OTP',
-              errorText: otpError.value,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            textStyle: theme.textTheme.headlineMedium,
+            pinTheme: PinTheme(
+              shape: PinCodeFieldShape.box,
+              borderRadius: BorderRadius.circular(8),
+              fieldHeight: 60,
+              fieldWidth: 52,
+              activeFillColor: Colors.white,
+              inactiveFillColor: isDarkTheme
+                  ? Colors.grey[800]!
+                  : Colors.grey[200]!,
+              selectedFillColor: Colors.blue.shade50,
+              activeColor: Colors.blue,
+              inactiveColor: Colors.grey,
+              selectedColor: Colors.blue,
             ),
+            animationDuration: const Duration(milliseconds: 300),
+            enableActiveFill: true,
+            onChanged: (value) {
+              otpError.value = null;
+            },
+            errorTextSpace: 30,
           ),
+
           const SizedBox(height: 24),
+
           FilledButton(
             onPressed: state.status is AsyncLoading
                 ? null
                 : () {
-                    final otp = otpController.text;
+                    final otp = otpController.text.trim();
+
                     if (otp.isEmpty) {
-                      otpError.value = 'OTP is required';
+                      otpError.value = 'PIN is required';
+                      return;
+                    }
+
+                    if (otp.length != 6) {
+                      otpError.value = 'OTP must be 6 digits';
                       return;
                     }
                     // Move to next step (new password input)
+                    vm.goToNextStep();
                     vm.verifyOtp(otp);
                   },
             style: FilledButton.styleFrom(
@@ -193,7 +228,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
             child: state.status is AsyncLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : Text(
-                    "Verify OTP",
+                    "Verify",
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -232,38 +267,68 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Enter your new password below.",
+            "Choose a strong password you haven’t used before.",
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.textTheme.titleMedium?.color?.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 32),
+
           TextField(
             controller: newPasswordController,
             onChanged: (value) => newPasswordError.value = null,
-            obscureText: true,
+            obscureText: !passwordVisible.value,
             decoration: InputDecoration(
               labelText: 'New Password',
               errorText: newPasswordError.value,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  passwordVisible.value
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                ),
+                onPressed: () => passwordVisible.value = !passwordVisible.value,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+
+          const SizedBox(height: 12),
+
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: PasswordStrengthIndicator(
+              password: useValueListenable(newPasswordController).text,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           TextField(
             controller: confirmPasswordController,
             onChanged: (value) => confirmPasswordError.value = null,
-            obscureText: true,
+            obscureText: !confirmPasswordVisible.value,
             decoration: InputDecoration(
               labelText: 'Confirm New Password',
               errorText: confirmPasswordError.value,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  confirmPasswordVisible.value
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                ),
+                onPressed: () => confirmPasswordVisible.value =
+                    !confirmPasswordVisible.value,
+              ),
             ),
           ),
           const SizedBox(height: 24),
+
           FilledButton(
             onPressed: state.status is AsyncLoading
                 ? null
@@ -282,6 +347,12 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
                     }
                     if (newPassword != confirmPassword) {
                       confirmPasswordError.value = 'Passwords do not match';
+                      return;
+                    }
+
+                    final validation = validatePassword(newPassword);
+                    if (validation != null) {
+                      newPasswordError.value = validation;
                       return;
                     }
                     // Add more password validation if needed
@@ -312,6 +383,7 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      backgroundColor: theme.colorScheme.surface,
       body: Stack(
         children: [
           Positioned.fill(
@@ -325,6 +397,8 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
 
           Column(
             children: [
+              ProgressBar(progress: state.progress),
+
               Flexible(
                 fit: FlexFit.loose,
                 child: SafeArea(
@@ -334,14 +408,15 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(height: 48),
+                        SizedBox(height: 16),
 
                         Align(
                           alignment: Alignment.centerLeft,
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_ios, size: 24),
                             onPressed: () {
-                              if (state.step == PasswordRecoveryStep.enterEmail) {
+                              if (state.step ==
+                                  PasswordRecoveryStep.enterEmail) {
                                 context.pop();
                               } else {
                                 vm.resetFlow(); // Go back to initial state
@@ -357,7 +432,8 @@ class PasswordRecoveryScreen extends HookConsumerWidget {
                               child: switch (state.step) {
                                 PasswordRecoveryStep.enterEmail =>
                                   buildEmailInput(),
-                                PasswordRecoveryStep.enterOtp => buildOtpInput(),
+                                PasswordRecoveryStep.enterOtp =>
+                                  buildOtpInput(),
                                 PasswordRecoveryStep.enterNewPassword =>
                                   buildNewPasswordInput(),
                               },
