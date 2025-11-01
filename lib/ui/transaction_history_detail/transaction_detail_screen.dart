@@ -178,15 +178,21 @@ class TransactionDetailScreen extends HookConsumerWidget {
   }
 
   Widget _buildPaymentStatus(Transaction transaction) {
-    final method = switch (transaction.status) {
-      TransactionStatus.success => switch (transaction.isCredit) {
-        true => 'Received to Wallet',
-        false => 'Paid via Wallet',
-      },
-      TransactionStatus.failed => 'Payment Failed',
-      TransactionStatus.reversed => 'Payment Reversed',
-      TransactionStatus.pending => 'Payment Pending',
-    };
+    String method;
+    if (transaction.status == TransactionStatus.success) {
+      if (transaction.isCredit) {
+        method = 'Paid via ${transaction.paymentMethod}';
+      } else {
+        // If it's a debit and successful, use the payment method
+        method = 'Paid via ${transaction.paymentMethod}';
+      }
+    } else if (transaction.status == TransactionStatus.failed) {
+      method = 'Payment Failed';
+    } else if (transaction.status == TransactionStatus.reversed) {
+      method = 'Payment Reversed';
+    } else { // TransactionStatus.pending
+      method = 'Payment Pending';
+    }
     return Column(
       children: [
         Text(
