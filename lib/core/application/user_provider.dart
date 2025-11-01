@@ -31,6 +31,11 @@ class UserNotifier extends StateNotifier<UserState> {
   ) : super(UserState.initial());
 
   Future<void> checkInitialStatus() async {
+    // If user data is already available, no need to re-initialize
+    if (state.user is AsyncData && state.user.value != null) {
+      return;
+    }
+
     // First, try to load from local storage
     final localUser = await _profileStorage.loadUser();
     if (localUser != null) {

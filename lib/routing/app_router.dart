@@ -14,6 +14,9 @@ import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/password_recovery/widget/password_recovery_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_confirm_pin_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_new_pin_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_otp_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_four_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_three_screen.dart';
 import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
@@ -68,6 +71,7 @@ final appRouter = GoRouter(
       '/transaction-history',
       '/transaction-detail',
       '/webview',
+      '/reset-pin'
     ];
 
     final isProtected = protectedRoutes.contains(state.matchedLocation);
@@ -126,6 +130,25 @@ final appRouter = GoRouter(
         final password = args['password'];
         return OtpScreen(email: email ?? '', password: password ?? '');
       },
+    ),
+
+    GoRoute(
+      path: '/reset-pin',
+      builder: (context, state) {
+        final args = state.extra as Map<String, String?>? ?? {};
+        final accountNo = args['account'];
+        return PinRecoveryScreen(initialAccountNo: accountNo ?? '');
+      },
+    ),
+
+    GoRoute(
+      path: '/pin-recovery-new-pin',
+      builder: (context, state) => const PinRecoveryNewPinScreen(),
+    ),
+
+    GoRoute(
+      path: '/pin-recovery-confirm-pin',
+      builder: (context, state) => const PinRecoveryConfirmPinScreen(),
     ),
 
     GoRoute(

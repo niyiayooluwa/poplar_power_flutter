@@ -22,9 +22,9 @@ class UserDto {
   final bool active;
   final bool verified;
   final bool? lock;
-  final int? systemRef;
+  final String? systemRef;
   final int? serviceRef;
-  final int? walletAccountNo;
+  final String? walletAccountNo;
   final String? currency;
   final bool? pinCreated;
   final String? customerStatus;
@@ -82,9 +82,9 @@ class UserDto {
       active: json['active'] as bool,
       verified: json['verified'] as bool,
       lock: json['lock'] as bool?,
-      systemRef: json['systemRef'] as int?,
+      systemRef: json['systemRef'] as String?,
       serviceRef: json['serviceRef'] as int?,
-      walletAccountNo: json['walletAccountNo'] as int?,
+      walletAccountNo: json['walletAccountNo'] as String?,
       currency: json['currency'] as String?,
       pinCreated: json['pinCreated'] as bool?,
       customerStatus: json['customerStatus'] as String?,
@@ -101,9 +101,9 @@ class UserDto {
       customRef: customRef,
       verified: verified,
       active: active,
-      systemRef: systemRef?.toString(),
+      systemRef: systemRef,
       serviceRef: serviceRef?.toString(),
-      walletAccountNo: walletAccountNo?.toString(), // Convert int? to String?
+      walletAccountNo: walletAccountNo,
       currency: currency,
       pinCreated: pinCreated,
       customerStatus: customerStatus,
@@ -133,7 +133,7 @@ class UserDto {
       'active': active,
       'verified': verified,
       'lock': lock,
-      'systemRef': systemRef?.toString(), // Convert int? to String?
+      'systemRef': systemRef,
       'serviceRef': serviceRef?.toString(), // Convert int? to String?
       'walletAccountNo': walletAccountNo,
       'currency': currency,
@@ -154,9 +154,9 @@ class UserDto {
       verified: user.verified,
       active: user.active,
       customRef: user.customRef,
-      systemRef: int.tryParse(user.systemRef ?? ''),
+      systemRef: user.systemRef,
       serviceRef: int.tryParse(user.serviceRef ?? ''),
-      walletAccountNo: int.tryParse(user.walletAccountNo ?? ''),
+      walletAccountNo: user.walletAccountNo,
       currency: user.currency,
       pinCreated: user.pinCreated,
       customerStatus: user.customerStatus,

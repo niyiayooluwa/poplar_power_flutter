@@ -42,18 +42,15 @@ class AuthResponseDto {
     }
 
     if (accountData != null) {
-      // Safely parse numeric values that might come as strings
       final bankAccount = accountData['bankAccount'];
       final sysAccount = accountData['sysAccount'];
 
-      mergedUserJson.addAll({
-        'walletAccountNo': bankAccount is String
-            ? int.tryParse(bankAccount)
-            : bankAccount as int?,
-        'systemRef': sysAccount is String
-            ? int.tryParse(sysAccount)
-            : sysAccount as int?,
-      });
+      mergedUserJson['walletAccountNo'] = bankAccount is String
+          ? bankAccount
+          : bankAccount?.toString();
+      mergedUserJson['systemRef'] = sysAccount is String
+          ? sysAccount
+          : sysAccount?.toString();
     }
 
     return AuthResponseDto(

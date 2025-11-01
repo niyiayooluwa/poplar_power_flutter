@@ -88,8 +88,27 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<AuthFailure, User>> getAuthenticatedUser() async {
     try {
+      final localUser = await _userProfileStorage.loadUser();
+
+      // Fetch user from API (auth/me endpoint)
       final userDto = await remoteDataSource.getAuthenticatedUser();
-      return Right(userDto.toEntity());
+      User fetchedUser = userDto.toEntity();
+
+      // If a local user exists, merge the fetched data with local data
+      // prioritizing walletAccountNo from localUser if it exists.
+      // This is crucial because the /auth/me endpoint does not return wallet information.
+      if (localUser != null) {
+        fetchedUser = fetchedUser.copyWith(
+          walletAccountNo: localUser.walletAccountNo ?? fetchedUser.walletAccountNo,
+          // Add other fields from localUser that might be missing in fetchedUser if necessary
+          // For example, if auth/me doesn't return customRef, but localUser has it:
+          // customRef: localUser.customRef ?? fetchedUser.customRef,
+        );
+      }
+
+      // Save the (potentially merged) user to local storage
+      await _userProfileStorage.saveUser(fetchedUser);
+      return Right(fetchedUser);
     } on DioException catch (e) {
       return Left(_handleDioException(e));
     } catch (e) {

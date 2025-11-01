@@ -1,6 +1,4 @@
 // Refactored ViewModel
-import 'dart:ui';
-
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/domain/use_cases/auth/register_use_case.dart';
 import 'package:poplar_power/ui/user_onboarding/auth/signup/viewmodel/signup_state.dart';
