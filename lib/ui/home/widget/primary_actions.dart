@@ -1,4 +1,19 @@
-// File: lib/widgets/balance_card.dart
+/// A widget that displays the primary action buttons on the home screen.
+/// 
+/// This widget arranges two pill-shaped action buttons ("Send" and "Top Up")
+/// horizontally with equal width, separated by a small gap. Each button navigates
+/// to a different route when tapped.
+/// 
+/// Uses [LayoutBuilder] to calculate button width responsively based on the
+/// available space. The widget is designed to be used with Riverpod for state
+/// management.
+/// 
+/// The "Scan" button is currently commented out, but can be enabled if needed.
+/// 
+/// - "Send": Navigates to the '/send' route.
+/// - "Top Up": Navigates to the '/topup' route.
+/// 
+/// Requires [PillActionItem] widget for rendering individual action buttons.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -8,9 +23,6 @@ class PrimaryActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
-    final iconColor = isDarkTheme ? Colors.white : Colors.black;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -29,7 +41,6 @@ class PrimaryActions extends HookConsumerWidget {
                 ),
               ),
 
-              //TODO(): Future implementation maybe?
               /*SizedBox(
                 width: buttonWidth,
                 child: PillActionItem(
@@ -54,6 +65,14 @@ class PrimaryActions extends HookConsumerWidget {
   }
 }
 
+/// A widget that displays a pill-shaped action item with an icon and label.
+/// 
+/// [PillActionItem] is a stateless widget that shows an icon and a text label
+/// inside a rounded container. It responds to tap events via the [onTap] callback.
+/// 
+/// - [icon]: The icon to display.
+/// - [label]: The text label to display next to the icon.
+/// - [onTap]: The callback function to execute when the item is tapped.
 class PillActionItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -69,7 +88,9 @@ class PillActionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        onTap();
+      },
       borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

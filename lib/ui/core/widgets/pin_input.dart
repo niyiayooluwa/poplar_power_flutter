@@ -214,7 +214,7 @@ class PinEntrySheet extends HookWidget {
 
                   Text(
                     title ?? 'Enter PIN',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[900],
                     ),
@@ -390,7 +390,7 @@ class PinEntryService {
     bool Function(String pin)? validator,
     int maxAttempts = 3,
   }) async {
-    String? enteredPin;
+    //String? enteredPin;
     bool showError = false;
     int attempts = 0;
 

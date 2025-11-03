@@ -57,7 +57,12 @@ class SendScreen extends HookConsumerWidget {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: BackButton(
+          onPressed: () {
+            viewModel.reset();
+            context.pop();
+          },
+        ),
         title: const Text('Send Money'),
       ),
       body: SafeArea(

@@ -1,0 +1,33 @@
+import 'package:dart_either/dart_either.dart';
+import 'package:poplar_power/domain/entities/user.dart';
+import 'package:poplar_power/domain/failures/auth_failure.dart';
+
+abstract class AuthRepository {
+  Future<Either<AuthFailure, User>> login(String email, String password);
+
+  Future<Either<AuthFailure, User>> register(
+    String email,
+    String password,
+    String phone,
+    String fullName,
+    String? customRef,
+    int pin,
+  );
+
+  Future<void> logout();
+
+  Future<bool> hasToken(); // Check if user is logged in
+  Future<Either<AuthFailure, User>>
+  getAuthenticatedUser(); // Get profile of logged-in user
+  Future<Either<AuthFailure, User>> verifyOtp(
+    String email,
+    String password,
+    String otp,
+  );
+
+  Future<Either<AuthFailure, void>> resendOtp(String email);
+
+  Future<Either<AuthFailure, void>> resendUserOtp(String email);
+
+  Future<AuthFailure?> resetPassword(String email, String otp, String newPassword);
+}

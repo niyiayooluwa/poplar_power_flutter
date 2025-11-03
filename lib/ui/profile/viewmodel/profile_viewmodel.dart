@@ -1,71 +1,85 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:poplar_power/domain/models/profile.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:poplar_power/domain/use_cases/profile/get_profile_use_case.dart';
+import 'package:poplar_power/domain/use_cases/profile/logout_use_case.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/data/services/settings_service.dart';
 
 class ProfileViewModel extends StateNotifier<ProfileState> {
-  ProfileViewModel() : super(ProfileState.initial()) {
-    _loadProfile();
+  final LogOutUseCase _logOutUseCase;
+  final SettingsService _settingsService;
+
+  ProfileViewModel(
+    this._logOutUseCase,
+    this._settingsService,
+  ) : super(ProfileState.initial()) {
     _loadBiometricsSetting();
   }
 
-  Future<void> _loadProfile() async {
-    // Simulate loading profile data
-    await Future.delayed(const Duration(seconds: 1));
-    state = state.copyWith(
-      profile: Profile(
-        fullName: 'John Doe',
-        email: 'john.doe@example.com',
-        phoneNumber: '+1 123-456-7890',
-      ),
-      isLoading: false,
-    );
-  }
-
   Future<void> _loadBiometricsSetting() async {
-    final prefs = await SharedPreferences.getInstance();
-    final enableBiometrics = prefs.getBool('enableBiometrics') ?? false;
+    final enableBiometrics = await _settingsService.getBiometricsSetting();
     state = state.copyWith(enableBiometrics: enableBiometrics);
   }
 
   Future<void> setBiometrics(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('enableBiometrics', value);
+    await _settingsService.setBiometricsSetting(value);
     state = state.copyWith(enableBiometrics: value);
   }
 
   void changePassword() {
     // Simulate change password logic
-    print('Change password button pressed');
+  }
+
+  Future<void> logout() async {
+    await _logOutUseCase.execute();
+    state = state.copyWith(isLoggedOut: true);
+  }
+
+  void resetLogoutStatus() {
+    state = state.copyWith(isLoggedOut: false);
   }
 }
 
 class ProfileState {
-  final Profile? profile;
   final bool isLoading;
   final bool enableBiometrics;
+  final bool isLoggedOut;
 
   ProfileState({
-    this.profile,
     this.isLoading = true,
     this.enableBiometrics = false,
+    this.isLoggedOut = false,
   });
 
   factory ProfileState.initial() => ProfileState();
 
   ProfileState copyWith({
-    Profile? profile,
     bool? isLoading,
     bool? enableBiometrics,
+    bool? isLoggedOut,
   }) {
     return ProfileState(
-      profile: profile ?? this.profile,
       isLoading: isLoading ?? this.isLoading,
       enableBiometrics: enableBiometrics ?? this.enableBiometrics,
+      isLoggedOut: isLoggedOut ?? this.isLoggedOut,
     );
   }
 }
 
+final getProfileUseCaseProvider = Provider<GetProfileUseCase>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return GetProfileUseCase(authRepository);
+});
+
+final logOutUseCaseProvider = Provider<LogOutUseCase>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return LogOutUseCase(authRepository);
+});
+
 final profileViewModelProvider =
     StateNotifierProvider<ProfileViewModel, ProfileState>(
-  (ref) => ProfileViewModel(),
-);
+      (ref) {
+        final logOutUseCase = ref.watch(logOutUseCaseProvider);
+        final settingsService = ref.watch(settingsServiceProvider);
+        return ProfileViewModel(logOutUseCase, settingsService);
+      },
+    );

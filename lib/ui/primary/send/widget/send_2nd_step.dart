@@ -3,12 +3,12 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:poplar_power/data/model/transaction_class.dart';
-import 'package:poplar_power/ui/core/widgets/pin_input.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+import 'package:poplar_power/domain/models/transaction_field.dart';
+import 'package:poplar_power/ui/core/models/transaction_payload.dart';
+import 'package:poplar_power/ui/core/viewmodels/transaction_flow_viewmodel.dart';
 import 'package:poplar_power/ui/primary/send/viewmodel/send_provider.dart';
-
-import '../../../../data/mock/mock_service/app_providers.dart';
-import '../../../../data/services/confirm_transaction_service.dart';
 
 class Send2ndStepScreen extends HookConsumerWidget {
   const Send2ndStepScreen({super.key});
@@ -17,16 +17,15 @@ class Send2ndStepScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.read(sendViewModelProvider.notifier);
     final state = ref.watch(sendViewModelProvider);
+    final transactionFlow = ref.read(transactionFlowProvider.notifier);
+    final transactionState = ref.watch(transactionFlowProvider);
 
     final amountString = state.amount;
     final recipientName =
         state.accountName ?? 'Recipient'; // Use actual fetched name
     final recipientBank = state.selectedBank?.name ?? 'Bank';
     final recipientAccountNumber = state.accountNUmber ?? 'Account';
-    final currentBalance = ref
-        .read(userProvider)
-        .balance; // Mock current balance
-    final isProcessing = useState(false);
+    final currentBalance = ref.watch(userProvider).balance.value;
 
     String formatCurrency(double value) {
       final formatter = NumberFormat.currency(
@@ -35,70 +34,6 @@ class Send2ndStepScreen extends HookConsumerWidget {
         decimalDigits: 0,
       );
       return formatter.format(value);
-    }
-
-    void showTransferConfirmation(BuildContext context) {
-      TransactionSheetService.showConfirmation(
-        context,
-        title: 'Transfer Money',
-        amount: '₦$amountString',
-        description: 'Transfer to $recipientName',
-        transactionConfig: TransactionSheetService.transferConfig,
-        paymentMethod: TransactionSheetService.walletConfig,
-        fields: TransactionSheetService.createTransferFields(
-          recipientName: recipientName,
-          accountNumber: recipientAccountNumber,
-          bankName: recipientBank,
-          fee: '0',
-          total: amountString,
-        ),
-        onConfirm: () async {
-          try {
-            context.pop(); // Dismiss the bottom sheet
-            await Future.delayed(const Duration(milliseconds: 500));
-
-            // Show the bottom sheet and wait for the result (PIN)
-            final pin = await PinEntryService.showPinEntryWithRetry(
-              context,
-              title: 'Authentication Required',
-              validator: (pin) => pin == '1234', // Your validation logic
-              maxAttempts: 3,
-            );
-
-            // If user completed PIN entry
-            if (pin != null) {
-              isProcessing.value = true;
-
-              await Future.delayed(
-                const Duration(seconds: 1),
-              ); // Simulate API call
-
-              isProcessing.value = false;
-
-              if (context.mounted) {
-                ref.invalidate(sendViewModelProvider);
-                context.replace(
-                  '/transaction-detail',
-                  extra: Transaction(
-                    title: 'Transfer to $recipientName',
-                    amount: -int.tryParse(state.amount)!.toDouble(),
-                    date: DateTime.timestamp(),
-                    status: TransactionStatus.success,
-                    icon: Icons.send,
-                  ),
-                );
-              }
-            }
-          } catch (error) {
-            isProcessing.value = false;
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Purchase failed: $error')),
-              );
-            }
-          }
-        },
-      );
     }
 
     return Scaffold(
@@ -120,7 +55,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.3),
+                      color: Colors.grey.withAlpha(75),
                       spreadRadius: 1,
                       blurRadius: 3,
                       offset: const Offset(0, 2),
@@ -193,7 +128,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Current Balance ${formatCurrency(currentBalance)}',
+                        'Current Balance ${formatCurrency((currentBalance ?? 0).toDouble())}',
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black54,
@@ -205,7 +140,6 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        // Added runSpacing for vertical spacing between rows
                         children: state.quickAmounts.map((quickAmount) {
                           return OutlinedButton(
                             onPressed: () =>
@@ -219,7 +153,7 @@ class Send2ndStepScreen extends HookConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
-                              ), // Added consistent padding
+                              ),
                             ),
                             child: Text(
                               '₦${NumberFormat('#,###').format(quickAmount)}',
@@ -294,7 +228,40 @@ class Send2ndStepScreen extends HookConsumerWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: amountString.length >= 3
-                      ? () => showTransferConfirmation(context)
+                      ? () {
+                          // TODO(dev): This is a temporary fix. The 'Send' feature needs its own
+                          // transaction flow or a more generic payload.
+                          final dummyPayload = TransactionPayload(
+                            customerIdentifier: recipientAccountNumber,
+                            amount: int.tryParse(amountString) ?? 0,
+                            categoryGroup: 'TRANSFER',
+                            categoryOrBiller: recipientBank,
+                            billerOrProductId: '',
+                            notificationPreference:
+                                NotificationPreference.none,
+                          );
+
+                          transactionFlow.startTransaction(
+                            payload: dummyPayload,
+                            title: 'Transfer Money',
+                            amount: '₦$amountString',
+                            fields: [
+                              TransactionField(
+                                  label: 'To', value: recipientName),
+                              TransactionField(
+                                  label: 'Account',
+                                  value: recipientAccountNumber),
+                              TransactionField(
+                                  label: 'Bank', value: recipientBank),
+                              TransactionField(
+                                  label: 'Fee', value: '₦0.00'),
+                              TransactionField(
+                                  label: 'Total',
+                                  value: '₦$amountString',
+                                  isHighlighted: true),
+                            ],
+                          );
+                        }
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -303,7 +270,8 @@ class Send2ndStepScreen extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: isProcessing.value
+                  child: transactionState.step ==
+                          TransactionFlowStep.processing
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -315,30 +283,34 @@ class Send2ndStepScreen extends HookConsumerWidget {
                           ),
                         )
                       : amountString.length >= 3
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.send, color: Colors.white),
-                            const SizedBox(width: 16),
-                            Text(
-                              'Transfer',
-                              style: Theme.of(context).textTheme.bodyLarge
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.send, color: Colors.white),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'Transfer',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              'Please enter a valid amount',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
                                   ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
-                          ],
-                        )
-                      : Text(
-                          'Please enter a valid amount',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
                 ),
               ),
             ],

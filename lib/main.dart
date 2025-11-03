@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/routing/app_router.dart';
 import 'package:poplar_power/ui/core/ui/theme/app_theme.dart';
+import 'package:poplar_power/ui/core/widgets/transaction_flow_orchestrator.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ void main() {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
+  
   runApp(const ProviderScope(child: PoplarPowerApp()));
 }
 
@@ -35,6 +37,11 @@ class PoplarPowerApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return TransactionFlowOrchestrator(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

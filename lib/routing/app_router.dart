@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/data/model/transaction_class.dart';
+import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
+import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/data/services/settings_service.dart';
+import 'package:poplar_power/routing/navigator_key.dart';
+import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
 import 'package:poplar_power/ui/primary/send/widget/send_2nd_step.dart';
 import 'package:poplar_power/ui/primary/topup/widget/topup_screen.dart';
 import 'package:poplar_power/ui/profile/widget/profile_screen.dart';
-import 'package:poplar_power/ui/quick_actions/airtime/widgets/airtime_screen.dart';
 import 'package:poplar_power/ui/quick_actions/cable/widget/cable_screen.dart';
 import 'package:poplar_power/ui/quick_actions/electricity/widget/buy_electricity_screen.dart';
 import 'package:poplar_power/ui/quick_actions/more_actions.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/password_recovery/widget/password_recovery_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_confirm_pin_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_new_pin_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/pin_recovery/widget/pin_recovery_otp_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_four_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/widget/sign_up_three_screen.dart';
+import 'package:poplar_power/ui/user_onboarding/otp/widget/otp_screen.dart';
+import 'package:poplar_power/ui/webview/widget/webview_screen.dart';
 
 import '../ui/primary/send/widget/send_screen.dart';
 import '../ui/quick_actions/internet/widget/internet_screen.dart';
@@ -21,19 +32,63 @@ import '../ui/user_onboarding/auth/signup/widget/sign_up_two_screen.dart';
 import '../ui/user_onboarding/onboarding/widget/get_started.dart';
 import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
+import '../ui/webview/widget/payment_callback_screen.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
+final appRouter = GoRouter(
+  navigatorKey: navigatorKey,
+  initialLocation: '/splash',
+  redirect: (BuildContext context, GoRouterState state) async {
+    final authRepository = AuthRepositoryImpl(
+      remoteDataSource: AuthRemoteDataSourceImpl(),
+    );
+    final hasToken = await authRepository.hasToken();
+    final settingsService = SettingsService();
+    final hasCompletedOnboarding = await settingsService
+        .hasCompletedOnboarding();
 
-final GoRouter appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
+    // Define routes that a returning user should be redirected AWAY from.
+    final preAuthRoutes = ['/onboarding', '/get-started'];
+    final isOnPreAuthRoute = preAuthRoutes.contains(state.matchedLocation);
+
+    // If the user has a token and is on a pre-auth page, send them to login.
+    if (hasToken && isOnPreAuthRoute) {
+      return '/login';
+    }
+
+    // --- The rest of the original logic for logged-out users ---
+    final protectedRoutes = [
+      '/home',
+      '/send',
+      '/send2',
+      '/topup',
+      '/notifications',
+      '/profile',
+      '/internet',
+      '/airtime',
+      '/billers',
+      '/cable',
+      '/more-actions',
+      '/transaction-history',
+      '/transaction-detail',
+      '/webview',
+      '/reset-pin'
+    ];
+
+    final isProtected = protectedRoutes.contains(state.matchedLocation);
+
+    if (!hasCompletedOnboarding && state.matchedLocation != '/onboarding') {
+      return '/onboarding';
+    }
+
+    if (hasCompletedOnboarding && !hasToken && isProtected) {
+      return '/get-started';
+    }
+
+    return null;
+  },
   routes: [
     /// Public routes - no navbar
-    GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen()
-    ),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
 
     GoRoute(
       path: '/onboarding',
@@ -45,10 +100,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const GetStartedScreen(),
     ),
 
-    GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen()
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
     GoRoute(
       path: '/signup',
@@ -61,50 +113,59 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen()
+        path: '/signup-three',
+        builder: (context, state) => const SignupStep3Screen()
+    ),
+    
+    GoRoute(
+        path: '/signup-four',
+        builder: (context, state) => const SignupStep4Screen()
     ),
 
-    /*/// Shell route - wraps screens with bottom nav
-    ShellRoute(
-      navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) => BottomNavShell(child: child),
-      routes: [
-        GoRoute(
-          path: '/home',
-          name: 'home',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HomeScreen()),
-        ),
-        GoRoute(
-          path: '/pay',
-          name: 'pay',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: PayScreen()),
-        ),
-        GoRoute(
-          path: '/more',
-          name: 'more',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: MoreScreen()),
-        ),
-      ],
-    ),*/
     GoRoute(
-        path: '/send',
-        builder: (context, state) => const SendScreen()
+      path: '/otp',
+      builder: (context, state) {
+        final args = state.extra as Map<String, String>? ?? {};
+        final email = args['email'];
+        final password = args['password'];
+        return OtpScreen(email: email ?? '', password: password ?? '');
+      },
     ),
+
+    GoRoute(
+      path: '/reset-pin',
+      builder: (context, state) {
+        final args = state.extra as Map<String, String?>? ?? {};
+        final accountNo = args['account'];
+        return PinRecoveryScreen(initialAccountNo: accountNo ?? '');
+      },
+    ),
+
+    GoRoute(
+      path: '/pin-recovery-new-pin',
+      builder: (context, state) => const PinRecoveryNewPinScreen(),
+    ),
+
+    GoRoute(
+      path: '/pin-recovery-confirm-pin',
+      builder: (context, state) => const PinRecoveryConfirmPinScreen(),
+    ),
+
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const PasswordRecoveryScreen()
+    ),
+
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+
+    GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
 
     GoRoute(
       path: '/send2',
       builder: (context, state) => const Send2ndStepScreen(),
     ),
 
-    //GoRoute(path: '/scan', builder: (context, state) => const SendScreen()),
-    GoRoute(
-        path: '/topup',
-        builder: (context, state) => const TopUpScreen()
-    ),
+    GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
 
     GoRoute(
       path: '/notifications',
@@ -123,13 +184,12 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const InternetScreen(),
     ),
 
-    GoRoute(
+    /* GoRoute(
       path: '/airtime',
       builder: (context, state) => const AirtimeScreen(),
-    ),
-
+    ),*/
     GoRoute(
-      path: '/electricity',
+      path: '/billers',
       builder: (context, state) => const ElectricityScreen(),
     ),
 
@@ -151,6 +211,31 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final transaction = state.extra as Transaction;
         return TransactionDetailScreen(transaction: transaction);
+      },
+    ),
+
+    GoRoute(
+      path: '/webview',
+      builder: (context, state) {
+        final args = state.extra as Map<String, String?>?; // Allow null values
+        final url = args?['url'];
+
+        // Add null check and provide fallback
+        if (url == null) {
+          // Handle the case where url is null - maybe navigate back or show error
+          return const Scaffold(body: Center(child: Text('Invalid URL')));
+        }
+
+        return WebViewScreen(webPaymentUrl: url);
+      },
+    ),
+
+    GoRoute(
+      path: '/payment-callback',
+      builder: (context, state) {
+        final trxref = state.uri.queryParameters['trxref'];
+        final reference = state.uri.queryParameters['reference'];
+        return PaymentCallbackScreen(trxref: trxref, reference: reference);
       },
     ),
   ],

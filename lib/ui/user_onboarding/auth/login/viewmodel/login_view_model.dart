@@ -1,28 +1,50 @@
-// lib/ui/auth/view_model/auth_view_model.dart
+import 'dart:ui';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../../data/mock/mock_service/mock_auth_service.dart';
+import 'package:poplar_power/core/application/user_provider.dart';
+import 'package:poplar_power/domain/use_cases/auth/login_use_case.dart';
+
 
 /// ViewModel managing login logic and state.
 class LoginViewModel extends StateNotifier<AsyncValue<void>> {
-  final MockAuthService _authService;
+  final LoginUseCase _loginUseCase;
+  final Ref _ref;
 
-  LoginViewModel(this._authService) : super(const AsyncData(null));
+  LoginViewModel(this._loginUseCase, this._ref)
+    : super(const AsyncData(null));
 
-  /// Attempts login using the mock auth service.
-  Future<void> login(String email, String password) async {
+  Future<void> login(
+    String email,
+    String password, {
+    required VoidCallback onSuccess,
+    required Function(String email, String password) onOtpRequired,
+  }) async {
     state = const AsyncLoading();
 
-    try {
-      await _authService.login(email, password);
-      state = const AsyncData(null);
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+    final result = await _loginUseCase.execute(email, password);
+
+    result.fold(
+      ifLeft: (failure) {
+        if (failure.message.contains("Account is not verified")) {
+          onOtpRequired(email, password); // Pass password here
+        } else {
+          state = AsyncError(failure.message, StackTrace.current);
+        }
+      },
+      ifRight: (user) {
+        if (!user.verified) {
+          onOtpRequired(user.email, password); // Pass password here
+        } else {
+          _ref.read(userProvider.notifier).onLoginSuccess(user);
+          onSuccess();
+        }
+        state = const AsyncData(null);
+      },
+    );
   }
 }
 
-/// Provides [loginViewModel] with a mock service for now.
 final loginViewModelProvider =
-  StateNotifierProvider<LoginViewModel, AsyncValue<void>>(
-      (ref) => LoginViewModel(MockAuthService()),
-);
+    StateNotifierProvider<LoginViewModel, AsyncValue<void>>((ref) {
+      final loginUseCase = ref.watch(loginUseCaseProvider);
+      return LoginViewModel(loginUseCase, ref);
+    });

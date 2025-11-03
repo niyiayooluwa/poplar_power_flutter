@@ -1,86 +1,113 @@
-// lib/ui/auth/viewmodel/signup_view_model.dart
-
-import 'dart:ui';
+// Refactored ViewModel
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/domain/use_cases/auth/register_use_case.dart';
+import 'package:poplar_power/ui/user_onboarding/auth/signup/viewmodel/signup_state.dart';
+import 'package:poplar_power/utils/validators.dart';
 
-import '../../../../../data/mock/mock_service/mock_auth_service.dart';
+class SignupViewModel extends StateNotifier<SignupState> {
+  final RegisterUseCase _registerUseCase;
 
-/// Model class to hold signup data across steps.
-class SignupFormData {
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String password;
-  final String customRef;
+  // Initialize with the default state
+  SignupViewModel(this._registerUseCase) : super(const SignupState());
 
-  const SignupFormData({
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.password,
-    required this.customRef,
-  });
-}
-
-/// ViewModel for signup flow.
-///
-/// Manages user input between steps and handles submission to service.
-class SignupViewModel extends AsyncNotifier<void> {
-  String? _firstName;
-  String? _lastName;
-  String? _email;
-
-  final _service = MockSignupService();
-
-  @override
-  Future<void> build() async {
-    // no initialization needed
+  void goToNextStep() {
+    if (state.currentStep < 4) {
+      // Update state immutably
+      state = state.copyWith(currentStep: state.currentStep + 1);
+    }
   }
 
-  /// Save data from Step 1
-  void saveStep1({
+  void goToPreviousStep() {
+    if (state.currentStep > 1) {
+      state = state.copyWith(currentStep: state.currentStep - 1);
+    }
+  }
+
+  void resetFlow() {
+    state = const SignupState(); // Simply reset to the initial state
+  }
+
+  // Validation logic remains the same, but now it updates the state
+  Map<String, String>? validateAndSaveStep1({
     required String firstName,
     required String lastName,
     required String email,
-  }) {
-    _firstName = firstName;
-    _lastName = lastName;
-    _email = email;
-  }
-
-  /// Final signup submission
-  Future<void> signup({
-    required String password,
-    required String confirmPassword,
+    required String phoneNumber,
     required String customRef,
-    required VoidCallback onSuccess,
-  }) async {
-    if (password != confirmPassword) {
-      state = AsyncError("Passwords do not match", StackTrace.current);
-      return;
+  }) {
+    final errors = <String, String>{};
+    // ... (all your validation logic is still valid here) ...
+    final firstNameError = validateName(firstName);
+    if (firstNameError != null) errors['firstName'] = firstNameError;
+
+    final lastNameError = validateName(lastName);
+    if (lastNameError != null) errors['lastName'] = lastNameError;
+
+    final emailError = validateEmail(email);
+    if (emailError != null) errors['email'] = emailError;
+
+    final phoneNumberError = validatePhoneNumber(phoneNumber);
+    if (phoneNumberError != null) errors['phoneNumber'] = phoneNumberError;
+
+    if (errors.isNotEmpty) {
+      return errors;
     }
 
-    final user = SignupFormData(
-      firstName: _firstName ?? '',
-      lastName: _lastName ?? '',
-      email: _email ?? '',
-      password: password,
+    // If valid, update the state immutably
+    state = state.copyWith(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNumber: phoneNumber,
       customRef: customRef,
     );
 
-    state = const AsyncLoading();
+    return null; // Success
+  }
 
-    try {
-      await _service.registerUser(user);
-      state = const AsyncData(null);
-      onSuccess();
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+  void savePasswordAndContinue({required String password}) {
+    state = state.copyWith(password: password);
+  }
+
+  void savePinAndContinue({required int pin}) {
+    state = state.copyWith(pin: pin);
+  }
+
+  Future<void> signup({
+    required Function() onSuccess,
+    required Function(String email, String password) onOtpRequired,
+  }) async {
+    // Update the specific submission status part of the state
+    state = state.copyWith(submissionStatus: const AsyncLoading());
+
+    final result = await _registerUseCase.execute(
+      state.email,
+      state.password,
+      '234${state.phoneNumber}',
+      state.fullName,
+      state.customRef,
+      state.pin!
+    );
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        submissionStatus: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (user) {
+        if (!user.verified) {
+          onOtpRequired(user.email, state.password);
+        } else {
+          onSuccess();
+        }
+        state = state.copyWith(submissionStatus: const AsyncData(null));
+      },
+    );
   }
 }
 
 /// Riverpod provider for the [SignupViewModel]
-final signupViewModelProvider = AsyncNotifierProvider<SignupViewModel, void>(() {
-  return SignupViewModel();
+final signupViewModelProvider =
+StateNotifierProvider<SignupViewModel, SignupState>((ref) {
+  final registerUseCase = ref.watch(registerUseCaseProvider);
+  return SignupViewModel(registerUseCase);
 });

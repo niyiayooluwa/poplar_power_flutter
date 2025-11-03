@@ -1,86 +1,185 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../data/mock/mock_repository/mock_cable_repository.dart';
+import 'package:poplar_power/data/models/billers/customer_verification/customer_verification_request_dto.dart';
+import 'package:poplar_power/data/models/billers/payment_request_dto.dart';
+import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_billers_for_category_use_case.dart';
+import 'package:poplar_power/domain/use_cases/biller/get_products_for_biller_use_case.dart';
+import 'package:poplar_power/domain/use_cases/biller/verify_customer_use_case.dart';
+import 'package:poplar_power/domain/use_cases/cable/buy_cable_use_case.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
+import 'package:uuid/uuid.dart';
+
 import 'buy_cable_state.dart';
 
-/// This file defines the providers used for managing cable package purchases.
-///
-/// It includes providers for the cable package repository and the view model
-/// responsible for handling the business logic of buying cable packages.
-
-/// ViewModel for managing the state and logic of buying cable packages.
 class BuyCableViewModel extends StateNotifier<BuyCableState> {
-  final CablePackagesRepository _repository;
+  final GetBillersForCategoryUseCase _getProvidersUseCase;
+  final GetProductsForBillerUseCase _getProductsUseCase;
+  final VerifyCustomerUseCase _verifyCustomerUseCase;
+  final BuyCableUseCase _buyCableUseCase;
 
-  /// Creates a [BuyCableViewModel] with the given [_repository].
-  ///
-  /// Initializes the state to [BuyCableState.initial] and loads cable providers.
-  BuyCableViewModel(this._repository) : super(BuyCableState.initial()) {
-    _loadCableProviders();
-  }
+  BuyCableViewModel(
+    this._getProvidersUseCase,
+    this._getProductsUseCase,
+    this._verifyCustomerUseCase,
+    this._buyCableUseCase,
+  ) : super(BuyCableState.initial());
 
-  /// Loads cable providers from the repository and updates the state.
-  ///
-  /// This method is called when the ViewModel is initialized.
-  void _loadCableProviders() async {
-    final providers = await _repository.fetchCableProviders();
-    state = state.copyWith(cableProviders: providers);
-  }
+  //==============================================================================
+  // State Methods
+  //==============================================================================
 
-  /// Sets the account number in the state.
-  ///
-  /// [number] is the account number to set.
-  void setAccountNumber(String number) {
-    state = state.copyWith(accountNumber: number);
-  }
-
-  /// Selects a cable provider by name and updates the state.
-  ///
-  /// [name] is the name of the cable provider to select.
-  /// Resets the selected package when a new provider is selected.
-  void selectCableProvider(String name) {
-    final selected = state.cableProviders.firstWhere(
-      (provider) => provider.name == name,
-      // It's good practice to provide an orElse to handle cases where the provider is not found,
-      // though in this controlled environment, it might not be strictly necessary if the UI ensures
-      // only valid provider names are passed.
-      // orElse: () => null, // Or throw an error, or handle as appropriate.
+  void selectCableProviderByOption(SelectableOption option) {
+    final selected = state.cableProviders.valueOrNull?.where(
+      (p) => p.name == option.name,
     );
-    state = state.copyWith(selectedProvider: selected, selectedPackage: null);
+    if (selected != null && selected.isNotEmpty) {
+      selectCableProvider(selected.first);
+    }
   }
 
-  /// Selects a cable package by name from the currently selected provider and updates the state.
-  ///
-  /// [name] is the name of the cable package to select.
-  void selectCablePackage(String name) {
-    // Ensures that a provider is selected before trying to select a package.
-    final package = state.selectedProvider?.packages.firstWhere(
-      (p) => p.name == name,
-      // Similar to selectCableProvider, consider an orElse for robustness.
-      // orElse: () => null, // Or throw an error, or handle as appropriate.
+  void selectPackageByOption(SelectableOption option) {
+    final selected = state.products.valueOrNull?.where(
+      (p) => p.name == option.name,
     );
-    state = state.copyWith(selectedPackage: package);
+    if (selected != null && selected.isNotEmpty) {
+      selectPackage(selected.first);
+    }
   }
 
-  /// Resets the selected provider, package, and account number to their initial states.
-  void reset() {
+  void selectCableProvider(Biller provider) {
     state = state.copyWith(
-      selectedProvider: null,
-      selectedPackage: null,
-      accountNumber: '',
+      selectedProvider: provider,
+      selectedProduct: null,
+      products: const AsyncData([]),
     );
   }
 
-  /// Checks if the form is valid based on the current state.
-  ///
-  /// The form is considered valid if a provider and package are selected,
-  /// and the account number is not null and has a length between 11 and 16 characters (inclusive).
-  bool get isFormValid {
-    return state.selectedProvider != null &&
-        state.selectedPackage != null &&
-        state.accountNumber != null &&
-        state.accountNumber!.length >
-            10 && // Account number must be greater than 10 characters.
-        state.accountNumber!.length <=
-            16; // Account number must be less than or equal to 16 characters.
+  void selectPackage(BillerProduct product) {
+    state = state.copyWith(selectedProduct: product);
+  }
+
+  void setAccountNumber(String num) =>
+      state = state.copyWith(accountNumber: num);
+
+  void setAmount(String amount) => state = state.copyWith(amount: amount);
+
+  void reset() => state = BuyCableState.initial();
+
+  void setWalletPin(String pin) => state = state.copyWith(walletPin: pin);
+
+  void setEmail(String email) => state = state.copyWith(email: email);
+
+  void setPhoneNumber(String phone) =>
+      state = state.copyWith(phoneNumber: phone);
+
+  void setPreference(NotificationPreference pref) =>
+      state = state.copyWith(notificationPreference: pref);
+
+  void setProvider(PaymentProvider provider) =>
+      state = state.copyWith(provider: provider);
+
+  PaymentRequestDto buildPurchaseRequest() {
+    return PaymentRequestDto(
+      customerIdentifier: state.accountNumber,
+      amount: int.tryParse(state.amount) ?? 0,
+      walletPin: state.walletPin,
+      notificationPreference: state.notificationPreference!,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      provider: state.provider,
+      categoryGroup: "PAY_TV",
+      categoryOrBiller: state.selectedProvider!.alias,
+      billerOrProductId: state.selectedProduct!.name,
+    );
+  }
+
+  //==============================================================================
+  // Asynchronous Methods
+  //==============================================================================
+  Future<void> fetchProviders() async {
+    state = state.copyWith(cableProviders: const AsyncLoading());
+    final result = await _getProvidersUseCase.execute('PAY_TV');
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        cableProviders: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (providers) =>
+          state = state.copyWith(cableProviders: AsyncData(providers)),
+    );
+  }
+
+  Future<void> fetchProducts(String providerAlias) async {
+    if (state.selectedProvider == null) return;
+    state = state.copyWith(products: const AsyncLoading());
+    final result = await _getProductsUseCase.execute(providerAlias);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        products: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (products) =>
+          state = state.copyWith(products: AsyncData(products)),
+    );
+  }
+
+  Future verifyCustomer() async {
+    if (!state.canVerify) return;
+
+    state = state.copyWith(verificationState: const AsyncLoading());
+
+    final uuid = Uuid().v1();
+
+    final request = CustomerVerificationRequestDto(
+      biller: state.selectedProvider!.alias,
+      product: state.selectedProduct!.name.toUpperCase(),
+      account: state.accountNumber,
+      reference: uuid
+    );
+
+    final result = await _verifyCustomerUseCase.execute(request);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        verificationState: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (data) =>
+          state = state.copyWith(verificationState: AsyncData(data)),
+    );
+  }
+
+  Future<void> buyToken() async {
+    if (!state.isFormValid) return;
+
+    state = state.copyWith(purchaseState: const AsyncLoading());
+
+    final request = buildPurchaseRequest();
+    final result = await _buyCableUseCase.execute(request);
+
+    result.fold(
+      ifLeft: (failure) => state = state.copyWith(
+        purchaseState: AsyncError(failure.message, StackTrace.current),
+      ),
+      ifRight: (_) =>
+          state = state.copyWith(purchaseState: const AsyncData(null)),
+    );
   }
 }
+
+final buyCableViewModelProvider =
+    StateNotifierProvider.autoDispose<BuyCableViewModel, BuyCableState>((ref) {
+      final getProviders = ref.watch(getBillersForCategoryUseCaseProvider);
+      final getProducts = ref.watch(getProductsForBillerUseCaseProvider);
+      final verifyCustomer = ref.watch(verifyCustomerUseCaseProvider);
+      final buyCable = ref.watch(buyCableUseCaseProvider);
+
+      return BuyCableViewModel(
+        getProviders,
+        getProducts,
+        verifyCustomer,
+        buyCable,
+      );
+    });

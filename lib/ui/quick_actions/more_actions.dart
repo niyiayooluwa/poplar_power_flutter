@@ -15,17 +15,17 @@ class MoreActions extends StatelessWidget {
         'color': Colors.blue,
         'route': '/internet'
       },
-      {
+      /*{
         'icon': Icons.call,
         'label': 'Airtime',
         'color': Colors.green,
         'route': '/airtime'
-      },
+      },*/
       {
         'icon': Icons.power,
         'label': 'Electricity',
         'color': Colors.orange,
-        'route': '/electricity'
+        'route': '/billers'
       },
       {
         'icon': Icons.tv,

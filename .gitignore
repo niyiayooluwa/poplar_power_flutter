@@ -32,6 +32,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/lib/gemini/
+/lib/core/constants/api_constants.dart
 
 # Symbolication related
 app.*.symbols
@@ -43,4 +45,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-/lib/gemini/better_validation_form.dart

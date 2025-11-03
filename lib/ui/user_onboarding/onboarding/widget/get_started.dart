@@ -61,7 +61,7 @@ class GetStartedScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.tonal(
-                    onPressed: () { context.go('/signup');},
+                    onPressed: () { context.push('/signup');},
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
                       fixedSize: const Size(double.infinity, 48),
@@ -84,7 +84,7 @@ class GetStartedScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () { context.go('/login');},
+                    onPressed: () { context.push('/login');},
                     style: FilledButton.styleFrom(
                       fixedSize: const Size(double.infinity, 48),
                       shape: RoundedRectangleBorder(

@@ -1,56 +1,93 @@
-import '../../../../domain/models/data_bundle.dart';
-import '../../../../domain/models/internet_service_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:poplar_power/domain/models/biller.dart';
+import 'package:poplar_power/domain/models/biller_product.dart';
+import 'package:poplar_power/domain/models/customer_verification.dart';
+import 'package:poplar_power/domain/models/notification_preference.dart';
+import 'package:poplar_power/domain/models/payment_provider.dart';
+import 'package:poplar_power/ui/core/widgets/async_selectable_field.dart';
 
 /// Represents the state of the Buy Data screen.
 class BuyDataState {
-  /// A list of available Internet Service Providers (ISPs).
-  final List<InternetServiceProvider> isps;
+  final AsyncValue<List<Biller>> isps;
+  final AsyncValue<List<BillerProduct>> products;
 
-  /// The currently selected ISP.
-  final InternetServiceProvider? selectedISP;
+  final AsyncValue<List<SelectableOption>> mappedIsps;
+  final AsyncValue<List<SelectableOption>> mappedProducts;
 
-  /// The currently selected data bundle.
-  final DataBundle? selectedBundle;
+  final Biller? selectedIsp;
+  final BillerProduct? selectedProduct;
 
-  /// The recepient phone number
-  final String? phoneNumber;
+  final String phoneNumber;
+  final String price;
 
-  /// Creates an instance of [BuyDataState].
-  ///
-  /// [isps] is the list of available ISPs.
-  /// [selectedISP] is the currently selected ISP.
-  /// [selectedBundle] is the currently selected data bundle.
+  final String walletPin;
+  final String email;
+
+  final NotificationPreference notificationPreference;
+  final PaymentProvider provider;
+
+  final AsyncValue<void> purchaseState;
+  final AsyncValue<CustomerVerification?> verificationState;
+
   const BuyDataState({
-    required this.isps,
-    required this.selectedISP,
-    required this.selectedBundle,
-    required this.phoneNumber
+    this.isps = const AsyncData([]),
+    this.products = const AsyncData([]),
+    this.mappedIsps = const AsyncData([]),
+    this.mappedProducts = const AsyncData([]),
+    this.selectedIsp,
+    this.selectedProduct,
+    this.phoneNumber = '',
+    this.price = '',
+    this.walletPin = '',
+    this.email = '',
+    this.provider = PaymentProvider.paystack,
+    this.notificationPreference = NotificationPreference.both,
+    this.purchaseState = const AsyncData(null),
+    this.verificationState = const AsyncData(null),
   });
 
-  /// Creates an initial state for the Buy Data screen.
-  ///
-  /// The initial state has an empty list of ISPs, no selected ISP, and no selected data bundle.
-  factory BuyDataState.initial() {
-    return const BuyDataState(
-      isps: [],
-      selectedISP: null,
-      selectedBundle: null,
-      phoneNumber: null,
-    );
-  }
+  factory BuyDataState.initial() => const BuyDataState();
 
-  /// Creates a copy of the current state with the given fields replaced with the new values.
   BuyDataState copyWith({
-    List<InternetServiceProvider>? isps,
-    InternetServiceProvider? selectedISP,
-    DataBundle? selectedBundle,
+    AsyncValue<List<Biller>>? isps,
+    AsyncValue<List<BillerProduct>>? products,
+    AsyncValue<List<SelectableOption>>? mappedIsps,
+    AsyncValue<List<SelectableOption>>? mappedProducts,
+    Biller? selectedIsp,
+    BillerProduct? selectedProduct,
     String? phoneNumber,
+    String? price,
+    String? walletPin,
+    String? email,
+    NotificationPreference? notificationPreference,
+    PaymentProvider? provider,
+    AsyncValue<void>? purchaseState,
+    AsyncValue<CustomerVerification>? verificationState,
   }) {
     return BuyDataState(
       isps: isps ?? this.isps,
-      selectedISP: selectedISP ?? this.selectedISP,
-      selectedBundle: selectedBundle ?? this.selectedBundle,
+      products: products ?? this.products,
+      mappedIsps: mappedIsps ?? this.mappedIsps,
+      mappedProducts: mappedProducts ?? this.mappedProducts,
+      selectedIsp: selectedIsp ?? this.selectedIsp,
+      selectedProduct: selectedProduct ?? this.selectedProduct,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      price: price ?? this.price,
+      walletPin: walletPin ?? this.walletPin,
+      email: email ?? this.email,
+      notificationPreference:
+          notificationPreference ?? this.notificationPreference,
+      provider: provider ?? this.provider,
+      purchaseState: purchaseState ?? this.purchaseState,
+      verificationState: verificationState ?? this.verificationState,
     );
   }
+
+  bool get isFormValid =>
+      selectedIsp != null &&
+      selectedProduct != null &&
+      phoneNumber.isNotEmpty &&
+      phoneNumber.length == 11 &&
+      price != '' &&
+      price != '0';
 }
