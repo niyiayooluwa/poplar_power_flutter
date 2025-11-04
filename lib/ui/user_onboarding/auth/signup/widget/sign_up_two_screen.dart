@@ -182,7 +182,7 @@ class SignupStep2Screen extends HookConsumerWidget {
 
                         // Next button
                         FilledButton(
-                          onPressed: () {
+                          onPressed: state.validatePassword ? () {
                             final password = passwordController.text;
                             final confirm = confirmPasswordController.text;
 
@@ -207,7 +207,7 @@ class SignupStep2Screen extends HookConsumerWidget {
                             vm.savePasswordAndContinue(password: password);
                             vm.goToNextStep();
                             context.push('/signup-three');
-                          },
+                          } : null,
                           style: FilledButton.styleFrom(
                             fixedSize: const Size(double.infinity, 48),
                             shape: RoundedRectangleBorder(

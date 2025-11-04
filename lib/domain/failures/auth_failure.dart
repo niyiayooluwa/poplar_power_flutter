@@ -7,7 +7,7 @@ sealed class AuthFailure {
       const AuthFailure._('Password is too weak.');
 
   factory AuthFailure.emailInUse() =>
-      const AuthFailure._('Email is already in use.');
+      const AuthFailure._('Email is already in use. Try logging in instead.');
 
   factory AuthFailure.invalidEmail() =>
       const AuthFailure._('Invalid email address.');

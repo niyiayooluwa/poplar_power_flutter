@@ -162,7 +162,7 @@ class InternetScreen extends HookConsumerWidget {
 
                           transactionFlow.startTransaction(
                             payload: payload,
-                            title: 'Confirm Data Purchase',
+                            title: 'Confirm Purchase',
                             amount: '₦$transactionAmount',
                             fields: [
                               TransactionField(

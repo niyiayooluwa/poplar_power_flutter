@@ -61,7 +61,7 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
         fullName: fullName,
         customRef: customRef,
-        pin: pin
+        pin: pin,
       );
       final userDto = await remoteDataSource.register(requestDto);
       return Right(userDto.toEntity());
@@ -99,7 +99,8 @@ class AuthRepositoryImpl implements AuthRepository {
       // This is crucial because the /auth/me endpoint does not return wallet information.
       if (localUser != null) {
         fetchedUser = fetchedUser.copyWith(
-          walletAccountNo: localUser.walletAccountNo ?? fetchedUser.walletAccountNo,
+          walletAccountNo:
+              localUser.walletAccountNo ?? fetchedUser.walletAccountNo,
           // Add other fields from localUser that might be missing in fetchedUser if necessary
           // For example, if auth/me doesn't return customRef, but localUser has it:
           // customRef: localUser.customRef ?? fetchedUser.customRef,
@@ -192,7 +193,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthFailure?> resetPassword(String email, String otp, String newPassword) async {
+  Future<AuthFailure?> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
     try {
       await remoteDataSource.verifyOtpAndResetPassword(email, otp, newPassword);
       return null; // Return null for success
@@ -210,17 +215,56 @@ class AuthRepositoryImpl implements AuthRepository {
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
         return AuthFailure.network();
+
       case DioExceptionType.badResponse:
-        if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
-          return AuthFailure.unknown();
+        final statusCode = e.response?.statusCode;
+        final data = e.response?.data;
+
+        String? message;
+        if (data is Map<String, dynamic>) {
+          message = data['message']?.toString();
         }
 
-        final responseData = e.response?.data;
-        if (responseData is Map<String, dynamic>) {
-          final message = responseData['message'] as String?;
-          return AuthFailure.serverError(message ?? 'Unknown server error');
+        // Handle specific status codes
+        if (statusCode == 400 || statusCode == 401) {
+          if (message != null) {
+            final msg = message.toLowerCase();
+
+            if (msg.contains('already exists') || msg.contains('email')) {
+              return AuthFailure.emailInUse();
+            }
+
+            if (msg.contains('invalid email')) {
+              return AuthFailure.invalidEmail();
+            }
+
+            if (msg.contains('user not found')) {
+              return AuthFailure.userNotFound();
+            }
+
+            if (msg.contains('incorrect password') ||
+                msg.contains('wrong password') ||
+                msg.contains('invalid credentials')) {
+              return AuthFailure.invalidCredentials();
+            }
+
+            if (msg.contains('locked')) {
+              return AuthFailure.accountLocked(message);
+            }
+
+            // Fallback: known server-side message
+            return AuthFailure.serverError(message);
+          }
+
+          // No message? still a client error
+          return AuthFailure.serverError('Bad request: $statusCode');
         }
-        return AuthFailure.unknown();
+
+        // Catch-all for other 4xx/5xx
+        return AuthFailure.serverError(
+          message ?? 'Unexpected server response: $statusCode',
+        );
+
       default:
         return AuthFailure.unknown();
     }

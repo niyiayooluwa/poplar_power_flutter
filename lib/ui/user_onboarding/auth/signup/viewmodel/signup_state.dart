@@ -53,4 +53,10 @@ class SignupState {
   double get progress => currentStep / 4.0;
 
   String get fullName => '$firstName $lastName';
+
+  bool get validatePassword =>
+      password.length >= 8 &&
+      password.contains(RegExp(r'[A-Z]')) &&
+      password.contains(RegExp(r'[0-9]')) &&
+      password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
 }
