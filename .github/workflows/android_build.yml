@@ -25,6 +25,19 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create ApiConstants file
+        run: |
+          mkdir -p lib/core/constants
+          cat > lib/core/constants/api_constants.dart << 'EOF'
+          class ApiConstants {
+            static const String BASE_URL = 'https://poplar-be.blacksillicon.com/api';
+            static const String APP_ID = 'dev_app_id';
+            static const String PUBLIC_KEY = 'dev_public_key';
+            static const String SECRET_KEY = 'dev_secret_key';
+            static const String NETTPAY_SECRET = 'dev_nettpay_secret';
+          }
+          EOF
+
       - name: Get Flutter dependencies
         run: flutter pub get
 
