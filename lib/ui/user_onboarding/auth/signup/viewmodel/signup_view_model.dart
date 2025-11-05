@@ -69,6 +69,10 @@ class SignupViewModel extends StateNotifier<SignupState> {
     state = state.copyWith(password: password);
   }
 
+  void updatePassword(String newPassword) {
+    state = state.copyWith(password: newPassword);
+  }
+
   void savePinAndContinue({required int pin}) {
     state = state.copyWith(pin: pin);
   }

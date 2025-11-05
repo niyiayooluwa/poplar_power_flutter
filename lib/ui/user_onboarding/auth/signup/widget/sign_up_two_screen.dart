@@ -114,8 +114,8 @@ class SignupStep2Screen extends HookConsumerWidget {
                                   controller: passwordController,
                                   obscureText: !passwordVisible.value,
                                   onChanged: (value) {
-                                    // Clear error on change
                                     passwordError.value = null;
+                                    vm.updatePassword(value); // Update ViewModel's password
                                   },
                                   decoration: InputDecoration(
                                     labelText: 'Password',
