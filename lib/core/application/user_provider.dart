@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
+import 'package:poplar_power/data/storage/credentials_storage.dart';
 import 'package:poplar_power/data/storage/user_profile_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
 import 'package:poplar_power/domain/repositories/auth_repository.dart';
@@ -22,11 +23,13 @@ class UserState {
 class UserNotifier extends StateNotifier<UserState> {
   final AuthRepository _authRepository;
   final UserProfileStorage _profileStorage;
+  final CredentialsStorage _credentialsStorage; // Add this line
   final GetWalletBalanceUseCase _getWalletBalanceUseCase;
 
   UserNotifier(
     this._authRepository,
     this._profileStorage,
+    this._credentialsStorage, // Add this line
     this._getWalletBalanceUseCase,
   ) : super(UserState.initial());
 
@@ -58,7 +61,27 @@ class UserNotifier extends StateNotifier<UserState> {
         },
       );
     } else {
-      state = state.copyWith(user: const AsyncData(null));
+      // If no token, try to log in with stored credentials
+      final storedEmail = await _credentialsStorage.getEmail();
+      final storedPassword = await _credentialsStorage.getPassword();
+
+      if (storedEmail != null && storedPassword != null) {
+        final result = await _authRepository.login(storedEmail, storedPassword);
+        result.fold(
+          ifLeft: (failure) async {
+            // If login with stored credentials fails, clear them
+            await _credentialsStorage.deleteCredentials();
+            state = state.copyWith(user: const AsyncData(null));
+          },
+          ifRight: (user) async {
+            _profileStorage.saveUser(user); // Save to local storage
+            state = state.copyWith(user: AsyncData(user));
+            await _fetchBalance(user);
+          },
+        );
+      } else {
+        state = state.copyWith(user: const AsyncData(null));
+      }
     }
   }
 
@@ -91,11 +114,13 @@ class UserNotifier extends StateNotifier<UserState> {
 }
 
 final userProfileStorageProvider = Provider((_) => UserProfileStorage());
+final credentialsStorageProvider = Provider((_) => CredentialsStorage());
 
 final userProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final profileStorage = ref.watch(userProfileStorageProvider);
+  final credentialsStorage = ref.watch(credentialsStorageProvider);
   final getWalletBalanceUseCase = ref.watch(getWalletBalanceUseCaseProvider);
-  return UserNotifier(authRepository, profileStorage, getWalletBalanceUseCase)
+  return UserNotifier(authRepository, profileStorage, credentialsStorage, getWalletBalanceUseCase)
     ..checkInitialStatus();
 });

@@ -19,24 +19,26 @@ void main() {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
-  
+
   runApp(const ProviderScope(child: PoplarPowerApp()));
 }
 
 /// Root widget of the PoplarPower application.
 /// This sets up the app theme, routing, and initial screen.
-class PoplarPowerApp extends StatelessWidget {
+class PoplarPowerApp extends ConsumerWidget {
   const PoplarPowerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goRouter = ref.watch(goRouterProvider);
+    
     return MaterialApp.router(
       title: 'Poplar Power',
       theme: AppTheme.lightTheme,
       //darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
-      routerConfig: appRouter,
+      debugShowCheckedModeBanner: true,
+      routerConfig: goRouter,
       builder: (context, child) {
         return TransactionFlowOrchestrator(
           child: child ?? const SizedBox.shrink(),

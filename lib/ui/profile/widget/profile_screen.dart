@@ -149,14 +149,16 @@ class ProfileScreen extends HookConsumerWidget {
                             },
                           ),
 
-                          /* const Divider(height: 1),
-                    _buildSwitchTile(
-                      icon: Icons.fingerprint,
-                      title: 'Enable Biometrics',
-                      value: profileState.enableBiometrics,
-                      onChanged: (value) =>
-                          profileViewModel.setBiometrics(value),
-                    ),*/
+                          if (profileViewModel.state.canCheckBiometrics) ...[
+                            const Divider(height: 1),
+                            _buildSwitchTile(
+                              icon: Icons.fingerprint,
+                              title: 'Enable Biometrics',
+                              value: profileViewModel.state.enableBiometrics,
+                              onChanged: (value) =>
+                                  profileViewModel.setBiometrics(value),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -303,7 +305,7 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  /*Widget _buildSwitchTile({
+  Widget _buildSwitchTile({
     required IconData icon,
     required String title,
     required bool value,
@@ -332,7 +334,7 @@ class ProfileScreen extends HookConsumerWidget {
         ],
       ),
     );
-  }*/
+  }
 
   String _getInitials(String name) {
     return name

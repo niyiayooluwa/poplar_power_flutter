@@ -169,6 +169,36 @@ class LoginScreen extends HookConsumerWidget {
                           ),
                   ),
 
+                  // Biometric Login Button
+                  FutureBuilder<bool>(
+                    future: ref.read(loginViewModelProvider.notifier).canAuthenticateWithBiometrics(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done && snapshot.data == true) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20.0),
+                          child: IconButton(
+                            icon: Icon(Icons.fingerprint, size: 48, color: theme.colorScheme.primary),
+                            onPressed: authState.isLoading
+                                ? null
+                                : () {
+                                    ref.read(loginViewModelProvider.notifier).authenticateWithBiometrics(
+                                          onSuccess: () {
+                                            context.go('/home');
+                                          },
+                                          onError: (message) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(message)),
+                                            );
+                                          },
+                                        );
+                                  },
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
                   const Spacer(),
 
                   //Don't have an account?

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poplar_power/data/data_sources/remote/auth_remote_data_source.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/services/settings_service.dart';
 import 'package:poplar_power/routing/navigator_key.dart';
@@ -34,209 +34,214 @@ import '../ui/user_onboarding/onboarding/widget/onboarding.dart';
 import '../ui/user_onboarding/splash/widget/splash_screen.dart';
 import '../ui/webview/widget/payment_callback_screen.dart';
 
-final appRouter = GoRouter(
-  navigatorKey: navigatorKey,
-  initialLocation: '/splash',
-  redirect: (BuildContext context, GoRouterState state) async {
-    final authRepository = AuthRepositoryImpl(
-      remoteDataSource: AuthRemoteDataSourceImpl(),
-    );
-    final hasToken = await authRepository.hasToken();
-    final settingsService = SettingsService();
-    final hasCompletedOnboarding = await settingsService
-        .hasCompletedOnboarding();
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final settingsService = SettingsService();
 
-    // Define routes that a returning user should be redirected AWAY from.
-    final preAuthRoutes = ['/onboarding', '/get-started'];
-    final isOnPreAuthRoute = preAuthRoutes.contains(state.matchedLocation);
+  return GoRouter(
+    navigatorKey: navigatorKey,
+    initialLocation: '/splash',
+    redirect: (BuildContext context, GoRouterState state) async {
+      final hasToken = await authRepository.hasToken();
+      final hasCompletedOnboarding = await settingsService
+          .hasCompletedOnboarding();
 
-    // If the user has a token and is on a pre-auth page, send them to login.
-    if (hasToken && isOnPreAuthRoute) {
-      return '/login';
-    }
+      // Define routes that a returning user should be redirected AWAY from.
+      final preAuthRoutes = ['/onboarding', '/get-started', '/login', '/splash'];
+      final isOnPreAuthRoute = preAuthRoutes.contains(state.matchedLocation);
 
-    // --- The rest of the original logic for logged-out users ---
-    final protectedRoutes = [
-      '/home',
-      '/send',
-      '/send2',
-      '/topup',
-      '/notifications',
-      '/profile',
-      '/internet',
-      '/airtime',
-      '/billers',
-      '/cable',
-      '/more-actions',
-      '/transaction-history',
-      '/transaction-detail',
-      '/webview',
-      '/reset-pin'
-    ];
+      // If the user has a token and is on a pre-auth page, send them to login.
+      if (hasToken && isOnPreAuthRoute) {
+        return '/home';
+      }
 
-    final isProtected = protectedRoutes.contains(state.matchedLocation);
+      // --- The rest of the original logic for logged-out users ---
+      final protectedRoutes = [
+        '/home',
+        '/send',
+        '/send2',
+        '/topup',
+        '/notifications',
+        '/profile',
+        '/internet',
+        '/airtime',
+        '/billers',
+        '/cable',
+        '/more-actions',
+        '/transaction-history',
+        '/transaction-detail',
+        '/webview',
+        '/reset-pin',
+      ];
 
-    if (!hasCompletedOnboarding && state.matchedLocation != '/onboarding') {
-      return '/onboarding';
-    }
+      final isProtected = protectedRoutes.contains(state.matchedLocation);
 
-    if (hasCompletedOnboarding && !hasToken && isProtected) {
-      return '/get-started';
-    }
+      if (!hasCompletedOnboarding && state.matchedLocation != '/onboarding') {
+        return '/onboarding';
+      }
 
-    return null;
-  },
-  routes: [
-    /// Public routes - no navbar
-    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      if (hasCompletedOnboarding && !hasToken && isProtected) {
+        return '/get-started';
+      }
 
-    GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
-    ),
+      return null;
+    },
+    routes: [
+      /// Public routes - no navbar
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
 
-    GoRoute(
-      path: '/get-started',
-      builder: (context, state) => const GetStartedScreen(),
-    ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
 
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/get-started',
+        builder: (context, state) => const GetStartedScreen(),
+      ),
 
-    GoRoute(
-      path: '/signup',
-      builder: (context, state) => const SignupStep1Screen(),
-    ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
-    GoRoute(
-      path: '/signup-two',
-      builder: (context, state) => const SignupStep2Screen(),
-    ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupStep1Screen(),
+      ),
 
-    GoRoute(
+      GoRoute(
+        path: '/signup-two',
+        builder: (context, state) => const SignupStep2Screen(),
+      ),
+
+      GoRoute(
         path: '/signup-three',
-        builder: (context, state) => const SignupStep3Screen()
-    ),
-    
-    GoRoute(
+        builder: (context, state) => const SignupStep3Screen(),
+      ),
+
+      GoRoute(
         path: '/signup-four',
-        builder: (context, state) => const SignupStep4Screen()
-    ),
+        builder: (context, state) => const SignupStep4Screen(),
+      ),
 
-    GoRoute(
-      path: '/otp',
-      builder: (context, state) {
-        final args = state.extra as Map<String, String>? ?? {};
-        final email = args['email'];
-        final password = args['password'];
-        return OtpScreen(email: email ?? '', password: password ?? '');
-      },
-    ),
+      GoRoute(
+        path: '/otp',
+        builder: (context, state) {
+          final args = state.extra as Map<String, String>? ?? {};
+          final email = args['email'];
+          final password = args['password'];
+          return OtpScreen(email: email ?? '', password: password ?? '');
+        },
+      ),
 
-    GoRoute(
-      path: '/reset-pin',
-      builder: (context, state) {
-        final args = state.extra as Map<String, String?>? ?? {};
-        final accountNo = args['account'];
-        return PinRecoveryScreen(initialAccountNo: accountNo ?? '');
-      },
-    ),
+      GoRoute(
+        path: '/reset-pin',
+        builder: (context, state) {
+          final args = state.extra as Map<String, String?>? ?? {};
+          final accountNo = args['account'];
+          return PinRecoveryScreen(initialAccountNo: accountNo ?? '');
+        },
+      ),
 
-    GoRoute(
-      path: '/pin-recovery-new-pin',
-      builder: (context, state) => const PinRecoveryNewPinScreen(),
-    ),
+      GoRoute(
+        path: '/pin-recovery-new-pin',
+        builder: (context, state) => const PinRecoveryNewPinScreen(),
+      ),
 
-    GoRoute(
-      path: '/pin-recovery-confirm-pin',
-      builder: (context, state) => const PinRecoveryConfirmPinScreen(),
-    ),
+      GoRoute(
+        path: '/pin-recovery-confirm-pin',
+        builder: (context, state) => const PinRecoveryConfirmPinScreen(),
+      ),
 
-    GoRoute(
-      path: '/forgot-password',
-      builder: (context, state) => const PasswordRecoveryScreen()
-    ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const PasswordRecoveryScreen(),
+      ),
 
-    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
 
-    GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
+      GoRoute(path: '/send', builder: (context, state) => const SendScreen()),
 
-    GoRoute(
-      path: '/send2',
-      builder: (context, state) => const Send2ndStepScreen(),
-    ),
+      GoRoute(
+        path: '/send2',
+        builder: (context, state) => const Send2ndStepScreen(),
+      ),
 
-    GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
+      GoRoute(path: '/topup', builder: (context, state) => const TopUpScreen()),
 
-    GoRoute(
-      path: '/notifications',
-      builder: (context, state) => const NotificationScreen(),
-    ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
 
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
-    ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
 
-    //=========================================================================
-    // Quick actions routes
-    GoRoute(
-      path: '/internet',
-      builder: (context, state) => const InternetScreen(),
-    ),
+      //=========================================================================
+      // Quick actions routes
+      GoRoute(
+        path: '/internet',
+        builder: (context, state) => const InternetScreen(),
+      ),
 
-    /* GoRoute(
+      /* GoRoute(
       path: '/airtime',
       builder: (context, state) => const AirtimeScreen(),
     ),*/
-    GoRoute(
-      path: '/billers',
-      builder: (context, state) => const ElectricityScreen(),
-    ),
+      GoRoute(
+        path: '/billers',
+        builder: (context, state) => const ElectricityScreen(),
+      ),
 
-    GoRoute(path: '/cable', builder: (context, state) => const CableScreen()),
+      GoRoute(path: '/cable', builder: (context, state) => const CableScreen()),
 
-    GoRoute(
-      path: '/more-actions',
-      builder: (context, state) => const MoreActions(),
-    ),
+      GoRoute(
+        path: '/more-actions',
+        builder: (context, state) => const MoreActions(),
+      ),
 
-    //=========================================================================
-    GoRoute(
-      path: '/transaction-history',
-      builder: (context, state) => const TransactionHistoryScreen(),
-    ),
+      //=========================================================================
+      GoRoute(
+        path: '/transaction-history',
+        builder: (context, state) => const TransactionHistoryScreen(),
+      ),
 
-    GoRoute(
-      path: '/transaction-detail',
-      builder: (context, state) {
-        final transaction = state.extra as Transaction;
-        return TransactionDetailScreen(transaction: transaction);
-      },
-    ),
+      GoRoute(
+        path: '/transaction-detail',
+        builder: (context, state) {
+          final transaction = state.extra as Transaction;
+          return TransactionDetailScreen(transaction: transaction);
+        },
+      ),
 
-    GoRoute(
-      path: '/webview',
-      builder: (context, state) {
-        final args = state.extra as Map<String, String?>?; // Allow null values
-        final url = args?['url'];
+      GoRoute(
+        path: '/webview',
+        builder: (context, state) {
+          final args =
+              state.extra as Map<String, String?>?; // Allow null values
+          final url = args?['url'];
 
-        // Add null check and provide fallback
-        if (url == null) {
-          // Handle the case where url is null - maybe navigate back or show error
-          return const Scaffold(body: Center(child: Text('Invalid URL')));
-        }
+          // Add null check and provide fallback
+          if (url == null) {
+            // Handle the case where url is null - maybe navigate back or show error
+            return const Scaffold(body: Center(child: Text('Invalid URL')));
+          }
 
-        return WebViewScreen(webPaymentUrl: url);
-      },
-    ),
+          return WebViewScreen(webPaymentUrl: url);
+        },
+      ),
 
-    GoRoute(
-      path: '/payment-callback',
-      builder: (context, state) {
-        final trxref = state.uri.queryParameters['trxref'];
-        final reference = state.uri.queryParameters['reference'];
-        return PaymentCallbackScreen(trxref: trxref, reference: reference);
-      },
-    ),
-  ],
-);
+      GoRoute(
+        path: '/payment-callback',
+        builder: (context, state) {
+          final trxref = state.uri.queryParameters['trxref'];
+          final reference = state.uri.queryParameters['reference'];
+          return PaymentCallbackScreen(trxref: trxref, reference: reference);
+        },
+      ),
+    ],
+  );
+});

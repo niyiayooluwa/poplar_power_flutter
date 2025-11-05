@@ -6,6 +6,7 @@ import 'package:poplar_power/data/models/auth/login_request_dto.dart';
 import 'package:poplar_power/data/models/auth/resend_otp_request_dto.dart';
 import 'package:poplar_power/data/models/auth/signup_request_dto.dart';
 import 'package:poplar_power/data/models/auth/verify_otp_request_dto.dart';
+import 'package:poplar_power/data/storage/credentials_storage.dart';
 import 'package:poplar_power/data/storage/token_storage.dart';
 import 'package:poplar_power/data/storage/user_profile_storage.dart';
 import 'package:poplar_power/domain/entities/user.dart';
@@ -15,6 +16,7 @@ import 'package:poplar_power/domain/repositories/auth_repository.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final UserProfileStorage _userProfileStorage = UserProfileStorage();
+  final CredentialsStorage _credentialsStorage = CredentialsStorage(); // Add this line
 
   AuthRepositoryImpl({required this.remoteDataSource});
 
@@ -28,6 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
           authResponseDto.token != null &&
           authResponseDto.user != null) {
         await TokenStorage.saveToken(authResponseDto.token!);
+        await _credentialsStorage.saveCredentials(email, password); // Save credentials
         if (authResponseDto.poplarToken != null) {
           await TokenStorage.savePoplarToken(authResponseDto.poplarToken!);
         }
@@ -77,6 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await TokenStorage.deleteToken();
     await TokenStorage.deletePoplarToken();
     await _userProfileStorage.deleteUser();
+    await _credentialsStorage.deleteCredentials(); // Delete stored credentials
   }
 
   @override
