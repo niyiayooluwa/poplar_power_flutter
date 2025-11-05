@@ -1,58 +1,58 @@
 name: Android Release Build
 
 on:
-  push:
-    branches:
-      - development
+    push:
+        branches:
+            - development
 
 jobs:
-  build_android_apk:
-    runs-on: ubuntu-latest
+    build_android_apk:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+            - name: Set up Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: 'temurin'
+                  java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
+            - name: Set up Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  channel: 'stable'
+                  cache: true
 
-      - name: Create ApiConstants file
-        run: |
-          mkdir -p lib/core/constants
-          cat > lib/core/constants/api_constants.dart << 'EOF'
-          class ApiConstants {
-            static const String BASE_URL = 'https://poplar-be.blacksillicon.com/api';
-            static const String APP_ID = 'dev_app_id';
-            static const String PUBLIC_KEY = 'dev_public_key';
-            static const String SECRET_KEY = 'dev_secret_key';
-            static const String NETTPAY_SECRET = 'dev_nettpay_secret';
-          }
-          EOF
+            - name: Create ApiConstants file
+              run: |
+                  mkdir -p lib/core/constants
+                  cat > lib/core/constants/api_constants.dart << 'EOF'
+                  class ApiConstants {
+                    static const String BASE_URL = 'https://poplar-be.blacksillicon.com/api';
+                    static const String APP_ID = 'dev_app_id';
+                    static const String PUBLIC_KEY = 'dev_public_key';
+                    static const String SECRET_KEY = 'dev_secret_key';
+                    static const String NETTPAY_SECRET = 'dev_nettpay_secret';
+                  }
+                  EOF
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+            - name: Get Flutter dependencies
+              run: flutter pub get
 
-      - name: Run Flutter doctor
-        run: flutter doctor -v
+            - name: Run Flutter doctor
+              run: flutter doctor -v
 
-      - name: Accept Android SDK licenses
-        run: yes | flutter doctor --android-licenses
+            - name: Accept Android SDK licenses
+              run: yes | flutter doctor --android-licenses
 
-      - name: Build Android APK
-        run: flutter build apk --release
+            - name: Build Android APK
+              run: flutter build apk --release
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-apk-${{ github.sha }}
-          path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+            - name: Upload APK artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-release-apk-${{ github.sha }}
+                  path: build/app/outputs/flutter-apk/app-release.apk
+                  retention-days: 30
