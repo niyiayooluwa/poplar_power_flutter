@@ -56,3 +56,28 @@ jobs:
                   name: app-release-apk-${{ github.sha }}
                   path: build/app/outputs/flutter-apk/app-release.apk
                   retention-days: 30
+
+            - name: Create Release
+              id: create_release
+              uses: softprops/action-gh-release@v1
+              if: github.ref == 'refs/heads/development'
+              with:
+                  tag_name: dev-build-${{ github.run_number }}
+                  name: Development Build #${{ github.run_number }}
+                  body: |
+                      ## 📱 Development Build
+                      
+                      **Build Date:** ${{ github.event.head_commit.timestamp }}
+                      **Commit:** ${{ github.sha }}
+                      **Message:** ${{ github.event.head_commit.message }}
+                      
+                      ### 📥 Installation Instructions:
+                      1. Download the APK file below
+                      2. Enable "Install from Unknown Sources" on your Android device
+                      3. Install the APK
+                      
+                      ---
+                      Built automatically from the `development` branch
+                  files: build/app/outputs/flutter-apk/app-release.apk
+                  draft: false
+                  prerelease: true
