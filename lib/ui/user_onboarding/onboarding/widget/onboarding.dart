@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../viewmodel/onboarding_view_model.dart';
 
 /// List of content for each onboarding step.
@@ -10,20 +12,21 @@ final List<Map<String, String>> onboardingContent = [
   {
     'title': 'Pay Bills with a Tap',
     'subtitle': 'Fast, Easy and Secure Payments',
-    'bg': 'assets/images/onboarding_1.jpg',
+    'bg': 'assets/drawables/send-money.svg',
     'color': '2563EB',
     //'attribution': '"https://storyset.com/data"> Data illustrations by Storyset</a>'
   },
   {
     'title': 'Simplify Payments',
     'subtitle': 'Simplify your payments with the tool built for you',
-    'bg': 'assets/images/onboarding_2.jpg',
+    'bg': 'assets/drawables/mobile_pay.svg',
     'color': '059669',
   },
   {
     'title': 'Track Spending with Ease',
-    'subtitle': 'Track your financial transactions and manage your budget effortlessly',
-    'bg': 'assets/images/onboarding_3.jpg',
+    'subtitle':
+        'Track your financial transactions and manage your budget effortlessly',
+    'bg': 'assets/drawables/personal-finance.svg',
     'color': '8B5CF6',
   },
 ];
@@ -45,24 +48,23 @@ class OnboardingScreen extends HookConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Background image that changes with each slide
-        Image.asset(
-          slide['bg']!,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Color(int.parse("0xFF${slide['color']}")), // Fallback color
-              child: Center(
-                child: Icon(Icons.broken_image_rounded, color: Colors.white, size: 48),
-              ),
-            );
-          },
-        ),
-
         // Semi-transparent overlay to improve contrast for text
-        /**Container(
-          color: Colors.black.withOpacity(0.45),
-        ),*/
+        Container(color: Color(int.parse("0xFF${slide['color']}"))),
+
+        // Background image that changes with each slide
+        Center(
+          child: SizedBox(
+            height: 370,
+            width: 370,
+            child: SvgPicture.asset(
+              slide['bg']!,
+              fit: BoxFit.contain,
+              placeholderBuilder: (context) => const Center(
+                child: CircularProgressIndicator(color: Colors.blue),
+              ),
+            ),
+          ),
+        ),
 
         // Foreground content
         SafeArea(
@@ -88,9 +90,9 @@ class OnboardingScreen extends HookConsumerWidget {
                 // Smaller subheader text (subtitle)
                 Text(
                   slide['subtitle']!,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white70,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                   textAlign: TextAlign.left,
                 ),
 
@@ -142,24 +144,24 @@ class _OnboardingControls extends StatelessWidget {
       children: [
         // Custom WhatsApp-style indicator (bars with animation)
         Expanded(
-         flex: 3,
-         child:  Row(
-           mainAxisAlignment: MainAxisAlignment.center,
-           children: List.generate(3, (index) {
-             final isActive = index == currentPage;
-             return AnimatedContainer(
-               duration: const Duration(milliseconds: 300),
-               margin: const EdgeInsets.symmetric(horizontal: 4),
-               height: 8,
-               width: isActive ? 28 : 12,
-               decoration: BoxDecoration(
-                 color: isActive ? Colors.black : Colors.white,
-                 borderRadius: BorderRadius.circular(12),
-               ),
-             );
-           }),
-         ),
-       ),
+          flex: 3,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              final isActive = index == currentPage;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: isActive ? 28 : 12,
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.black : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              );
+            }),
+          ),
+        ),
 
         SizedBox(width: 32),
 
@@ -189,21 +191,21 @@ class _OnboardingControls extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0)
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
                   child: Text(
-                      isLastPage ? 'Get Started' : 'Next',
-                      style: const TextStyle(
-                        color: Color(0xff2563EB),
-                        fontSize: 16
-                      )
+                    isLastPage ? 'Get Started' : 'Next',
+                    style: const TextStyle(
+                      color: Color(0xff2563EB),
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
