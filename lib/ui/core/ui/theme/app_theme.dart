@@ -210,7 +210,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: _lightColorScheme,
-      textTheme: GoogleFonts.spaceGroteskTextTheme(_textTheme),
+      textTheme: GoogleFonts.notoSansTextTheme(_textTheme),
+      //textTheme: GoogleFonts.spaceGroteskTextTheme(_textTheme),
       // App Bar Theme
       appBarTheme: const AppBarTheme(
         elevation: 0,
@@ -459,7 +460,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: _darkColorScheme,
-      textTheme: _textTheme,
+      textTheme: GoogleFonts.notoSansTextTheme(_textTheme),
       fontFamily: 'Inter',
 
       // App Bar Theme

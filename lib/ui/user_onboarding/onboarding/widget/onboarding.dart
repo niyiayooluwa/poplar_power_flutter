@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../viewmodel/onboarding_view_model.dart';
@@ -12,21 +11,21 @@ final List<Map<String, String>> onboardingContent = [
   {
     'title': 'Pay Bills with a Tap',
     'subtitle': 'Fast, Easy and Secure Payments',
-    'bg': 'assets/drawables/send-money.svg',
+    'bg': 'assets/images/1.jpg',
     'color': '2563EB',
     //'attribution': '"https://storyset.com/data"> Data illustrations by Storyset</a>'
   },
   {
     'title': 'Simplify Payments',
     'subtitle': 'Simplify your payments with the tool built for you',
-    'bg': 'assets/drawables/mobile_pay.svg',
+    'bg': 'assets/images/2.jpg',
     'color': '059669',
   },
   {
     'title': 'Track Spending with Ease',
     'subtitle':
-        'Track your financial transactions and manage your budget effortlessly',
-    'bg': 'assets/drawables/personal-finance.svg',
+    'Track your financial transactions and manage your budget effortlessly',
+    'bg': 'assets/images/3.jpg',
     'color': '8B5CF6',
   },
 ];
@@ -45,14 +44,19 @@ class OnboardingScreen extends HookConsumerWidget {
     // Pull current content from onboardingContent using the page index
     final slide = onboardingContent[currentPage];
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Semi-transparent overlay to improve contrast for text
-        Container(color: Color(int.parse("0xFF${slide['color']}"))),
+    for (var i = 0; i < onboardingContent.length; i++) {
+      precacheImage(AssetImage(onboardingContent[i]['bg']!), context);
+    }
 
-        // Background image that changes with each slide
-        Center(
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Semi-transparent overlay to improve contrast for text
+          //Container(color: Color(int.parse("0xFF${slide['color']}"))),
+
+          // Background image that changes with each slide
+          /*Center(
           child: SizedBox(
             height: 370,
             width: 370,
@@ -64,72 +68,104 @@ class OnboardingScreen extends HookConsumerWidget {
               ),
             ),
           ),
-        ),
+        ),*/
 
-        // Foreground content
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 48),
-
-                // Big header text (title)
-                Text(
-                  slide['title']!,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-
-                const SizedBox(height: 12),
-
-                // Smaller subheader text (subtitle)
-                Text(
-                  slide['subtitle']!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(color: Colors.white70),
-                  textAlign: TextAlign.left,
-                ),
-
-                const Spacer(),
-
-                // Bottom section with indicator and navigation buttons
-                _OnboardingControls(
-                  currentPage: currentPage,
-                  onNext: () {
-                    controller.nextPage(context);
-                  },
-                  onSkip: () {
-                    controller.skip();
-                  },
-                  isLastPage: controller.isLastPage,
-                ),
-
-                const SizedBox(height: 24),
-              ],
+          Positioned.fill(
+            child: Image.asset(
+              slide['bg']!,
+              fit: BoxFit.cover,
             ),
           ),
-        ),
-      ],
+
+
+          Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.7),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.95),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomCenter,
+                  )
+              )
+          ),
+
+          // Foreground content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 48),
+
+                  // Big header text (title)
+                  Text(
+                    slide['title']!,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Smaller subheader text (subtitle)
+                  Text(
+                    slide['subtitle']!,
+                    style: Theme
+                        .of(
+                      context,
+                    )
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(color: Colors.white70),
+                    textAlign: TextAlign.left,
+                  ),
+
+                  const Spacer(),
+
+                  // Bottom section with indicator and navigation buttons
+                  _OnboardingControls(
+                    currentPage: currentPage,
+                    onNext: () {
+                      controller.nextPage(context);
+                    },
+                    onSkip: () {
+                      controller.skip();
+                    },
+                    isLastPage: controller.isLastPage,
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Bottom controls widget that contains:
-/// - A custom progress indicator
-/// - A row with "Skip" and "Next"/"Get Started" buttons
-class _OnboardingControls extends StatelessWidget {
+
+  /// Bottom controls widget that contains:
+  /// - A custom progress indicator
+  /// - A row with "Skip" and "Next"/"Get Started" buttonsclass _OnboardingControls extends StatelessWidget {
+  class _OnboardingControls extends StatelessWidget{
   final int currentPage;
   final VoidCallback onNext;
   final VoidCallback onSkip;
   final bool isLastPage;
 
-  const _OnboardingControls({
+  const _OnboardingControls ({
     required this.currentPage,
     required this.onNext,
     required this.onSkip,
@@ -142,7 +178,7 @@ class _OnboardingControls extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Custom WhatsApp-style indicator (bars with animation)
+      // Custom WhatsApp-style indicator (bars with animation)
         Expanded(
           flex: 3,
           child: Row(
@@ -155,7 +191,7 @@ class _OnboardingControls extends StatelessWidget {
                 height: 8,
                 width: isActive ? 28 : 12,
                 decoration: BoxDecoration(
-                  color: isActive ? Colors.black : Colors.white,
+                  color: isActive ? Color(0xff2563EB) : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
               );
@@ -170,7 +206,7 @@ class _OnboardingControls extends StatelessWidget {
           flex: 7,
           child: Row(
             children: [
-              // "Skip" button (black text)
+            // "Skip" button (black text)
               if (!isLastPage)
                 Expanded(
                   flex: 3,
@@ -183,7 +219,7 @@ class _OnboardingControls extends StatelessWidget {
                   ),
                 ),
 
-              // "Next" or "Get Started" button
+// "Next" or "Get Started" button
               Expanded(
                 flex: 7,
                 child: FilledButton(
