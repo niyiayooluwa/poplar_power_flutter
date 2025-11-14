@@ -37,6 +37,7 @@ class ProfileScreen extends HookConsumerWidget {
                 expandedHeight: 200,
                 pinned: true,
                 backgroundColor: theme.colorScheme.primary,
+                iconTheme: const IconThemeData(color: Colors.white),
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(

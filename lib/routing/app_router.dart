@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:poplar_power/data/repositories/auth_repository_impl.dart';
 import 'package:poplar_power/data/services/settings_service.dart';
 import 'package:poplar_power/routing/navigator_key.dart';
+import 'package:poplar_power/routing/transitions.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 import 'package:poplar_power/ui/home/home_screen.dart';
 import 'package:poplar_power/ui/notifications/notifications_screen.dart';
@@ -47,7 +48,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           .hasCompletedOnboarding();
 
       // Define routes that a returning user should be redirected AWAY from.
-      final preAuthRoutes = ['/onboarding', '/get-started', '/login', '/splash'];
+      final preAuthRoutes = [
+        '/onboarding',
+        '/get-started',
+        '/login',
+        '/splash',
+      ];
       final isOnPreAuthRoute = preAuthRoutes.contains(state.matchedLocation);
 
       // If the user has a token and is on a pre-auth page, send them to login.
@@ -177,7 +183,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) =>
+            SlideTransitionPage(key: state.pageKey, child: ProfileScreen()),
       ),
 
       //=========================================================================

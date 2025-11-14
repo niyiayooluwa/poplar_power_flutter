@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:poplar_power/ui/core/models/transaction.dart';
 
-
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
 
@@ -9,12 +8,13 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String _format(String string) {
+      return string.replaceAll('_', ' ');
+    }
+
     return Container(
       //margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 12,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
 
       decoration: BoxDecoration(
         //color: Colors.white,
@@ -24,41 +24,33 @@ class TransactionItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-                transaction.icon,
-                color: Colors.grey[600]
-            ),
+            child: Icon(transaction.icon, color: Colors.grey[600]),
           ),
 
-
           SizedBox(width: 16),
-
 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    transaction.title,
-                    style: TextStyle(fontWeight: FontWeight.w600)
+                  _format(transaction.merchant),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
 
                 Text(
-                    transaction.formattedDateTime,
-                    style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12
-                    )
+                  transaction.formattedDateTime,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
           ),
-
 
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -66,8 +58,8 @@ class TransactionItem extends StatelessWidget {
               Text(
                 transaction.formattedAmount,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: transaction.amountColor
+                  fontWeight: FontWeight.bold,
+                  color: transaction.amountColor,
                 ),
               ),
 
@@ -85,9 +77,9 @@ class TransactionItem extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
